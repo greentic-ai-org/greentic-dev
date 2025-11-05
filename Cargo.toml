@@ -15,4 +15,4 @@ anyhow = "1.0"
 clap = { version = "4.5", features = ["derive"] }
 dev-runner = { path = "crates/dev-runner" }
 serde_yaml_bw = "2"
-greentic-conformance = { path = "../greentic-conformance", optional = true }
+greentic-conformance = { version = "0.1", optional = true }

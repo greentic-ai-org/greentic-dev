@@ -9,9 +9,6 @@ use serde_yaml_bw::Value as YamlValue;
 use crate::registry::DescribeRegistry;
 use crate::schema::{schema_id_from_json, validate_yaml_against_schema};
 
-#[cfg(feature = "conformance")]
-use greentic_conformance::validate_node;
-
 #[derive(Clone, Debug, Default)]
 pub struct ComponentSchema {
     pub node_schema: Option<String>,
@@ -160,17 +157,6 @@ where
                         component: component.to_owned(),
                         index,
                         message,
-                    }
-                })?;
-            }
-
-            #[cfg(feature = "conformance")]
-            {
-                validate_node(component, node).map_err(|error| {
-                    FlowValidationError::Conformance {
-                        component: component.to_owned(),
-                        index,
-                        error: error.to_string(),
                     }
                 })?;
             }
