@@ -1,0 +1,9 @@
+(function() {
+    var implementors = Object.fromEntries([["dev_runner",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/convert/trait.From.html\" title=\"trait core::convert::From\">From</a>&lt;<a class=\"struct\" href=\"https://doc.rust-lang.org/nightly/std/io/error/struct.Error.html\" title=\"struct std::io::error::Error\">Error</a>&gt; for <a class=\"enum\" href=\"dev_runner/transcript/enum.TranscriptError.html\" title=\"enum dev_runner::transcript::TranscriptError\">TranscriptError</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/convert/trait.From.html\" title=\"trait core::convert::From\">From</a>&lt;<a class=\"struct\" href=\"https://docs.rs/serde_yaml_bw/2.4.0/serde_yaml_bw/error/struct.Error.html\" title=\"struct serde_yaml_bw::error::Error\">Error</a>&gt; for <a class=\"enum\" href=\"dev_runner/transcript/enum.TranscriptError.html\" title=\"enum dev_runner::transcript::TranscriptError\">TranscriptError</a>"]]]]);
+    if (window.register_implementors) {
+        window.register_implementors(implementors);
+    } else {
+        window.pending_implementors = implementors;
+    }
+})()
+//{"start":57,"fragment_lengths":[929]}

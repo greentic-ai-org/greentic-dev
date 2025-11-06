@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>mocks</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 2rem;
+        max-width: 60rem;
+      }
+      pre {
+        background: #f4f4f4;
+        padding: 1rem;
+        white-space: pre-wrap;
+      }
+      code {
+        background: #f4f4f4;
+        padding: 0 0.3rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>mocks</h1>
+    <pre># Local Mocks
+
+The `dev-runner` crate ships with lightweight mocks so flows can be exercised without talking to real infrastructure.
+
+## Ports and endpoints
+
+* **HTTP mocks** – Default to `127.0.0.1:3100`. Override via the `MOCK_HTTP_PORT` environment variable.
+* **NATS mock** – Starts on `127.0.0.1:4223`. Override via `MOCK_NATS_PORT`.
+* **Secret vault mock** – Binds to `127.0.0.1:8201` with an in-memory backend.
+
+Mocks only listen on loopback and are started on demand by the runner.
+
+## Fault injection
+
+Use environment variables or flow metadata to enable specific failure modes:
+
+| Mock           | Env var                    | Behaviour                                 |
+| -------------- | -------------------------- | ----------------------------------------- |
+| HTTP           | `MOCK_HTTP_FAIL_PATTERN`   | Regex of paths to force 500 responses.    |
+| NATS           | `MOCK_NATS_DROP_RATE`      | Fraction (0–1) of messages to drop.       |
+| Secret vault   | `MOCK_VAULT_SEAL_AT_START` | When set, mock starts in sealed state.    |
+
+These knobs let you confirm your flow handles partial failures, retries, and transient outages before deploying.
+</pre>
+  </body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>scaffolder</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 2rem;
+        max-width: 60rem;
+      }
+      pre {
+        background: #f4f4f4;
+        padding: 1rem;
+        white-space: pre-wrap;
+      }
+      code {
+        background: #f4f4f4;
+        padding: 0 0.3rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>scaffolder</h1>
+    <pre># Component Scaffolder
+
+`cargo xtask new-component &lt;name&gt;` generates a ready-to-validate component skeleton.
+
+## Generated layout
+
+```
+component-&lt;name&gt;/
+├── Cargo.toml
+├── schemas/v1/&lt;name&gt;.node.schema.json
+├── src/
+│   ├── describe.rs
+│   └── lib.rs
+├── tests/schema_validates_examples.rs
+├── examples/flows/min.yaml
+└── .github/workflows/ci.yml
+```
+
+### Cargo.toml
+Declares dependencies (`serde`, `serde_json`, `serde_yaml_bw`, `jsonschema`) and the component crate metadata.
+
+### `src/describe.rs`
+Provides a stub `describe()` function that:
+
+* Loads the node schema from `schemas/v1/&lt;name&gt;.node.schema.json`.
+* Returns the schema inside a JSON describe payload.
+
+### `tests/schema_validates_examples.rs`
+Runs the example flow through the schema to catch drift between schema and examples.
+
+### `examples/flows/min.yaml`
+Minimal flow that references the component so CI has something to validate.
+
+### `schemas/v1/&lt;name&gt;.node.schema.json`
+Draft-07 JSON Schema used by the runner and scaffolded tests.
+
+### `.github/workflows/ci.yml`
+Basic Rust workflow (fmt, clippy, test) so the new component repo has guardrails from day one.
+</pre>
+  </body>
+</html>

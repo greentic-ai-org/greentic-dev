@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["TEMPLATE_CI_WORKFLOW","TEMPLATE_COMPONENT_CARGO","TEMPLATE_EXAMPLE_MIN","TEMPLATE_SCHEMA_NODE","TEMPLATE_SRC_DESCRIBE","TEMPLATE_SRC_LIB","TEMPLATE_TEST_SCHEMA"],"enum":["Commands"],"fn":["create_dir","main","new_component","render_template","run","write_template"],"static":["WORKSPACE_ROOT"],"struct":["Cli","TemplateContext"]};

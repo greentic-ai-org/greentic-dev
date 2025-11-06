@@ -41,6 +41,24 @@ const TEMPLATE_CI_WORKFLOW: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/templates/.github_workflows_ci.yml"
 ));
+const TEMPLATE_DOCS_GETTING_STARTED: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/templates/docs_getting_started.md"
+));
+const TEMPLATE_DOCS_CONFIG: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/templates/docs_config.md"
+));
+const TEMPLATE_DOCS_TESTING: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/templates/docs_testing.md"
+));
+const TEMPLATE_DOCS_CI: &str =
+    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/templates/docs_ci.md"));
+const TEMPLATE_DOCS_SECURITY: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/templates/docs_security.md"
+));
 
 #[derive(Parser)]
 #[command(name = "xtask")]
@@ -100,6 +118,7 @@ fn new_component(name: &str) -> Result<()> {
     create_dir(component_dir.join("schemas/v1"))?;
     create_dir(component_dir.join("examples/flows"))?;
     create_dir(component_dir.join(".github/workflows"))?;
+    create_dir(component_dir.join("docs"))?;
 
     // Write templated files.
     write_template(
@@ -138,6 +157,31 @@ fn new_component(name: &str) -> Result<()> {
     write_template(
         &component_dir.join(".github/workflows/ci.yml"),
         TEMPLATE_CI_WORKFLOW,
+        &context,
+    )?;
+    write_template(
+        &component_dir.join("docs/getting-started.md"),
+        TEMPLATE_DOCS_GETTING_STARTED,
+        &context,
+    )?;
+    write_template(
+        &component_dir.join("docs/config.md"),
+        TEMPLATE_DOCS_CONFIG,
+        &context,
+    )?;
+    write_template(
+        &component_dir.join("docs/testing.md"),
+        TEMPLATE_DOCS_TESTING,
+        &context,
+    )?;
+    write_template(
+        &component_dir.join("docs/ci.md"),
+        TEMPLATE_DOCS_CI,
+        &context,
+    )?;
+    write_template(
+        &component_dir.join("docs/security.md"),
+        TEMPLATE_DOCS_SECURITY,
         &context,
     )?;
 
