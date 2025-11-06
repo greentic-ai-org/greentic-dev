@@ -65,18 +65,35 @@ def render_markdown_placeholder(path: Path) -> str:
 """
 
 
-def copy_docs():
+def copy_docs() -> list[tuple[str, str]]:
     docs_out = DIST / "docs"
     docs_out.mkdir()
-    for md in DOCS_SRC.glob("*.md"):
+    entries: list[tuple[str, str]] = []
+    for md in sorted(DOCS_SRC.glob("*.md")):
         html_content = render_markdown_placeholder(md)
-        (docs_out / f"{md.stem}.html").write_text(html_content, encoding="utf-8")
+        output = docs_out / f"{md.stem}.html"
+        output.write_text(html_content, encoding="utf-8")
+
+        title = md.stem
+        with md.open("r", encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("#"):
+                    title = line.lstrip("# ").strip()
+                    break
+
+        entries.append((title, f"docs/{output.name}"))
+    return entries
 
 
-def write_index():
+def write_index(doc_entries: list[tuple[str, str]]):
     index = DIST / "index.html"
+    doc_links = "\n".join(
+        f'      <li><a href="{href}">{html.escape(title)}</a></li>'
+        for title, href in doc_entries
+    )
     index.write_text(
-        """<!DOCTYPE html>
+        (
+            """<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -92,14 +109,14 @@ def write_index():
     <h1>greentic-dev documentation</h1>
     <ul>
       <li><a href="rustdoc/greentic_dev/index.html">Rust API docs</a></li>
-      <li><a href="docs/runner.html">Runner guide</a></li>
-      <li><a href="docs/mocks.html">Mocks guide</a></li>
-      <li><a href="docs/viewer.html">Transcript viewer</a></li>
-      <li><a href="docs/scaffolder.html">Component scaffolder</a></li>
+{doc_links}
     </ul>
   </body>
 </html>
-""",
+""".replace(
+                "{doc_links}", doc_links
+            )
+        ),
         encoding="utf-8",
     )
 
@@ -108,8 +125,8 @@ def main():
     ensure_sources()
     clean_dist()
     copy_rustdoc()
-    copy_docs()
-    write_index()
+    entries = copy_docs()
+    write_index(entries)
 
 
 if __name__ == "__main__":

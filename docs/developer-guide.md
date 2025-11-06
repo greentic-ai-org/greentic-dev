@@ -1,0 +1,67 @@
+# Developer Guide: Building a Component Locally
+
+This guide walks through building a full component, packaging it, and running it locally with the greentic dev mocks.
+
+## 1. Scaffold a component
+
+```bash
+cargo xtask new-component my-component
+cd component-my-component
+```
+
+The scaffold includes schema, docs, example flow, tests, and CI.
+
+## 2. Define the schema
+
+Edit `schemas/v1/my-component.node.schema.json` to describe configuration and defaults. Run the schema validation test:
+
+```bash
+cargo test
+```
+
+Update `docs/config.md` with supported fields and defaults.
+
+## 3. Implement describe()
+
+In `src/describe.rs`, populate the schema and other metadata returned to the runner. Should reference the published schema URL. Use `src/lib.rs` to expose crate interface.
+
+## 4. Build the component binary/pack
+
+Implement the component logic (WASM pack or native). Provide a `describe` command and operation handlers.
+
+## 5. Run unit tests
+
+Add component-specific tests in `tests/` and run with optional golden regeneration:
+
+```bash
+GOLDEN_ACCEPT=1 cargo test      # when updating goldens
+cargo test                      # ensure clean run
+```
+
+## 6. Package for local deployment
+
+If producing a pack, use the standard greentic pack tooling (`greentic-pack build`). Otherwise build the binary.
+
+## 7. Validate flows locally
+
+Back in the greentic-dev workspace, create/update flows referencing the new component schema or pack.
+
+Validate with the dev runner:
+
+```bash
+cargo run -p greentic-dev -- run -f examples/flows/my-component.yaml --validate-only
+```
+
+This generates a transcript at `.greentic/transcripts`.
+
+## 8. Run with mocks
+
+Ensure the mocks are configured (see `docs/mocks.md`). Start the dev runner without `--validate-only` (execution support is under development) and use transcripts to verify defaults vs overrides (`cargo run -p dev-viewer -- --file <transcript>`).
+
+## 9. CI readiness
+
+Commit schema, docs, and tests. Ensure `cargo fmt`, `cargo clippy`, and `cargo test` pass. Update CI workflows if required.
+
+## 10. Publish docs and schema
+
+Deploy the schema to GitHub Pages (or the configured CDN). Update documentation (`docs/`) so developers understand usage, testing, CI, and security requirements.
