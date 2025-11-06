@@ -163,8 +163,10 @@ YAML
 Run the dev runner in validation mode to ensure the flow and schema line up:
 
 ```bash
-cargo run -p greentic-dev -- run -f examples/flows/hello-world.yaml --validate-only
+greentic-dev run -f examples/flows/hello-world.yaml --validate-only
 ```
+
+> Prefer running straight from the workspace? Use `cargo run -p greentic-dev -- run …` instead.
 
 Successful validation will drop a transcript under `.greentic/transcripts/` that you can inspect with the viewer (`cargo run -p dev-viewer -- --file <path>`).
 

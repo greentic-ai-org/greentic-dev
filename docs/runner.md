@@ -7,7 +7,7 @@ The `greentic-dev` runner is built around schema awareness. Every node in a flow
 The runner exposes a dedicated validation mode via:
 
 ```bash
-cargo run -p greentic-dev -- run -f examples/flows/min.yaml --validate-only
+greentic-dev run -f examples/flows/min.yaml --validate-only
 ```
 
 In validation mode the CLI:
@@ -18,6 +18,8 @@ In validation mode the CLI:
 4. Applies any component defaults and records the merged configuration in a transcript.
 
 Because validation skips tool execution it is fast and safe to run in CI.
+
+> Developing from source without installing the binary? Use `cargo run -p greentic-dev -- run …` instead.
 
 Running without `--validate-only` currently performs the same validation steps and then exits. Future work will add actual execution after schema checks pass.
 

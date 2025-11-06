@@ -57,10 +57,12 @@ Flows in Greentic are YAML documents describing a set of nodes. Historically it 
 Because validation happens before execution, you can run it on every commit or as part of CI:
 
 ```bash
-cargo run -p greentic-dev -- run -f examples/flows/min.yaml --validate-only
+greentic-dev run -f examples/flows/min.yaml --validate-only
 ```
 
 The `--validate-only` flag is deliberately fast—it skips tool execution but still produces transcripts at `.greentic/transcripts/`.
+
+> If you prefer not to install the CLI globally while developing, use `cargo run -p greentic-dev -- run …` instead.
 
 ### Examining the transcript
 
@@ -86,13 +88,14 @@ so you immediately know which fields rely on defaults versus user input.
 
 | Action                          | Command                                                                 |
 |---------------------------------|-------------------------------------------------------------------------|
-| Validate a flow                 | `cargo run -p greentic-dev -- run -f <flow>.yaml --validate-only`       |
+| Validate a flow                 | `greentic-dev run -f <flow>.yaml --validate-only`                       |
 | View transcript                 | `cargo run -p dev-viewer -- --file .greentic/transcripts/<file>.yaml`   |
+| Scaffold a component            | `greentic-dev component new <name>`                                     |
+| Validate a component            | `greentic-dev component validate --path <dir>`                          |
+| Pack a component                | `greentic-dev component pack --path <dir>`                              |
 | Run full test suite             | `cargo test` \| `cargo test --features conformance`                     |
 | Lint everything                 | `cargo clippy --all-targets --all-features -- -D warnings`              |
 | Format                          | `cargo fmt`                                                             |
-| Generate docs locally           | `cargo doc --workspace --no-deps`                                       |
-| Build GitHub Pages bundle       | `python3 scripts/build_pages.py`                                        |
 
 ---
 
@@ -156,7 +159,7 @@ Creates `packs/my-component/0.1.0/` with the `.wasm`, `meta.json` (provider meta
 Back in the main workspace:
 
 ```bash
-cargo run -p greentic-dev -- run -f examples/flows/my-component.yaml --validate-only
+greentic-dev run -f examples/flows/my-component.yaml --validate-only
 cargo run -p dev-viewer -- --file .greentic/transcripts/<file>.yaml
 ```
 
@@ -192,5 +195,28 @@ Finally, publish your component’s own schema (usually under `component-<name>/
 * **GitHub Pages index** – `https://greentic-ai.github.io/greentic-dev/`
 
 If you need help wiring your component into the larger conformance suites, check the `greentic-conformance` crate (available on crates.io) and wire its flows into `dev-runner`’s validation APIs.
+
+---
+
+## CLI reference
+
+All commands are available both through the installed binary (`greentic-dev …`) and via `cargo run -p greentic-dev -- …` while developing locally.
+
+```
+greentic-dev run -f <flow.yaml> [--validate-only] [--print-schemas]
+
+greentic-dev component new <name> [--dir DIR]
+greentic-dev component validate [--path PATH] [--skip-build]
+greentic-dev component pack [--path PATH] [--out-dir DIR] [--skip-build]
+greentic-dev component demo-run [--path PATH] [--artifact FILE]
+                               [--operation NAME] [--input JSON]
+                               [--config FILE] [--skip-build]
+```
+
+- **`run`**: Compile each node schema and validate a flow YAML. `--print-schemas` lists registry stubs. `--validate-only` skips execution (flow execution is still under development).
+- **`component new`**: Scaffold a component in the current directory (or `--dir`). Generates provider metadata, vendored WIT, schema, and README.
+- **`component validate`**: Ensure the built artifact matches `provider.toml` (WIT package IDs, world identifier). Rebuilds unless `--skip-build` is supplied.
+- **`component pack`**: Produce `packs/<name>/<version>/` with the `.wasm`, `meta.json`, and SHA256 sums. Ideal for distribution.
+- **`component demo-run`**: Load the component through `component-runtime`, apply configuration, and invoke an operation locally for quick end-to-end smoke tests.
 
 Happy building! This toolkit should make it painless to iterate on components with confidence before they enter the main platform.
