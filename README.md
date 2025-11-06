@@ -80,130 +80,73 @@ so you immediately know which fields rely on defaults versus user input.
 
 ## Creating a component – the “why” and the “how”
 
-Below is the full workflow we follow when creating a complex component that we can run with local mocks. Each step includes not only **how** to perform it, but **why** it matters in the Greentic ecosystem.
+Below is the workflow we follow when creating a new component that we can validate and iterate locally. Each step highlights **why** it matters inside the Greentic ecosystem.
 
 ### 1. Scaffold with `cargo xtask`
 
 ```bash
-cargo xtask new-component my-component
+cargo run -p xtask -- new-component my-component
 cd component-my-component
 ```
 
-**Why**: Every component in Greentic must expose schema metadata, documentation, and CI guardrails. The scaffold bakes these in: JSON Schema, describe stub, docs, example flow, unit tests, and a GitHub Actions workflow. Starting from the scaffold keeps new components consistent and reduces the “blank page” problem.
+**Why**: The scaffold wires up provider metadata, vendored WIT packages, and a `wit_bindgen` hello world so you can build immediately without chasing dependencies.
 
-The generated layout:
+Generated layout:
 
 ```
 component-my-component/
 ├── Cargo.toml
-├── schemas/v1/my-component.node.schema.json
-├── src/describe.rs
+├── provider.toml
+├── README.md
+├── schemas/v1/config.schema.json
 ├── src/lib.rs
-├── tests/schema_validates_examples.rs
-├── examples/flows/min.yaml
-├── docs/
-│   ├── getting-started.md
-│   ├── config.md
-│   ├── testing.md
-│   ├── ci.md
-│   └── security.md
-└── .github/workflows/ci.yml
+└── wit/
+    ├── world.wit
+    └── deps/
+        ├── greentic-component-<ver>/
+        ├── greentic-host-import-<ver>/
+        └── greentic-types-core-<ver>/
 ```
 
-### 2. Design the schema and defaults
+### 2. Model the configuration schema
 
-Open `schemas/v1/my-component.node.schema.json` and model the configuration surface. Provide defaults wherever possible so flows stay concise. The runner uses this schema for validation and merges defaults into transcripts, so keeping it authoritative is critical.
+Edit `schemas/v1/config.schema.json` with the fields and defaults your node exposes. The runner uses this schema to validate flows and merge defaults into transcripts, so keep it authoritative. Document the same contract in the component’s `README.md` (or an internal `docs/` folder) for flow authors.
 
-Run the schema test (why: ensures docs and examples match the schema):
+### 3. Implement behaviour in `src/lib.rs`
+
+The template already exports `greentic:component/node` and echoes a `message`. Replace the stub with real logic. If you need additional WIT packages, drop them under `wit/deps/` and add a line to `Cargo.toml`’s `package.metadata.component.target.dependencies`. Update `provider.toml` whenever capabilities, versions, or artifact paths change.
+
+### 4. Build and validate
 
 ```bash
-cargo test
+cargo component build --release
+cargo run -p xtask -- validate --path .
 ```
 
-Update `docs/config.md` to explain each field, default values, and a sample YAML node. This becomes the contract you hand to flow authors.
+**Why**: `cargo component` produces the WASM artifact using only the vendored WIT, which keeps builds reproducible. `xtask validate` confirms the artifact and metadata agree (WIT package IDs, world name, version pins) and, when WASI shims exist, inspects the manifest via the component runtime. If WASI support is missing locally, validation still passes but prints a warning that manifest inspection was skipped.
 
-### 3. Implement `describe()`
-
-Inside `src/describe.rs`, wire up the `describe()` function so it returns a payload like:
-
-```rust
-json!({
-    "component": "my-component",
-    "version": 1,
-    "schemas": {
-        "node": node_schema_json
-    }
-})
-```
-
-**Why**: The runner prioritises the schema returned from `describe()` over registry stubs. Having the component own its schema guarantees validation is always using the latest version (including when packaged or deployed).
-
-### 4. Build the business logic / pack
-
-Depending on your delivery format (native binary, WASM pack), implement the runtime operations. We typically expose a CLI entry point:
+### 5. Package for distribution (optional)
 
 ```bash
-cargo build
-./target/debug/my-component describe            # returns schema
-./target/debug/my-component run --config path   # executes using local config
+cargo run -p xtask -- pack --path .
 ```
 
-If you are packaging as a Greentic pack, run `greentic-pack build` after compile-time checks pass.
+Creates `packs/my-component/0.1.0/` with the `.wasm`, `meta.json` (provider metadata + SHA + timestamp), and `SHA256SUMS`. Use this output when publishing or handing the component to downstream teams.
 
-### 5. Write unit and integration tests
+### 6. Wire into flows and inspect transcripts
 
-Augment the generated `tests/schema_validates_examples.rs` with component-specific validation. Use golden files when comparing structured output. Regenerate goldens intentionally:
-
-```bash
-GOLDEN_ACCEPT=1 cargo test      # update goldens
-cargo test                      # ensure clean run without regeneration
-```
-
-**Why**: Tests give confidence that the schema, docs, and behaviour never drift apart. Golden snapshots make it obvious when response shape changes, forcing a conscious decision to accept the new behaviour.
-
-### 6. Document everything
-
-The scaffolded docs are intentionally verbose. Update them as you build:
-
-* `docs/getting-started.md` – how a teammate clones, builds, and tests the component.
-* `docs/config.md` – every YAML field, defaults, and examples.
-* `docs/testing.md` – how to run the harness, regenerate goldens, and debug failures.
-* `docs/ci.md` – what to expect from PR/nightly pipelines (and secrets policy).
-* `docs/security.md` – how tokens are handled (no raw secrets; only opaque handles).
-
-These documents publish automatically via the main repo’s Pages workflow, so downstream teams can self-serve.
-
-### 7. Validate flows locally
-
-Back in the `greentic-dev` repo, add or update flow YAML files referencing your new component. Run validation:
+Back in the main workspace:
 
 ```bash
 cargo run -p greentic-dev -- run -f examples/flows/my-component.yaml --validate-only
+cargo run -p dev-viewer -- --file .greentic/transcripts/<file>.yaml
 ```
 
-Why: This ensures the flow is immediately compatible with the runner and surfaces schema errors before integrating with the larger conformance kit.
+The runner ensures the flow matches the schema; the viewer shows which values came from defaults versus overrides so you can spot configuration drift quickly. Use the mock services (`docs/mocks.md`) to emulate HTTP/NATS/secret providers while you iterate.
 
-### 8. Inspect transcripts with the viewer
+---
 
-After validation, open the transcript produced in `.greentic/transcripts`. It shows:
-
-* Which defaults were applied (useful for confirming environment-specific values).
-* Which overrides came directly from the flow author.
-* Schema IDs and any warnings.
-
-```bash
-cargo run -p dev-viewer -- --file .greentic/transcripts/my-component-<ts>.yaml
-```
-
-### 9. Run with mocks (optional execution)
-
-The dev runner bundles loopback mocks for HTTP, NATS, and a vault-like secret store. Configure them via environment variables (`MOCK_HTTP_PORT`, `MOCK_NATS_PORT`, etc.) when developing features like retries or fault injection. See `docs/mocks.md` for the full matrix of knobs including failure injection such as `MOCK_HTTP_FAIL_PATTERN`.
-
-While execution mode is evolving, you can already simulate flow behaviour by orchestrating components against these mocks or by using transcripts to drive manual checks.
-
-### 10. Harden CI & publish docs
-
-Before opening a PR:
+Before opening a PR, keep the usual guardrails clean:
 
 ```bash
 cargo fmt
@@ -211,13 +154,7 @@ cargo clippy --all-targets --all-features -- -D warnings
 cargo test
 ```
 
-The scaffolded CI workflow mirrors these commands. Once merged, GitHub Pages automatically rebuilds:
-
-```
-https://greentic-ai.github.io/greentic-dev/
-```
-
-The site now includes:
+When Greentic interface versions update, re-vendor the WIT under `wit/deps/` (re-run the scaffold or copy from the cargo registry) and adjust `provider.toml` + `Cargo.toml` to match. This ensures validation continues to run purely against published crates.
 
 * Rust API docs (`cargo doc` output),
 * Runner, mocks, viewer, scaffolder guides, and

@@ -1,67 +1,194 @@
-# Developer Guide: Building a Component Locally
+# Developer Guide: End-to-End Hello World Component
 
-This guide walks through building a full component, packaging it, and running it locally with the greentic dev mocks.
+This guide walks from a clean workstation all the way to a “hello world” Greentic component that you can validate locally. Follow the steps in order; each section calls out the exact commands you need to run.
 
-## 1. Scaffold a component
+---
+
+## 1. Prerequisites
+
+1. **Install Rust (via rustup).**
+   ```bash
+   curl https://sh.rustup.rs -sSf | sh
+   source "$HOME/.cargo/env"
+   rustup update stable
+   ```
+
+2. **Add the WASI target required by `cargo component`.**
+   ```bash
+   rustup target add wasm32-wasip1
+   ```
+
+3. **Install component tooling.**
+   ```bash
+   cargo install cargo-component --locked
+   ```
+   > `cargo-component` performs the WIT-driven build; install it once and keep it updated with `cargo install cargo-component --locked --force`.
+
+4. **(Optional) Install supporting CLI tools.**
+   - `cargo install wasm-tools --locked` if you want to inspect component metadata with `wasm-tools component wit`.
+   - `cargo install just` if you prefer using the repo’s shorthand tasks.
+
+---
+
+## 2. Clone the workspace
 
 ```bash
-cargo xtask new-component my-component
-cd component-my-component
+git clone https://github.com/greentic-ai/greentic-dev.git
+cd greentic-dev
+cargo fetch   # primes the cargo cache while you still have network access
 ```
 
-The scaffold includes schema, docs, example flow, tests, and CI.
-
-## 2. Define the schema
-
-Edit `schemas/v1/my-component.node.schema.json` to describe configuration and defaults. Run the schema validation test:
+Ensure the basics build before you scaffold anything:
 
 ```bash
+cargo fmt --all
+cargo clippy --all-targets --all-features -- -D warnings
 cargo test
 ```
 
-Update `docs/config.md` with supported fields and defaults.
+---
 
-## 3. Implement describe()
+## 3. Scaffold a hello world component
 
-In `src/describe.rs`, populate the schema and other metadata returned to the runner. Should reference the published schema URL. Use `src/lib.rs` to expose crate interface.
-
-## 4. Build the component binary/pack
-
-Implement the component logic (WASM pack or native). Provide a `describe` command and operation handlers.
-
-## 5. Run unit tests
-
-Add component-specific tests in `tests/` and run with optional golden regeneration:
+Use the `xtask` scaffolder to generate a new component skeleton. This populates a ready-to-build WASM package, provider metadata, schema, and docs.
 
 ```bash
-GOLDEN_ACCEPT=1 cargo test      # when updating goldens
-cargo test                      # ensure clean run
+cargo run -p xtask -- new-component hello-world
+cd component-hello-world
 ```
 
-## 6. Package for local deployment
+The scaffold contains:
 
-If producing a pack, use the standard greentic pack tooling (`greentic-pack build`). Otherwise build the binary.
+| Path | Purpose |
+|------|---------|
+| `Cargo.toml` | Component manifest (wired for `cargo component`). |
+| `provider.toml` | Canonical metadata that drives packaging + validation. |
+| `schemas/v1/config.schema.json` | JSON Schema for node configuration. |
+| `src/lib.rs` | The component implementation (starts with an echo example). |
+| `wit/world.wit` & `wit/deps/` | Vendored WIT packages pinned to the Greentic interface versions pulled from the workspace `Cargo.lock`. |
+| `README.md` | Mini playbook that you can expand for this specific component. |
 
-## 7. Validate flows locally
+Open `src/lib.rs` and confirm the stub echoes the `message` field back to the caller—that is our “hello world”.
 
-Back in the greentic-dev workspace, create/update flows referencing the new component schema or pack.
+---
 
-Validate with the dev runner:
+## 4. Build the component
+
+From inside the component directory:
 
 ```bash
-cargo run -p greentic-dev -- run -f examples/flows/my-component.yaml --validate-only
+cargo component build --release
 ```
 
-This generates a transcript at `.greentic/transcripts`.
+This emits `target/wasm32-wasip1/release/hello-world.wasm` using only the vendored WIT dependencies.
 
-## 8. Run with mocks
+If you ever see a network-related error, double-check that `cargo fetch` succeeded earlier. The Greentic scaffolder assumes offline builds, so the `cargo` registry cache needs to be populated once up front.
 
-Ensure the mocks are configured (see `docs/mocks.md`). Start the dev runner without `--validate-only` (execution support is under development) and use transcripts to verify defaults vs overrides (`cargo run -p dev-viewer -- --file <transcript>`).
+---
 
-## 9. CI readiness
+## 5. Validate with the Greentic xtask
 
-Commit schema, docs, and tests. Ensure `cargo fmt`, `cargo clippy`, and `cargo test` pass. Update CI workflows if required.
+Return to the workspace root (or pass the component path explicitly) and run the validator. It compiles (if you didn’t already), decodes the embedded WIT packages, and checks your metadata.
 
-## 10. Publish docs and schema
+```bash
+cargo run -p xtask -- validate --path component-hello-world
+```
 
-Deploy the schema to GitHub Pages (or the configured CDN). Update documentation (`docs/`) so developers understand usage, testing, CI, and security requirements.
+You should see output similar to:
+
+```
+✓ Validated hello-world 0.1.0
+  artifact: .../component-hello-world/target/wasm32-wasip1/release/hello-world.wasm
+  sha256 : <hash>
+  world  : root:component/root
+  packages:
+    - greentic:component@0.4.0
+    - wasi:cli@0.2.3
+    ...
+  exports: <skipped - missing WASI host support>
+```
+
+> The final line is expected today: the reference runtime (component-runtime 0.2.0) does not bundle WASI Preview 2 shims yet. Validation still succeeds; only the manifest inspection is skipped.
+
+If validation fails, fix the reported issue (wrong version pins, missing artifact, etc.) and re-run the command.
+
+---
+
+## 6. (Optional) Package the component
+
+When you are ready to distribute your build artifact, let the `pack` subcommand produce a canonical bundle:
+
+```bash
+cargo run -p xtask -- pack --path component-hello-world
+```
+
+This writes:
+
+```
+component-hello-world/packs/hello-world/0.1.0/
+  ├─ hello-world-0.1.0.wasm
+  ├─ meta.json           # JSON rendering of provider.toml with sha256 + timestamp
+  └─ SHA256SUMS
+```
+
+These files are what CI/CD or downstream integration tooling will consume.
+
+---
+
+## 7. Wire the component into a flow (hello world)
+
+Create a simple flow definition that references the new component. From the workspace root:
+
+```bash
+cat <<'YAML' > examples/flows/hello-world.yaml
+version: 1
+nodes:
+  hello:
+    using: hello-world
+    config:
+      message: "Hello from Greentic!"
+YAML
+```
+
+Run the dev runner in validation mode to ensure the flow and schema line up:
+
+```bash
+cargo run -p greentic-dev -- run -f examples/flows/hello-world.yaml --validate-only
+```
+
+Successful validation will drop a transcript under `.greentic/transcripts/` that you can inspect with the viewer (`cargo run -p dev-viewer -- --file <path>`).
+
+---
+
+## 8. Next steps: iterate on the component
+
+With the skeleton in place you can now:
+
+1. **Customize behavior.** Edit `src/lib.rs` to perform real work instead of echoing input. Add any additional WIT dependencies in `Cargo.toml` if your component needs other Greentic interfaces.
+2. **Expand the schema.** Update `schemas/v1/config.schema.json` with required fields, defaults, and examples.
+3. **Document configuration and testing.** Extend `README.md` (scaffolded in the component) so other developers know how to run and validate it.
+4. **Add tests.** Bring in `cargo test` suites or golden tests. The Greentic toolchain honors `GOLDEN_ACCEPT=1` for regeneration, the same as other repos.
+5. **Keep linting clean.** In the component folder run `cargo fmt`, `cargo clippy --all-targets -- -D warnings`, and `cargo test` before committing.
+
+Once the component is ready, integrate it into CI using the guidance in `docs/scaffolder.md` and `docs/runner.md`, and publish schemas/docs through the usual GitHub Pages workflow.
+
+---
+
+## Quick reference
+
+```
+# one-time setup
+rustup target add wasm32-wasip1
+cargo install cargo-component --locked
+
+# scaffold
+cargo run -p xtask -- new-component hello-world
+cd component-hello-world
+
+# develop
+cargo component build --release
+cargo run -p xtask -- validate --path .
+cargo run -p xtask -- pack --path .      # optional
+```
+
+You now have a fully reproducible path from a fresh machine to a validated Greentic component. Happy building!
