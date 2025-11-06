@@ -205,10 +205,10 @@ fn key_to_segment(key: &YamlValue) -> String {
 
 fn render_scalar(value: &YamlValue) -> String {
     match value {
-        YamlValue::Null => "null".to_string(),
-        YamlValue::Bool(b) => b.to_string(),
-        YamlValue::Number(number) => number.to_string(),
-        YamlValue::String(s) => s.clone(),
+        YamlValue::Null(_) => "null".to_string(),
+        YamlValue::Bool(b, _) => b.to_string(),
+        YamlValue::Number(number, _) => number.to_string(),
+        YamlValue::String(s, _) => s.clone(),
         _ => serde_yaml_bw::to_string(value)
             .unwrap_or_default()
             .trim()
