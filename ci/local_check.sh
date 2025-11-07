@@ -8,6 +8,7 @@ set -euo pipefail
 : "${LOCAL_CHECK_ONLINE:=1}"
 : "${LOCAL_CHECK_STRICT:=0}"
 : "${LOCAL_CHECK_VERBOSE:=0}"
+: "${LOCAL_CHECK_INSTALL_HOOK:=0}"
 
 if [[ "${LOCAL_CHECK_VERBOSE}" == "1" ]]; then
   set -x
@@ -70,7 +71,9 @@ HOOK
   echo "[info] Installed pre-push hook to run ci/local_check.sh"
 }
 
-install_prepush_hook
+if [[ "${LOCAL_CHECK_INSTALL_HOOK}" == "1" ]]; then
+  install_prepush_hook
+fi
 
 WORKSPACE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${WORKSPACE_ROOT}"
