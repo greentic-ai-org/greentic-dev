@@ -2,6 +2,19 @@
 name = "greentic-dev"
 version = "0.3.0"
 edition = "2024"
+include = [
+    "Cargo.toml",
+    "Cargo.lock",
+    "README.md",
+    "src/**",
+    "src/templates/**",
+    "ci/**",
+    "docs/**",
+    "examples/**",
+    "fixtures/**",
+    "scripts/**",
+    "tests/**",
+]
 
 [workspace]
 members = ["crates/dev-viewer", "xtask"]

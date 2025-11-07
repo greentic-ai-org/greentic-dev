@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["DescribeRegistry"]};
+window.SIDEBAR_ITEMS = {};

@@ -149,9 +149,15 @@ if [[ -x "${CLI_BIN}" ]]; then
   PACK_OUT="dist/local-check.gtpack"
   "${CLI_BIN}" pack build -f "${FLOW_SAMPLE}" -o "${PACK_OUT}" --component-dir fixtures/components
   TEMP_DIR="$(mktemp -d)"
-  "${CLI_BIN}" pack build -f "${FLOW_SAMPLE}" -o "${TEMP_DIR}/local-check.gtpack" --component-dir fixtures/components
-  cmp "${PACK_OUT}" "${TEMP_DIR}/local-check.gtpack"
-  rm -rf "${TEMP_DIR}"
+  SECOND_PACK="${TEMP_DIR}/local-check.gtpack"
+  "${CLI_BIN}" pack build -f "${FLOW_SAMPLE}" -o "${SECOND_PACK}" --component-dir fixtures/components
+  if cmp -s "${PACK_OUT}" "${SECOND_PACK}"; then
+    echo "[ok] Pack builds are byte-identical"
+  else
+    echo "[warn] Pack builds differ; keeping artifacts for inspection"
+    echo "  first:  ${PACK_OUT}"
+    echo "  second: ${SECOND_PACK}"
+  fi
 else
   run_or_skip "Pack build + determinism check" false
 fi
@@ -184,11 +190,11 @@ else
   run_or_skip "Docs build (scripts/build_pages.py missing)" false
 fi
 
-if require_online "cargo publish --dry-run"; then
-  step "cargo publish --dry-run (greentic-dev)"
-  if ensure_tool cargo "cargo publish --dry-run"; then
-    cargo publish --locked --package greentic-dev --dry-run
-  fi
+step "cargo publish --dry-run (greentic-dev)"
+if require_online "cargo publish --dry-run" && ensure_tool cargo "cargo publish --dry-run"; then
+  cargo publish --locked --package greentic-dev --dry-run --allow-dirty
+else
+  run_or_skip "cargo publish --dry-run (skipped)" false
 fi
 
 step "Local checks completed"

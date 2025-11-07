@@ -29,27 +29,27 @@ static WORKSPACE_ROOT: Lazy<PathBuf> = Lazy::new(|| PathBuf::from(env!("CARGO_MA
 
 const TEMPLATE_COMPONENT_CARGO: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/templates/component/Cargo.toml"
+    "/src/templates/component/Cargo.toml.in"
 ));
 const TEMPLATE_SRC_LIB: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/templates/component/src/lib.rs"
+    "/src/templates/component/src/lib.rs"
 ));
 const TEMPLATE_PROVIDER: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/templates/component/provider.toml"
+    "/src/templates/component/provider.toml"
 ));
 const TEMPLATE_SCHEMA_CONFIG: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/templates/component/schemas/v1/config.schema.json"
+    "/src/templates/component/schemas/v1/config.schema.json"
 ));
 const TEMPLATE_README: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/templates/component/README.md"
+    "/src/templates/component/README.md"
 ));
 const TEMPLATE_WORLD: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/templates/component/wit/world.wit"
+    "/src/templates/component/wit/world.wit"
 ));
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

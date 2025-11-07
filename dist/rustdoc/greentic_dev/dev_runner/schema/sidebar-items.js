@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["schema_id_from_json","validate_yaml_against_schema"]};
