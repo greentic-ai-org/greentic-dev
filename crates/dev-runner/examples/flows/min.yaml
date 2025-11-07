@@ -1,5 +1,0 @@
-nodes:
-  - id: example
-    component: example.component
-    inputs:
-      message: "Hello from flow"

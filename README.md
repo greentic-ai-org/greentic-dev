@@ -17,13 +17,13 @@ If you want to:
 
 | Crate / folder        | Purpose                                                                                  |
 |-----------------------|------------------------------------------------------------------------------------------|
-| `crates/dev-runner`   | Validates flows by compiling each node’s describe() schema and optional conformance kit. |
+| `src/dev_runner/`     | Validates flows by compiling each node’s describe() schema and optional conformance kit. |
 | `crates/dev-viewer`   | Renders transcripts and highlights defaults/overrides so you can reason about configs.    |
 | `greentic-dev component …` | Scaffolds, validates, and packs components (reusing the internal xtask tooling).    |
 | `docs/`               | High-level guides (runner, mocks, viewer, scaffolder, developer guide).                  |
 | `scripts/build_pages.py` | Builds the GitHub Pages site by combining Rustdoc output with the markdown guides.    |
 
-You will also find mock-service helpers for HTTP, NATS, and vault-like secrets in `dev-runner`, ready to be wired into flows.
+You will also find mock-service helpers for HTTP, NATS, and vault-like secrets in the built-in runner modules, ready to be wired into flows.
 
 ---
 
@@ -42,6 +42,8 @@ cargo install --git https://github.com/greentic-ai/greentic-dev greentic-dev
 # or from the current checkout
 cargo install --path .
 ```
+
+> You do **not** need to clone this repository just to use the CLI—`cargo install greentic-dev` is all that’s required. Clone the repo only if you plan to contribute or hack on the tooling itself.
 
 Once installed, `greentic-dev` becomes a single entry point for flow validation (`greentic-dev flow …`), deterministic pack builds (`greentic-dev pack …`), local pack runs, and component/MCP diagnostics.
 
@@ -242,7 +244,7 @@ Finally, publish your component’s own schema (usually under `component-<name>/
 * **Developer guide (HTML)** – `https://greentic-ai.github.io/greentic-dev/docs/developer-guide.html`
 * **GitHub Pages index** – `https://greentic-ai.github.io/greentic-dev/`
 
-If you need help wiring your component into the larger conformance suites, check the `greentic-conformance` crate (available on crates.io) and wire its flows into `dev-runner`’s validation APIs.
+If you need help wiring your component into the larger conformance suites, check the `greentic-conformance` crate (available on crates.io) and wire its flows into the `greentic-dev` runner APIs.
 
 ---
 

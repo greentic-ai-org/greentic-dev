@@ -4,17 +4,16 @@ version = "0.3.0"
 edition = "2024"
 
 [workspace]
-members = ["crates/dev-runner", "crates/dev-viewer", "xtask"]
+members = ["crates/dev-viewer", "xtask"]
 
 [features]
 default = []
-conformance = ["greentic-conformance", "dev-runner/conformance"]
+conformance = ["greentic-conformance"]
 mcp = ["greentic-mcp", "greentic-interfaces/runner-host-v1"]
 
 [dependencies]
 anyhow = "1.0"
 clap = { version = "4.5", features = ["derive"] }
-dev-runner = { path = "crates/dev-runner", version = "0.1.0" }
 serde_yaml_bw = "2"
 greentic-conformance = { version = "0.1", optional = true }
 once_cell = "1.19"

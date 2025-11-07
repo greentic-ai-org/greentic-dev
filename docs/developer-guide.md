@@ -40,27 +40,11 @@ This guide walks from a clean workstation all the way to a “hello world” Gre
    ```
    Installing the CLI lets you run `greentic-dev component …` without prefixing commands with `cargo run -p`.
 
----
-
-## 2. Clone the workspace
-
-```bash
-git clone https://github.com/greentic-ai/greentic-dev.git
-cd greentic-dev
-cargo fetch   # primes the cargo cache while you still have network access
-```
-
-Ensure the basics build before you scaffold anything:
-
-```bash
-cargo fmt --all
-cargo clippy --all-targets --all-features -- -D warnings
-cargo test
-```
+> For most workflows (including this guide) you only need the installed CLI. Clone the `greentic-dev` repository only if you intend to contribute code or work on the tooling itself.
 
 ---
 
-## 3. Scaffold a hello world component
+## 2. Scaffold a hello world component
 
 Use the `greentic-dev` CLI to generate a new component skeleton. This populates a ready-to-build WASM package, provider metadata, schema, and docs.
 
@@ -86,7 +70,7 @@ Open `src/lib.rs` and confirm the stub echoes the `message` field back to the ca
 
 ---
 
-## 4. Build the component
+## 3. Build the component
 
 From inside the component directory:
 
@@ -100,7 +84,7 @@ If you ever see a network-related error, double-check that `cargo fetch` succeed
 
 ---
 
-## 5. Validate with the greentic-dev CLI
+## 4. Validate with the greentic-dev CLI
 
 Return to the workspace root (or pass the component path explicitly) and run the validator. It compiles (if you didn’t already), decodes the embedded WIT packages, and checks your metadata.
 
@@ -128,7 +112,7 @@ If validation fails, fix the reported issue (wrong version pins, missing artifac
 
 ---
 
-## 6. (Optional) Package the component
+## 5. (Optional) Package the component
 
 When you are ready to distribute your build artifact, let the `pack` subcommand produce a canonical bundle:
 
@@ -149,7 +133,7 @@ These files are what CI/CD or downstream integration tooling will consume.
 
 ---
 
-## 7. Wire the component into a flow (hello world)
+## 6. Wire the component into a flow (hello world)
 
 Create a simple flow definition that references the new component. From the workspace root:
 
@@ -176,7 +160,7 @@ Successful validation produces canonical JSON you can feed into review tools. Wh
 
 ---
 
-## 8. Next steps: iterate on the component
+## 7. Next steps: iterate on the component
 
 With the skeleton in place you can now:
 

@@ -1,6 +1,6 @@
 # Local Mocks
 
-The `dev-runner` crate ships with lightweight mocks so flows can be exercised without talking to real infrastructure.
+The runner modules inside `greentic-dev` ship with lightweight mocks so flows can be exercised without talking to real infrastructure.
 
 ## Ports and endpoints
 

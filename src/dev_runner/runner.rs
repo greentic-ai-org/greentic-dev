@@ -1,13 +1,11 @@
 use std::collections::HashMap;
-use std::error::Error;
-use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use serde_yaml_bw::Value as YamlValue;
 
-use crate::registry::DescribeRegistry;
-use crate::schema::{schema_id_from_json, validate_yaml_against_schema};
+use super::registry::DescribeRegistry;
+use super::schema::{schema_id_from_json, validate_yaml_against_schema};
 
 #[derive(Clone, Debug, Default)]
 pub struct ComponentSchema {
@@ -219,65 +217,4 @@ pub enum FlowValidationError {
         index: usize,
         message: String,
     },
-    #[cfg(feature = "conformance")]
-    Conformance {
-        component: String,
-        index: usize,
-        error: String,
-    },
-}
-
-impl fmt::Display for FlowValidationError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            FlowValidationError::Io { path, error } => {
-                write!(f, "Failed to read flow file `{}`: {error}", path.display())
-            }
-            FlowValidationError::YamlParse { error } => {
-                write!(f, "Failed to parse flow YAML: {error}")
-            }
-            FlowValidationError::MissingNodes => {
-                write!(f, "Flow document is missing a `nodes` array")
-            }
-            FlowValidationError::NodeNotMapping { index } => {
-                write!(f, "Node at index {index} must be a mapping/object")
-            }
-            FlowValidationError::MissingComponent { index } => {
-                write!(f, "Node at index {index} is missing a `component` field")
-            }
-            FlowValidationError::DescribeFailed { component, error } => {
-                write!(f, "Failed to describe component `{component}`: {error}")
-            }
-            FlowValidationError::SchemaValidation {
-                component,
-                index,
-                message,
-            } => {
-                write!(
-                    f,
-                    "Schema validation failed for node {index} (`{component}`): {message}"
-                )
-            }
-            #[cfg(feature = "conformance")]
-            FlowValidationError::Conformance {
-                component,
-                index,
-                error,
-            } => {
-                write!(
-                    f,
-                    "Conformance validation failed for node {index} (`{component}`): {error}"
-                )
-            }
-        }
-    }
-}
-
-impl Error for FlowValidationError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            FlowValidationError::Io { error, .. } => Some(error),
-            _ => None,
-        }
-    }
 }

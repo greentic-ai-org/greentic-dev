@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 use clap::Parser;
-use dev_runner::FlowTranscript;
+use greentic_dev::dev_runner::{FlowTranscript, NodeTranscript};
 use serde_yaml_bw::{Mapping, Value as YamlValue};
 
 #[derive(Parser)]
@@ -42,7 +42,7 @@ fn load_transcript(path: &PathBuf) -> Result<FlowTranscript> {
     Ok(transcript)
 }
 
-fn render_node(node: &dev_runner::NodeTranscript) {
+fn render_node(node: &NodeTranscript) {
     println!("Node: {}", node.node_name);
     if let Some(schema_id) = &node.schema_id {
         println!("  Schema ID: {}", schema_id);

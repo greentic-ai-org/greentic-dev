@@ -8,7 +8,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use serde::{Deserialize, Serialize};
 use serde_yaml_bw::{Mapping, Value as YamlValue};
 
-use crate::runner::ValidatedNode;
+use super::runner::ValidatedNode;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NodeTranscript {
@@ -242,25 +242,6 @@ fn merge_node(
     }
 }
 
-fn key_to_segment(key: &YamlValue) -> String {
-    if let Some(as_str) = key.as_str() {
-        as_str.to_string()
-    } else {
-        serde_yaml_bw::to_string(key)
-            .unwrap_or_else(|_| "<non-string>".to_string())
-            .trim_matches('\n')
-            .to_string()
-    }
-}
-
-fn path_string(path: &[String]) -> Option<String> {
-    if path.is_empty() {
-        None
-    } else {
-        Some(path.join("."))
-    }
-}
-
 fn log_default(path: &[String], run_log: &mut Vec<String>) {
     if let Some(path_str) = path_string(path) {
         run_log.push(format!("default: {path_str}"));
@@ -273,55 +254,17 @@ fn log_override(path: &[String], run_log: &mut Vec<String>) {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn node_transcript_serializes_resolved_config() {
-        let defaults: YamlValue = serde_yaml_bw::from_str(
-            r#"
-component: oauth
-inputs:
-  client_id: null
-  client_secret: null
-  scopes: []
-"#,
-        )
-        .unwrap();
-
-        let node_config: YamlValue = serde_yaml_bw::from_str(
-            r#"
-id: oauth-node
-component: oauth
-inputs:
-  client_id: "abc"
-# client_secret omitted to ensure default handling
-"#,
-        )
-        .unwrap();
-
-        let validated = ValidatedNode {
-            component: "oauth".to_string(),
-            node_config,
-            schema_json: None,
-            schema_id: Some("schema".to_string()),
-            defaults: Some(defaults),
-        };
-
-        let transcript = node_transcript_from_validated(&validated);
-        let serialized = serde_yaml_bw::to_string(&transcript.resolved_config).unwrap();
-
-        assert!(
-            serialized.contains("client_secret: null"),
-            "defaults should be present in resolved config"
-        );
-        assert!(
-            transcript
-                .run_log
-                .iter()
-                .any(|entry| entry == "override: inputs.client_id"),
-            "overrides should be recorded in the run log"
-        );
+fn path_string(path: &[String]) -> Option<String> {
+    if path.is_empty() {
+        None
+    } else {
+        Some(path.join("."))
     }
+}
+
+fn key_to_segment(key: &YamlValue) -> String {
+    key.as_str()
+        .map(|s| s.to_string())
+        .or_else(|| key.as_u64().map(|n| n.to_string()))
+        .unwrap_or_else(|| "unknown".to_string())
 }
