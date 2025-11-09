@@ -54,7 +54,7 @@ jobs:
           fi
 
       - name: Install greentic-component tool
-        run: cargo install greentic-component --force --version 0.4
+        run: cargo install greentic-component --force --version ^0.4
 
       - name: Tests (features=${{ matrix.features || 'default' }})
         run: |
