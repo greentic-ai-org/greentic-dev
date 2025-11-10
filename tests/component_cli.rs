@@ -1,3 +1,4 @@
+use std::env;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -118,9 +119,16 @@ fn build_new_args(path: &Path) -> Vec<String> {
 }
 
 fn cli_bin() -> Result<PathBuf> {
-    let path = std::env::var("CARGO_BIN_EXE_greentic-dev")
-        .context("CARGO_BIN_EXE_greentic-dev was not set by cargo")?;
-    Ok(PathBuf::from(path))
+    const ENV_KEYS: [&str; 2] = ["CARGO_BIN_EXE_greentic-dev", "CARGO_BIN_EXE_greentic_dev"];
+    for key in ENV_KEYS {
+        if let Ok(path) = env::var(key) {
+            return Ok(PathBuf::from(path));
+        }
+    }
+    anyhow::bail!(
+        "cargo did not export any of {:?}; ensure greentic-dev binary is built with the tests",
+        ENV_KEYS
+    );
 }
 
 fn skip_component_tool() -> bool {
