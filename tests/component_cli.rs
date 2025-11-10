@@ -126,8 +126,8 @@ fn cli_bin() -> Result<PathBuf> {
         }
     }
     anyhow::bail!(
-        "cargo did not export any of {:?}; ensure greentic-dev binary is built with the tests",
-        ENV_KEYS
+        "cargo did not export any of {ENV_KEYS:?}; ensure greentic-dev binary is built with the \
+         tests"
     );
 }
 

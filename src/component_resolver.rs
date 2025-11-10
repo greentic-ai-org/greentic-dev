@@ -171,8 +171,7 @@ impl ComponentResolver {
 
         let prepared = prepare_component(target.as_ref()).with_context(|| {
             format!(
-                "resolver looked for `{name}` via `{}` but prepare_component failed",
-                target_display
+                "resolver looked for `{name}` via `{target_display}` but prepare_component failed"
             )
         })?;
 

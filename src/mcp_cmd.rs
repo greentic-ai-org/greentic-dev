@@ -153,7 +153,7 @@ fn print_report(report: &ToolMapReport) {
             tool.max_retries, tool.retry_backoff_ms
         );
         if let Some(size) = tool.size_bytes {
-            println!("  size: {} bytes", size);
+            println!("  size: {size} bytes");
         }
     }
     if !report.warnings.is_empty() {

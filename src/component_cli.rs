@@ -29,27 +29,27 @@ static WORKSPACE_ROOT: Lazy<PathBuf> = Lazy::new(|| PathBuf::from(env!("CARGO_MA
 
 const TEMPLATE_COMPONENT_CARGO: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/src/templates/component/Cargo.toml.in"
+    "/templates/component/Cargo.toml.in"
 ));
 const TEMPLATE_SRC_LIB: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/src/templates/component/src/lib.rs"
+    "/templates/component/src/lib.rs"
 ));
 const TEMPLATE_PROVIDER: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/src/templates/component/provider.toml"
+    "/templates/component/provider.toml"
 ));
 const TEMPLATE_SCHEMA_CONFIG: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/src/templates/component/schemas/v1/config.schema.json"
+    "/templates/component/schemas/v1/config.schema.json"
 ));
 const TEMPLATE_README: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/src/templates/component/README.md"
+    "/templates/component/README.md"
 ));
 const TEMPLATE_WORLD: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/src/templates/component/wit/world.wit"
+    "/templates/component/wit/world.wit"
 ));
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -461,8 +461,7 @@ pub fn demo_run_command(args: DemoRunArgs) -> Result<()> {
             match env::var(key) {
                 Ok(value) => Ok(value),
                 Err(_) => Err(component_runtime::CompError::Runtime(format!(
-                    "secret `{}` not provided; set environment variable `{}`",
-                    key, key
+                    "secret `{key}` not provided; set environment variable `{key}`"
                 ))),
             }
         };
@@ -533,7 +532,7 @@ fn vendor_wit_packages(component_dir: &Path, versions: &Versions) -> Result<()> 
             .ok_or_else(|| anyhow!("invalid wit namespace for {}", info.dir.display()))?
             .to_string_lossy()
             .into_owned();
-        let dest = deps_dir.join(format!("{}-{}", namespace, package_name));
+        let dest = deps_dir.join(format!("{namespace}-{package_name}"));
         copy_dir_recursive(&info.dir, &dest)?;
     }
 
@@ -563,7 +562,7 @@ fn detect_wit_package(crate_root: &Path, prefix: &str) -> Result<WitInfo> {
             .map_err(|_| anyhow!("non-unicode filename under {}", namespace_dir.display()))?;
         if let Some(rest) = name.strip_prefix(&prefix) {
             let version = Version::parse(rest)
-                .with_context(|| format!("invalid semver `{}` for {}", rest, prefix))?;
+                .with_context(|| format!("invalid semver `{rest}` for {prefix}"))?;
             if best.as_ref().is_none_or(|(current, _)| &version > current) {
                 best = Some((version, path));
             }
@@ -651,7 +650,7 @@ fn find_crate_source(crate_name: &str, version: &str) -> Result<PathBuf> {
         if !index_path.is_dir() {
             continue;
         }
-        let candidate = index_path.join(format!("{}-{}", crate_name, version));
+        let candidate = index_path.join(format!("{crate_name}-{version}"));
         if candidate.exists() {
             return Ok(candidate);
         }
@@ -719,7 +718,7 @@ impl TemplateContext {
         placeholders.insert("component_crate".into(), component_kebab.clone());
         placeholders.insert(
             "component_dir".into(),
-            format!("component-{}", component_kebab),
+            format!("component-{component_kebab}"),
         );
         placeholders.insert("interfaces_version".into(), versions.interfaces.clone());
         placeholders.insert("types_version".into(), versions.types.clone());
@@ -807,7 +806,7 @@ fn validate_component(path: &Path, build: bool) -> Result<ValidationReport> {
                 .map(|p| p.display().to_string())
                 .collect::<Vec<_>>()
                 .join(", ");
-            bail!("artifact path not found; checked {}", paths);
+            bail!("artifact path not found; checked {paths}");
         }
     };
 
@@ -864,9 +863,8 @@ fn validate_component(path: &Path, build: bool) -> Result<ValidationReport> {
             .collect();
         if !expected_packages.is_subset(&actual_greentic) {
             bail!(
-                "provider wit_packages {:?} not satisfied by embedded packages {:?}",
-                expected_packages,
-                actual_greentic
+                "provider wit_packages {expected_packages:?} not satisfied by embedded packages \
+                 {actual_greentic:?}"
             );
         }
     }
@@ -898,8 +896,7 @@ fn validate_component(path: &Path, build: bool) -> Result<ValidationReport> {
             let msg = wasmtime_err.to_string();
             if msg.contains("wasi:") {
                 println!(
-                    "warning: skipping runtime manifest validation due to missing WASI host support: {}",
-                    msg
+                    "warning: skipping runtime manifest validation due to missing WASI host support: {msg}"
                 );
                 None
             } else {
@@ -1102,7 +1099,7 @@ fn extract_wit_metadata(
 fn world_to_package_id(world: &str) -> Option<String> {
     let (pkg_part, rest) = world.split_once('/')?;
     let (_, version) = rest.rsplit_once('@')?;
-    Some(format!("{}@{}", pkg_part, version))
+    Some(format!("{pkg_part}@{version}"))
 }
 
 fn validate_exports(provider: &ProviderMetadata, manifest: &ComponentManifestInfo) -> Result<()> {
@@ -1113,10 +1110,7 @@ fn validate_exports(provider: &ProviderMetadata, manifest: &ComponentManifestInf
         .collect();
     for required in &provider.exports.provides {
         if !actual.contains(required) {
-            bail!(
-                "component manifest is missing required export `{}`",
-                required
-            );
+            bail!("component manifest is missing required export `{required}`");
         }
     }
     Ok(())
@@ -1139,8 +1133,7 @@ fn validate_capabilities(
     ] {
         if required && !actual.contains(name) {
             bail!(
-                "provider declares capability `{}` but component manifest does not expose it",
-                name
+                "provider declares capability `{name}` but component manifest does not expose it"
             );
         }
     }

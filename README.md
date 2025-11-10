@@ -49,7 +49,8 @@ Once installed, `greentic-dev` becomes a single entry point for flow validation 
 
 > **Requirements**
 >
-> The component subcommands delegate to the `greentic-component` CLI. Install `greentic-component >= 0.3.2` (for example `cargo install greentic-component --force --version 0.3`) so `greentic-dev component new/templates/doctor` can run. You can also point to a custom binary and set defaults via `~/.greentic/config.toml`:
+> - Rust 1.88+ (the repo pins this via `rust-toolchain.toml`)
+> - The component subcommands delegate to the `greentic-component` CLI. Install `greentic-component >= 0.3.2` (for example `cargo install greentic-component --force --version 0.3`) so `greentic-dev component new/templates/doctor` can run. You can also point to a custom binary and set defaults via `~/.greentic/config.toml`:
 >
 > ```toml
 > [tools.greentic-component]
@@ -296,23 +297,13 @@ greentic-dev mcp doctor <toolmap|provider> [--json]    # feature = "mcp"
 
 ## Local CI checks
 
-Mirror the GitHub Actions pipeline locally with:
+Run the same steps that CI executes:
 
 ```bash
 ci/local_check.sh
 ```
 
-Toggles:
-
-* `LOCAL_CHECK_ONLINE=0` – skip networked steps (default is online).
-* `LOCAL_CHECK_STRICT=1` – treat missing tools as fatal, enable extra checks.
-* `LOCAL_CHECK_VERBOSE=1` – echo each command (set `bash -x`).
-
-Example:
-
-```bash
-LOCAL_CHECK_ONLINE=0 LOCAL_CHECK_STRICT=1 ci/local_check.sh
-```
+It enforces `cargo fmt`, `cargo clippy --all-features`, `cargo test --all-features --locked`, a packaging smoke test (`ci/package_smoke.sh`), and finally `dist build` (installing `cargo-dist` on demand, which exposes the `dist` binary). If this script passes locally, the CI workflow will pass as well.
 
 - **`run`**: Compile each node schema and validate a flow YAML. `--print-schemas` lists registry stubs. `--validate-only` skips execution (flow execution is still under development).
 - **`component new`**: Scaffold a component in the current directory (or `--dir`). Generates provider metadata, vendored WIT, schema, and README.

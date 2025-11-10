@@ -4,20 +4,16 @@ version = "0.3.2"
 edition = "2024"
 description = "Developer CLI and local tooling for Greentic flows, packs, and components"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/agentic/greentic-dev"
+repository = "https://github.com/greentic-ai/greentic-dev"
+homepage = "https://greentic.ai/"
+documentation = "https://docs.rs/greentic-dev"
+# Ensure runtime assets ship with the crate.
 include = [
-    "Cargo.toml",
-    "Cargo.lock",
+    "src/**",
+    "templates/**",
     "README.md",
     "LICENSE*",
-    "src/**",
-    "src/templates/**",
-    "ci/**",
-    "docs/**",
-    "examples/**",
-    "fixtures/**",
-    "scripts/**",
-    "tests/**",
+    "Cargo.toml",
 ]
 
 [workspace]
@@ -58,3 +54,17 @@ jsonschema = "0.33"
 tempfile = "3"
 dirs = "6"
 which = "8"
+
+[workspace.metadata.dist]
+cargo-dist-version = "0.24.1"
+ci = ["github"]
+installers = ["shell"]
+targets = [
+    "x86_64-unknown-linux-gnu",
+    "x86_64-apple-darwin",
+    "aarch64-apple-darwin",
+    "x86_64-pc-windows-msvc",
+]
+
+[workspace.metadata.dist.package.greentic-dev]
+all-features = true

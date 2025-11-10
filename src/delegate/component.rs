@@ -78,8 +78,8 @@ impl ComponentDelegate {
             .context("failed to detect greentic-component version")?;
         if version < *MIN_COMPONENT_VERSION {
             bail!(
-                "greentic-component {version} is older than required {}. Run `cargo install greentic-component --force`.",
-                MIN_COMPONENT_VERSION_STR
+                "greentic-component {version} is older than required {MIN_COMPONENT_VERSION_STR}. \
+                 Run `cargo install greentic-component --force`."
             );
         }
 
@@ -176,8 +176,8 @@ fn resolve_program(config: &GreenticConfig) -> Result<ResolvedProgram> {
                 .map(|path| path.display().to_string())
                 .unwrap_or_else(|| "~/.greentic/config.toml".to_string());
             Err(anyhow!(
-                "failed to locate `{TOOL_NAME}` on PATH ({error}). Install it via `cargo install greentic-component` or set [tools.greentic-component].path in {}.",
-                config_hint
+                "failed to locate `{TOOL_NAME}` on PATH ({error}). Install it via `cargo install \
+                 greentic-component` or set [tools.greentic-component].path in {config_hint}."
             ))
         }
     }

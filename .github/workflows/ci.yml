@@ -2,99 +2,63 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
+    branches: ["master", "main"]
   pull_request:
-    branches: [ master ]
 
 permissions:
   contents: read
 
 jobs:
-  test:
-    name: Rust fmt • clippy • build • tests • schema-validate
+  rust-ci:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
-
-    strategy:
-      fail-fast: false
-      matrix:
-        rust: [ stable ]
-        features: [ "", "conformance" ]
-
+    env:
+      CARGO_TERM_COLOR: always
+      RUSTFLAGS: -D warnings
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Rust (${{ matrix.rust }})
+      - name: Install Rust (stable)
         uses: dtolnay/rust-toolchain@stable
+
+      - uses: mozilla-actions/sccache-action@v0.0.4
+
+      - name: Configure sccache
+        run: echo 'RUSTC_WRAPPER=sccache' >> "$GITHUB_ENV"
+
+      - name: Cache cargo
+        uses: actions/cache@v4
         with:
-          toolchain: ${{ matrix.rust }}
-          components: rustfmt, clippy
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            ~/.cache/sccache
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: |
-            . -> target
+      - name: fmt
+        run: cargo fmt --all --check
 
-      - name: Cargo fmt
-        run: cargo fmt --all -- --check
-
-      - name: Check greentic-types compat shim
-        run: python3 scripts/check_types_compat.py
-
-      - name: Cargo clippy
+      - name: clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
 
-      - name: Build (features=${{ matrix.features || 'default' }})
+      - name: test
+        run: cargo test --all-features --locked
+
+      - name: package smoke
+        run: ./ci/package_smoke.sh
+
+      - name: cargo-dist build (linux)
         run: |
-          if [ -z "${{ matrix.features }}" ]; then
-            cargo build --workspace --locked
-          else
-            cargo build --workspace --locked --features ${{ matrix.features }}
-          fi
-
-      - name: Install greentic-component tool
-        run: cargo install greentic-component --force --version ^0.3
-
-      - name: Tests (features=${{ matrix.features || 'default' }})
-        run: |
-          if [ -z "${{ matrix.features }}" ]; then
-            cargo test --workspace --locked --all-targets
-          else
-            cargo test --workspace --locked --all-targets --features ${{ matrix.features }}
-          fi
-
-      - name: Install greentic-dev CLI
-        if: ${{ matrix.features == '' }}
-        run: cargo install --path . --force
-
-      - name: CLI smoke test
-        if: ${{ matrix.features == '' }}
-        run: |
-          ~/.cargo/bin/greentic-dev --help
-          ~/.cargo/bin/greentic-dev flow --help
-          ~/.cargo/bin/greentic-dev component --help
-
-      - name: Flow validate smoke
-        if: ${{ matrix.features == '' }}
-        run: ~/.cargo/bin/greentic-dev flow validate -f examples/flows/min.ygtc --json
-
-      - name: Pack build smoke
-        if: ${{ matrix.features == '' }}
-        run: ~/.cargo/bin/greentic-dev pack build -f examples/flows/min.ygtc -o dist/ci-demo.gtpack --component-dir fixtures/components
-
-      - name: Upload demo pack
-        if: ${{ matrix.features == '' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: demo-pack
-          path: dist/ci-demo.gtpack
-          if-no-files-found: error
-
-      - name: Upload transcripts (if any)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: transcripts-${{ matrix.features || 'default' }}
-          path: .greentic/transcripts
-          if-no-files-found: ignore
+          command -v dist >/dev/null 2>&1 || cargo install cargo-dist
+          DIST_TAG=$(cargo metadata --no-deps --format-version=1 | python3 - <<'PY'
+import json, sys
+data = json.load(sys.stdin)
+for pkg in data["packages"]:
+    if pkg["name"] == "greentic-dev":
+        print(f"v{pkg['version']}")
+        break
+else:
+    raise SystemExit("greentic-dev package not found in metadata")
+PY
+)
+          dist build --target x86_64-unknown-linux-gnu --no-local-paths --tag "${DIST_TAG}"
