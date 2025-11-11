@@ -303,7 +303,7 @@ Run the same steps that CI executes:
 ci/local_check.sh
 ```
 
-It enforces `cargo fmt`, `cargo clippy --all-features`, `cargo test --all-features --locked`, a packaging smoke test (`ci/package_smoke.sh`), and finally `dist build` (installing `cargo-dist` on demand, which exposes the `dist` binary). If this script passes locally, the CI workflow will pass as well.
+It enforces `cargo fmt`, `cargo clippy --all-features`, `cargo build --workspace --all-features --locked`, and `cargo test --workspace --all-features --locked -- --nocapture`. The script sets up isolated `CARGO_HOME`/`CARGO_TARGET_DIR` just like CI, so if it passes locally, the workflow will pass as well.
 
 - **`run`**: Compile each node schema and validate a flow YAML. `--print-schemas` lists registry stubs. `--validate-only` skips execution (flow execution is still under development).
 - **`component new`**: Scaffold a component in the current directory (or `--dir`). Generates provider metadata, vendored WIT, schema, and README.

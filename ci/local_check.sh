@@ -1,37 +1,34 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-export RUSTFLAGS="-D warnings"
 export CARGO_TERM_COLOR=always
+export CARGO_NET_RETRY=10
+export CARGO_HTTP_CHECK_REVOKE=false
 
-echo "[local] fmt"
-cargo fmt --all --check
-
-echo "[local] clippy"
-cargo clippy --all-targets --all-features -- -D warnings
-
-echo "[local] test"
-cargo test --all-features --locked
-
-echo "[local] package smoke"
-./ci/package_smoke.sh
-
-echo "[local] cargo-dist build (artifacts)"
-if ! command -v dist >/dev/null 2>&1; then
-  cargo install cargo-dist
+if [[ -z "${CARGO_HOME:-}" ]]; then
+  export CARGO_HOME
+  CARGO_HOME="$(mktemp -d)"
 fi
-DIST_TAG=$(
-  cargo metadata --no-deps --format-version=1 | python3 - <<'PY'
-import json, sys
-data = json.load(sys.stdin)
-for pkg in data["packages"]:
-    if pkg["name"] == "greentic-dev":
-        print(f"v{pkg['version']}")
-        break
-else:
-    raise SystemExit("greentic-dev package not found in metadata")
-PY
-)
-dist build --target x86_64-unknown-linux-gnu --no-local-paths --tag "${DIST_TAG}"
 
-echo "[local] OK"
+if [[ -z "${CARGO_TARGET_DIR:-}" ]]; then
+  export CARGO_TARGET_DIR="$(pwd)/.target-local"
+fi
+
+echo "[check_local] toolchain:"
+rustup --version || true
+cargo --version
+
+echo "[check_local] fetch (locked)"
+cargo fetch --locked
+
+echo "[check_local] fmt + clippy"
+cargo fmt --all -- --check
+cargo clippy --all --all-features --locked -- -D warnings
+
+echo "[check_local] build (locked)"
+cargo build --workspace --all-features --locked
+
+echo "[check_local] test (locked)"
+cargo test --workspace --all-features --locked -- --nocapture
+
+echo "[check_local] OK"

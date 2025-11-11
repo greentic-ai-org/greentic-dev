@@ -45,7 +45,7 @@ fn load_transcript(path: &PathBuf) -> Result<FlowTranscript> {
 fn render_node(node: &NodeTranscript) {
     println!("Node: {}", node.node_name);
     if let Some(schema_id) = &node.schema_id {
-        println!("  Schema ID: {}", schema_id);
+        println!("  Schema ID: {schema_id}");
     } else {
         println!("  Schema ID: <unknown>");
     }

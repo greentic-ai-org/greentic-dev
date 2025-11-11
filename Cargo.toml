@@ -18,6 +18,7 @@ include = [
 
 [workspace]
 members = ["crates/dev-viewer", "xtask"]
+resolver = "2"
 
 [features]
 default = []

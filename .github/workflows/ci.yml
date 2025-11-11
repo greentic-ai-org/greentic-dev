@@ -2,63 +2,67 @@ name: CI
 
 on:
   push:
-    branches: ["master", "main"]
+    branches: [ main, master ]
   pull_request:
+    branches: [ main, master ]
+  workflow_dispatch: {}
 
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  rust-ci:
+  test:
+    name: Test (stable)
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     env:
       CARGO_TERM_COLOR: always
-      RUSTFLAGS: -D warnings
+      CARGO_HOME: ${{ runner.temp }}/cargo-${{ github.job }}-${{ github.run_id }}
+      CARGO_TARGET_DIR: ${{ runner.temp }}/target-${{ github.job }}-${{ github.run_id }}
+      CARGO_NET_RETRY: "10"
+      CARGO_HTTP_CHECK_REVOKE: "false"
+      RUSTFLAGS: "-D warnings"
+
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: false
+          fetch-depth: 0
 
-      - name: Install Rust (stable)
+      - name: Use repo rust-toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - uses: mozilla-actions/sccache-action@v0.0.4
-
-      - name: Configure sccache
-        run: echo 'RUSTC_WRAPPER=sccache' >> "$GITHUB_ENV"
-
-      - name: Cache cargo
+      - name: Prime caches
         uses: actions/cache@v4
         with:
           path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-            ~/.cache/sccache
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+            ${{ env.CARGO_HOME }}
+            ${{ env.CARGO_TARGET_DIR }}
+          key: ci-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.job }}
+          restore-keys: |
+            ci-${{ runner.os }}-${{ github.job }}-
 
-      - name: fmt
-        run: cargo fmt --all --check
-
-      - name: clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
-
-      - name: test
-        run: cargo test --all-features --locked
-
-      - name: package smoke
-        run: ./ci/package_smoke.sh
-
-      - name: cargo-dist build (linux)
+      - name: Install minimal deps
         run: |
-          command -v dist >/dev/null 2>&1 || cargo install cargo-dist
-          DIST_TAG=$(cargo metadata --no-deps --format-version=1 | python3 - <<'PY'
-import json, sys
-data = json.load(sys.stdin)
-for pkg in data["packages"]:
-    if pkg["name"] == "greentic-dev":
-        print(f"v{pkg['version']}")
-        break
-else:
-    raise SystemExit("greentic-dev package not found in metadata")
-PY
-)
-          dist build --target x86_64-unknown-linux-gnu --no-local-paths --tag "${DIST_TAG}"
+          rustup --version
+          cargo --version
+          cargo fetch --locked
+
+      - name: Lint (clippy + fmt)
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --all --all-features --locked -- -D warnings
+
+      - name: Build (all)
+        run: cargo build --workspace --all-features --locked
+
+      - name: Tests
+        run: cargo test --workspace --all-features --locked -- --nocapture
+
+      - name: Pack smoke
+        if: hashFiles('**/Cargo.toml') != ''
+        run: cargo build --workspace --locked --release

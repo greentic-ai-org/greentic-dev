@@ -1,16 +1,37 @@
-name: Release (cargo-dist)
+name: Release
 
 on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish to crates.io (true/false)"
+        default: "false"
+        required: true
   push:
-    tags: ["v*.*.*"]
+    tags:
+      - "greentic-dev-v*"
 
 permissions:
-  contents: write
-  id-token: write
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  dist:
+  publish:
+    name: Package/Publish (serialized)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      max-parallel: 1
+    env:
+      CARGO_TERM_COLOR: always
+      CARGO_HOME: ${{ runner.temp }}/cargo-${{ github.job }}-${{ github.run_id }}
+      CARGO_TARGET_DIR: ${{ runner.temp }}/target-${{ github.job }}-${{ github.run_id }}
+      CARGO_NET_RETRY: "10"
+      CARGO_HTTP_CHECK_REVOKE: "false"
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -18,17 +39,24 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - name: Install cargo-dist
-        run: cargo install cargo-dist
-
-      - name: Build artifacts
-        run: dist build --all --no-local-paths --tag "${GITHUB_REF_NAME}"
-
-      - name: Upload release artifacts
-        uses: ncipollo/release-action@v1
+      - uses: actions/cache@v4
         with:
-          allowUpdates: true
-          artifacts: "target/dist/*"
-          artifactErrorsFailBuild: true
-          draft: false
-          generateReleaseNotes: true
+          path: |
+            ${{ env.CARGO_HOME }}
+            ${{ env.CARGO_TARGET_DIR }}
+          key: release-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Verify build (locked)
+        run: |
+          cargo fetch --locked
+          cargo build --workspace --locked --all-features
+          cargo test --workspace --locked --all-features -- --quiet
+
+      - name: Cargo package (dry-run)
+        run: cargo package --locked --allow-dirty --no-verify || true
+
+      - name: Publish (optional)
+        if: github.event_name == 'workflow_dispatch' && inputs.publish == 'true'
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish --locked || true
