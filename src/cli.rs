@@ -19,9 +19,8 @@ pub enum Command {
     /// Pack tooling (build deterministic packs, run locally)
     #[command(subcommand)]
     Pack(PackCommand),
-    /// Component tooling (scaffolding, validation, diagnostics)
-    #[command(subcommand)]
-    Component(ComponentCommand),
+    /// Component tooling (delegates to `greentic-component`)
+    Component(ComponentPassthroughArgs),
     /// Manage greentic-dev configuration
     #[command(subcommand)]
     Config(ConfigCommand),
@@ -102,94 +101,15 @@ pub struct PackRunArgs {
     pub artifacts: Option<PathBuf>,
 }
 
-#[derive(Subcommand, Debug)]
-pub enum ComponentCommand {
-    /// Inspect a component and print metadata
-    Inspect(ComponentInspectArgs),
-    /// List component templates exported by greentic-component
-    Templates(ComponentTemplatesArgs),
-    /// Scaffold a new component via greentic-component
-    New(ComponentNewArgs),
-    /// Validate a component workspace via greentic-component
-    Validate(ComponentValidateArgs),
-    /// Run diagnostics for a component workspace via greentic-component
-    Doctor(ComponentDoctorArgs),
-}
-
-#[derive(Args, Debug, Clone)]
-pub struct ComponentInspectArgs {
-    /// Path or identifier for the component
-    pub target: String,
-    /// Emit compact JSON instead of pretty output
-    #[arg(long = "json")]
-    pub json: bool,
-}
-
 #[derive(Args, Debug, Clone, Default)]
-pub struct ComponentTemplatesArgs {
-    /// Emit JSON for the templates payload
-    #[arg(long = "json")]
-    pub json: bool,
-    /// Enable telemetry collection by the greentic-component tool
-    #[arg(long = "telemetry")]
-    pub telemetry: bool,
-}
-
-#[derive(Args, Debug, Clone, Default)]
-pub struct ComponentNewArgs {
-    /// Component name (used for the scaffold directory)
-    #[arg(long = "name", value_name = "NAME")]
-    pub name: Option<String>,
-    /// Target directory for the scaffold
-    #[arg(long = "path", value_name = "DIR")]
-    pub path: Option<PathBuf>,
-    /// Template identifier from `greentic-component templates`
-    #[arg(long = "template", value_name = "ID")]
-    pub template: Option<String>,
-    /// Reverse-DNS organization identifier (e.g., ai.greentic)
-    #[arg(long = "org", value_name = "ORG")]
-    pub org: Option<String>,
-    /// Version for the scaffolded component (semver)
-    #[arg(long = "version", value_name = "SEMVER")]
-    pub version: Option<String>,
-    /// License identifier (SPDX ID)
-    #[arg(long = "license", value_name = "ID")]
-    pub license: Option<String>,
-    /// WIT world name to target
-    #[arg(long = "wit-world", value_name = "WORLD")]
-    pub wit_world: Option<String>,
-    /// Run in non-interactive mode (no prompts)
-    #[arg(long = "non-interactive")]
-    pub non_interactive: bool,
-    /// Skip the compile check that runs after scaffolding
-    #[arg(long = "no-check")]
-    pub no_check: bool,
-    /// Emit JSON output for the scaffold result
-    #[arg(long = "json")]
-    pub json: bool,
-    /// Enable telemetry collection by the greentic-component tool
-    #[arg(long = "telemetry")]
-    pub telemetry: bool,
-}
-
-#[derive(Args, Debug, Clone, Default)]
-pub struct ComponentValidateArgs {
-    /// Path to the component workspace (defaults to current directory)
-    #[arg(long = "path", value_name = "DIR")]
-    pub path: Option<PathBuf>,
-    /// Enable telemetry collection by the greentic-component tool
-    #[arg(long = "telemetry")]
-    pub telemetry: bool,
-}
-
-#[derive(Args, Debug, Clone, Default)]
-pub struct ComponentDoctorArgs {
-    /// Path to the component workspace (defaults to current directory)
-    #[arg(long = "path", value_name = "DIR")]
-    pub path: Option<PathBuf>,
-    /// Enable telemetry collection by the greentic-component tool
-    #[arg(long = "telemetry")]
-    pub telemetry: bool,
+pub struct ComponentPassthroughArgs {
+    /// Arguments passed directly to the `greentic-component` CLI
+    #[arg(
+        value_name = "ARGS",
+        trailing_var_arg = true,
+        allow_hyphen_values = true
+    )]
+    pub passthrough: Vec<String>,
 }
 
 #[cfg(feature = "mcp")]
@@ -250,64 +170,27 @@ mod tests {
     use clap::Parser;
 
     #[test]
-    fn parses_component_new_arguments() {
+    fn parses_component_passthrough_args() {
         let cli = Cli::parse_from([
             "greentic-dev",
             "component",
             "new",
             "--name",
             "demo",
-            "--path",
-            "./demo",
-            "--template",
-            "rust",
-            "--org",
-            "ai.greentic",
-            "--version",
-            "0.1.0",
-            "--license",
-            "Apache-2.0",
-            "--wit-world",
-            "component:demo",
-            "--non-interactive",
-            "--no-check",
             "--json",
-            "--telemetry",
         ]);
-
-        let Command::Component(ComponentCommand::New(args)) = cli.command else {
-            panic!("expected component new variant");
+        let Command::Component(args) = cli.command else {
+            panic!("expected component passthrough variant");
         };
-        assert_eq!(args.name.as_deref(), Some("demo"));
         assert_eq!(
-            args.path.as_ref().map(|p| p.display().to_string()),
-            Some("./demo".into())
+            args.passthrough,
+            vec![
+                "new".to_string(),
+                "--name".into(),
+                "demo".into(),
+                "--json".into()
+            ]
         );
-        assert_eq!(args.template.as_deref(), Some("rust"));
-        assert_eq!(args.org.as_deref(), Some("ai.greentic"));
-        assert_eq!(args.version.as_deref(), Some("0.1.0"));
-        assert_eq!(args.license.as_deref(), Some("Apache-2.0"));
-        assert_eq!(args.wit_world.as_deref(), Some("component:demo"));
-        assert!(args.non_interactive);
-        assert!(args.no_check);
-        assert!(args.json);
-        assert!(args.telemetry);
-    }
-
-    #[test]
-    fn parses_component_templates_flag() {
-        let cli = Cli::parse_from([
-            "greentic-dev",
-            "component",
-            "templates",
-            "--json",
-            "--telemetry",
-        ]);
-        let Command::Component(ComponentCommand::Templates(args)) = cli.command else {
-            panic!("expected component templates variant");
-        };
-        assert!(args.json);
-        assert!(args.telemetry);
     }
 
     #[test]

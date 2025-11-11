@@ -8,6 +8,7 @@ use serde::Deserialize;
 pub struct GreenticConfig {
     #[serde(default)]
     pub tools: ToolsSection,
+    #[allow(dead_code)]
     #[serde(default)]
     pub defaults: DefaultsSection,
 }
@@ -23,12 +24,14 @@ pub struct ToolEntry {
     pub path: Option<PathBuf>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Default, Deserialize)]
 pub struct DefaultsSection {
     #[serde(default)]
     pub component: ComponentDefaults,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Default, Deserialize)]
 pub struct ComponentDefaults {
     pub org: Option<String>,

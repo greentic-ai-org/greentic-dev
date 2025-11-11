@@ -283,6 +283,7 @@ fn choose_latest_version(versions: &[DescribeVersion]) -> Option<DescribeVersion
     sorted.into_iter().next()
 }
 
+#[allow(dead_code)]
 #[derive(Serialize)]
 struct PreparedComponentView<'a> {
     manifest: &'a ComponentManifest,
@@ -295,6 +296,7 @@ struct PreparedComponentView<'a> {
     lifecycle: &'a Lifecycle,
 }
 
+#[allow(dead_code)]
 pub fn inspect(target: &str, compact_json: bool) -> Result<()> {
     let prepared = prepare_component(target)
         .with_context(|| format!("failed to prepare component `{target}`"))?;

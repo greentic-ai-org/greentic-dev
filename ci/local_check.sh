@@ -5,11 +5,6 @@ export CARGO_TERM_COLOR=always
 export CARGO_NET_RETRY=10
 export CARGO_HTTP_CHECK_REVOKE=false
 
-if [[ -z "${CARGO_HOME:-}" ]]; then
-  export CARGO_HOME
-  CARGO_HOME="$(mktemp -d)"
-fi
-
 if [[ -z "${CARGO_TARGET_DIR:-}" ]]; then
   export CARGO_TARGET_DIR="$(pwd)/.target-local"
 fi
@@ -19,7 +14,10 @@ rustup --version || true
 cargo --version
 
 echo "[check_local] fetch (locked)"
-cargo fetch --locked
+if ! cargo fetch --locked; then
+  echo "[check_local] cargo fetch failed (offline?). Continuing with existing cache."
+  export CARGO_NET_OFFLINE=true
+fi
 
 echo "[check_local] fmt + clippy"
 cargo fmt --all -- --check

@@ -34,6 +34,7 @@ impl CommandSpec {
 
 pub struct CommandOutput {
     pub status: ExitStatus,
+    #[allow(dead_code)]
     pub stdout: Option<Vec<u8>>,
     pub stderr: Option<Vec<u8>>,
 }

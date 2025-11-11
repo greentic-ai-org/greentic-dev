@@ -14,8 +14,7 @@ use clap::Parser;
 #[cfg(feature = "mcp")]
 use greentic_dev::cli::McpCommand;
 use greentic_dev::cli::{
-    Cli, Command, ComponentCommand, FlowCommand, MockSettingArg, PackCommand, PackSignArg,
-    RunPolicyArg,
+    Cli, Command, FlowCommand, MockSettingArg, PackCommand, PackSignArg, RunPolicyArg,
 };
 
 use crate::pack_build::PackSigning;
@@ -54,13 +53,7 @@ fn main() -> Result<()> {
                 })
             }
         },
-        Command::Component(component) => match component {
-            ComponentCommand::Inspect(args) => component_resolver::inspect(&args.target, args.json),
-            ComponentCommand::Templates(args) => cmd::component::run_templates(&args),
-            ComponentCommand::New(args) => cmd::component::run_new(&args),
-            ComponentCommand::Validate(args) => cmd::component::run_validate(&args),
-            ComponentCommand::Doctor(args) => cmd::component::run_doctor(&args),
-        },
+        Command::Component(component) => cmd::component::run_passthrough(&component),
         Command::Config(config_cmd) => cmd::config::run(config_cmd),
         #[cfg(feature = "mcp")]
         Command::Mcp(mcp) => match mcp {

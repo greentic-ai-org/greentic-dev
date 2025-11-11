@@ -159,7 +159,7 @@ so you immediately know which fields rely on defaults versus user input.
 | Pack a component                | `greentic-dev component pack --path <dir>`                              |
 | List component templates        | `greentic-dev component templates --json`                               |
 | Scaffold with org defaults      | `greentic-dev component new --name echo --org ai.greentic`              |
-| Doctor a component workspace    | `greentic-dev component doctor --path ./echo`                           |
+| Doctor a component workspace    | `greentic-dev component doctor --path ./echo` *(delegated)*             |
 | Set default org/template        | `greentic-dev config set defaults.component.org ai.greentic`            |
 | Inspect MCP tool map (feature)  | `greentic-dev mcp doctor <toolmap>`                                     |
 | Run full test suite             | `cargo test` \| `cargo test --features conformance`                     |
@@ -167,6 +167,7 @@ so you immediately know which fields rely on defaults versus user input.
 | Format                          | `cargo fmt`                                                             |
 
 Need to exercise only the component integration tests? Use `make itests`—it automatically skips when `greentic-component` is not on your `PATH`.
+_Component commands above delegate to the `greentic-component` CLI, so new subcommands or flags are available here as soon as they land upstream._
 
 ---
 
@@ -289,8 +290,8 @@ greentic-dev pack run -p <pack.gtpack>
                       [--otlp URL] [--allow host[,..]]
                       [--mocks on|off] [--artifacts DIR]
 
-greentic-dev component inspect <path|id> [--json]
-greentic-dev component doctor <path|id>
+greentic-dev component [<ARGS>...]
+                      # delegates directly to the `greentic-component` CLI
 
 greentic-dev mcp doctor <toolmap|provider> [--json]    # feature = "mcp"
 ```
@@ -306,9 +307,6 @@ ci/local_check.sh
 It enforces `cargo fmt`, `cargo clippy --all-features`, `cargo build --workspace --all-features --locked`, and `cargo test --workspace --all-features --locked -- --nocapture`. The script sets up isolated `CARGO_HOME`/`CARGO_TARGET_DIR` just like CI, so if it passes locally, the workflow will pass as well.
 
 - **`run`**: Compile each node schema and validate a flow YAML. `--print-schemas` lists registry stubs. `--validate-only` skips execution (flow execution is still under development).
-- **`component new`**: Scaffold a component in the current directory (or `--dir`). Generates provider metadata, vendored WIT, schema, and README.
-- **`component validate`**: Ensure the built artifact matches `provider.toml` (WIT package IDs, world identifier). Rebuilds unless `--skip-build` is supplied.
-- **`component pack`**: Produce `packs/<name>/<version>/` with the `.wasm`, `meta.json`, and SHA256 sums. Ideal for distribution.
-- **`component demo-run`**: Load the component through `component-runtime`, apply configuration, and invoke an operation locally for quick end-to-end smoke tests.
+- **`component …`**: Every invocation is forwarded to the `greentic-component` CLI, so any new subcommands or flags shipped there are immediately available here.
 
 Happy building! This toolkit should make it painless to iterate on components with confidence before they enter the main platform.
