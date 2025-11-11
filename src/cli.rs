@@ -52,6 +52,8 @@ pub enum PackCommand {
     Build(PackBuildArgs),
     /// Execute a pack locally with mocks/telemetry support
     Run(PackRunArgs),
+    /// Scaffold a pack workspace via the `packc` CLI
+    New(PackNewArgs),
 }
 
 #[derive(Args, Debug)]
@@ -99,6 +101,17 @@ pub struct PackRunArgs {
     /// Directory to persist run artifacts (transcripts, logs)
     #[arg(long = "artifacts")]
     pub artifacts: Option<PathBuf>,
+}
+
+#[derive(Args, Debug, Clone, Default)]
+pub struct PackNewArgs {
+    /// Arguments passed directly to the `packc new` command
+    #[arg(
+        value_name = "ARGS",
+        trailing_var_arg = true,
+        allow_hyphen_values = true
+    )]
+    pub passthrough: Vec<String>,
 }
 
 #[derive(Args, Debug, Clone, Default)]
@@ -190,6 +203,18 @@ mod tests {
                 "demo".into(),
                 "--json".into()
             ]
+        );
+    }
+
+    #[test]
+    fn parses_pack_new_args() {
+        let cli = Cli::parse_from(["greentic-dev", "pack", "new", "--name", "demo-pack"]);
+        let Command::Pack(PackCommand::New(args)) = cli.command else {
+            panic!("expected pack new variant");
+        };
+        assert_eq!(
+            args.passthrough,
+            vec!["--name".to_string(), "demo-pack".to_string()]
         );
     }
 

@@ -51,10 +51,14 @@ Once installed, `greentic-dev` becomes a single entry point for flow validation 
 >
 > - Rust 1.88+ (the repo pins this via `rust-toolchain.toml`)
 > - The component subcommands delegate to the `greentic-component` CLI. Install `greentic-component >= 0.3.2` (for example `cargo install greentic-component --force --version 0.3`) so `greentic-dev component new/templates/doctor` can run. You can also point to a custom binary and set defaults via `~/.greentic/config.toml`:
+> - The pack scaffolding command delegates to the `packc` CLI shipped with `greentic-pack`. Install it via `cargo install greentic-pack --bin packc --force` (or set `[tools.packc].path` in `~/.greentic/config.toml`) so `greentic-dev pack new` can run.
 >
 > ```toml
 > [tools.greentic-component]
 > path = "/opt/bin/greentic-component"
+>
+> [tools.packc]
+> path = "/opt/bin/packc"
 >
 > [defaults.component]
 > org = "ai.greentic"
@@ -153,6 +157,7 @@ so you immediately know which fields rely on defaults versus user input.
 | Validate a flow                 | `greentic-dev flow validate -f <flow>.ygtc [--json]`                    |
 | Build a pack                    | `greentic-dev pack build -f <flow>.ygtc -o dist/out.gtpack`             |
 | Run a pack locally              | `greentic-dev pack run -p dist/out.gtpack [--mocks on] [--allow host]`  |
+| Scaffold a pack workspace       | `greentic-dev pack new -- --name demo-pack` *(delegated to packc)*      |
 | View transcript                 | `cargo run -p dev-viewer -- --file .greentic/transcripts/<file>.yaml`   |
 | Scaffold a component            | `greentic-dev component new <name>`                                     |
 | Validate a component            | `greentic-dev component validate --path <dir>`                          |
@@ -224,6 +229,7 @@ greentic-dev component validate --path .
 ```bash
 greentic-dev component doctor --path .
 greentic-dev component pack --path .
+greentic-dev pack new -- --name hello-pack    # delegated to packc
 ```
 
 Creates `packs/my-component/0.1.0/` with the `.wasm`, `meta.json` (provider metadata + SHA + timestamp), and `SHA256SUMS`. Use this output when publishing or handing the component to downstream teams.

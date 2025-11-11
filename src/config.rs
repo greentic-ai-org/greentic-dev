@@ -17,6 +17,8 @@ pub struct GreenticConfig {
 pub struct ToolsSection {
     #[serde(rename = "greentic-component", default)]
     pub greentic_component: ToolEntry,
+    #[serde(rename = "packc", default)]
+    pub packc: ToolEntry,
 }
 
 #[derive(Debug, Default, Deserialize)]

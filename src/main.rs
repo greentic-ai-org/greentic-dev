@@ -52,6 +52,7 @@ fn main() -> Result<()> {
                     artifacts_dir: args.artifacts.as_deref(),
                 })
             }
+            PackCommand::New(args) => cmd::pack::run_new(&args),
         },
         Command::Component(component) => cmd::component::run_passthrough(&component),
         Command::Config(config_cmd) => cmd::config::run(config_cmd),
