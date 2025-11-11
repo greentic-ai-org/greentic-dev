@@ -27,8 +27,6 @@ jobs:
       max-parallel: 1
     env:
       CARGO_TERM_COLOR: always
-      CARGO_HOME: ${{ runner.temp }}/cargo-${{ github.job }}-${{ github.run_id }}
-      CARGO_TARGET_DIR: ${{ runner.temp }}/target-${{ github.job }}-${{ github.run_id }}
       CARGO_NET_RETRY: "10"
       CARGO_HTTP_CHECK_REVOKE: "false"
 
@@ -38,6 +36,11 @@ jobs:
           fetch-depth: 0
 
       - uses: dtolnay/rust-toolchain@stable
+
+      - name: Configure cargo directories
+        run: |
+          echo "CARGO_HOME=${{ runner.temp }}/cargo-${{ github.job }}-${{ github.run_id }}" >> "$GITHUB_ENV"
+          echo "CARGO_TARGET_DIR=${{ runner.temp }}/target-${{ github.job }}-${{ github.run_id }}" >> "$GITHUB_ENV"
 
       - uses: actions/cache@v4
         with:
