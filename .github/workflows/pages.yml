@@ -23,6 +23,8 @@ jobs:
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@v2
+      - name: Install tomlq
+        run: cargo install tomlq --locked
       - name: Build docs (cargo doc)
         run: |
           cargo doc --workspace --no-deps

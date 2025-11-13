@@ -23,6 +23,9 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
+      - name: Install tomlq
+        run: cargo install tomlq --locked
+
       - name: Build + Test (full, conformance on)
         run: |
           cargo build --workspace --locked --features conformance

@@ -49,6 +49,9 @@ jobs:
             ${{ env.CARGO_TARGET_DIR }}
           key: release-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
 
+      - name: Install tomlq
+        run: cargo install tomlq --locked
+
       - name: Verify build (locked)
         run: |
           cargo fetch --locked
