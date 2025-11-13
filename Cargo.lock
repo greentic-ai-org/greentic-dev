@@ -615,7 +615,8 @@ dependencies = [
 [[package]]
 name = "component-manifest"
 version = "0.3.9"
-source = "git+https://github.com/greentic-ai/greentic-component?branch=master#02e0085120716a3ae3dcbdc855e856790fe05952"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df229274a530fd5918c53f7d59004a0ec2877af0cef8f1be5e1b100c6dbc39a6"
 dependencies = [
  "jsonschema",
  "regex",
@@ -1554,7 +1555,8 @@ dependencies = [
 [[package]]
 name = "greentic-component-runtime"
 version = "0.3.9"
-source = "git+https://github.com/greentic-ai/greentic-component?branch=master#02e0085120716a3ae3dcbdc855e856790fe05952"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "22e5b17769904cfd19096288953ab5fab25e69fc8eafbded04fd091dad764ecd"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1579,7 +1581,8 @@ dependencies = [
 [[package]]
 name = "greentic-component-store"
 version = "0.3.9"
-source = "git+https://github.com/greentic-ai/greentic-component?branch=master#02e0085120716a3ae3dcbdc855e856790fe05952"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0cfdb8160093fd6505639237ffafa41fe30f4afb69b413c4d8c5255302984a49"
 dependencies = [
  "anyhow",
  "async-trait",

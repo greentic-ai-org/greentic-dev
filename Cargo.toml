@@ -39,12 +39,12 @@ toml_edit = "0.23"
 semver = "1.0"
 sha2 = "0.10"
 time = { version = "0.3", features = ["macros", "formatting"] }
-greentic-component-store = { git = "https://github.com/greentic-ai/greentic-component", branch = "master" }
+greentic-component-store = { version = "0.3" }
 wit-component = "0.240"
 wit-parser = "0.240"
 greentic-interfaces = { version = "0.4", default-features = false, features = ["describe-v1"] }
 greentic-types = { version = "0.3", features = ["serde"] }
-greentic-component-runtime = { git = "https://github.com/greentic-ai/greentic-component", branch = "master" }
+greentic-component-runtime = { version = "0.3" }
 greentic-flow = "0.3"
 greentic-pack = "0.3"
 greentic-runner = "0.3"
