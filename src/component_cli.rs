@@ -8,11 +8,12 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result, anyhow, bail};
 use clap::{Args, Subcommand};
-use component_runtime::{
-    self, Bindings, ComponentManifestInfo, ComponentRef, HostPolicy, LoadPolicy,
-};
-use component_store::ComponentStore;
 use convert_case::{Case, Casing};
+use greentic_component_runtime as component_runtime;
+use greentic_component_runtime::{
+    Bindings, ComponentManifestInfo, ComponentRef, HostPolicy, LoadPolicy,
+};
+use greentic_component_store::ComponentStore;
 use greentic_types::TenantCtx as RuntimeTenantCtx;
 use greentic_types::{EnvId, TenantCtx as FlowTenantCtx, TenantId};
 use once_cell::sync::Lazy;

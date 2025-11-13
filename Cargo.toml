@@ -1,6 +1,6 @@
 [package]
 name = "greentic-dev"
-version = "0.3.5"
+version = "0.3.6"
 edition = "2024"
 description = "Developer CLI and local tooling for Greentic flows, packs, and components"
 license = "MIT OR Apache-2.0"
@@ -39,12 +39,12 @@ toml_edit = "0.23"
 semver = "1.0"
 sha2 = "0.10"
 time = { version = "0.3", features = ["macros", "formatting"] }
-component-store = { git = "https://github.com/greentic-ai/greentic-component", branch = "master" }
+greentic-component-store = { git = "https://github.com/greentic-ai/greentic-component", branch = "master" }
 wit-component = "0.240"
 wit-parser = "0.240"
 greentic-interfaces = { version = "0.4", default-features = false, features = ["describe-v1"] }
 greentic-types = { version = "0.3", features = ["serde"] }
-component-runtime = { git = "https://github.com/greentic-ai/greentic-component", branch = "master" }
+greentic-component-runtime = { git = "https://github.com/greentic-ai/greentic-component", branch = "master" }
 greentic-flow = "0.3"
 greentic-pack = "0.3"
 greentic-runner = "0.3"
