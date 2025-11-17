@@ -49,7 +49,7 @@ greentic-flow = "0.3"
 greentic-pack = "0.3"
 greentic-runner = "0.3"
 greentic-component = { version = "0.3", features = ["prepare", "describe"] }
-greentic-mcp = { version = "0.3", optional = true }
+greentic-mcp = { version = "0.4", optional = true }
 jsonschema = "0.33"
 tempfile = "3"
 dirs = "6"
