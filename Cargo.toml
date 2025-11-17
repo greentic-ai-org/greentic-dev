@@ -45,7 +45,7 @@ wit-parser = "0.240"
 greentic-interfaces = { version = "0.4", default-features = false, features = ["describe-v1"] }
 greentic-types = { version = "0.3", features = ["serde"] }
 greentic-component-runtime = { version = "0.3" }
-greentic-flow = "0.3"
+greentic-flow = "0.4"
 greentic-pack = "0.3"
 greentic-runner = "0.3"
 greentic-component = { version = "0.3", features = ["prepare", "describe"] }
