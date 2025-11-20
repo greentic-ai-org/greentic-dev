@@ -8,6 +8,8 @@ on:
         default: "true"
         required: true
   push:
+    branches:
+      - main
     tags:
       - "greentic-dev-v*"
 
