@@ -9,7 +9,7 @@ on:
         required: true
   push:
     branches:
-      - main
+      - master
     tags:
       - "greentic-dev-v*"
 
