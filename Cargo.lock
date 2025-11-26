@@ -1607,9 +1607,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-interfaces"
-version = "0.4.34"
+version = "0.4.38"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d93e45b63d16abbc347e1bb01580daae9245aff20e702f53028672c224c76aa"
+checksum = "194f70177db8b7676db189fa1b497d1c2442138325f93ff28f5f26dcfe1be602"
 dependencies = [
  "anyhow",
  "greentic-types",
@@ -1646,9 +1646,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-pack"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b047a26fd15d4aaa64c46ee12ff3118b3e87b1c4ec3610b4ac4e10e8e40b0b9c"
+checksum = "275fb0b35453211a1c64e0903c3b948a3b0e48ba611dc6302e2373e2274bb1fe"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -1769,9 +1769,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-secrets"
-version = "0.4.1"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1c6faae726bcef7c28e2d29759721daeea23b9fd8842594a1b3eb70f20f139b"
+checksum = "23b7626b034a8723c2e3f1e94bb5db88600fd82a9096984804b048755c18e558"
 dependencies = [
  "async-trait",
  "greentic-secrets-api",
@@ -1782,9 +1782,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-secrets-api"
-version = "0.4.2"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "06e18e6152ed89fdeed7e6224dbb465da55fe6ea47bafed86df080a90efe7d6f"
+checksum = "ac7f985e7961e3a4215ed78689f5b02d5fab00de8a35423c84b0143315941cf2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1793,9 +1793,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-secrets-core"
-version = "0.4.1"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8bd255c195efa0a7d3f5f8211c69fb8648f6da285b7388888d1a63a03d2f5c43"
+checksum = "ad651c4d42bf7385c0c3f572b38e16b86a5ffb3c0c58c69ffb2f08dfa985b742"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -1819,9 +1819,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-secrets-spec"
-version = "0.4.2"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f75423028ce853bd857e486d5dcc38e0f00b3bfdcc974bddd3c095f6688b54bb"
+checksum = "611609e2fff0d10dac8e820dfc39939075c3a6826ba126676acba40abde42585"
 dependencies = [
  "async-trait",
  "serde",
@@ -1888,9 +1888,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-types"
-version = "0.4.4"
+version = "0.4.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "abe7cc7b2622ecb9cb9b99ec20b4d213c99f6c27b2e0e59a33a89ef0ecb54317"
+checksum = "be51e96c56b3d53286a6ebb436a70c199bca19946782aca2ea8d9b7ca9bd5608"
 dependencies = [
  "chrono",
  "fnv",
@@ -1911,9 +1911,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-types-macros"
-version = "0.4.6"
+version = "0.4.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "80ed6bb16648411a643caac49368f6ae5a20f128b348be5b3bcf64c58266efe3"
+checksum = "159ac89de01687b5342b88ed43794698d539ef22cb1dfcf804b869bdd74817d5"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2386,7 +2386,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4b0f83760fb341a774ed326568e19f5a863af4a952def8c39f9ab92fd95b88e5"
 dependencies = [
  "equivalent",
- "hashbrown 0.15.5",
+ "hashbrown 0.16.1",
  "serde",
  "serde_core",
 ]
@@ -4371,7 +4371,7 @@ dependencies = [
  "toml_datetime",
  "toml_parser",
  "toml_writer",
- "winnow 0.7.13",
+ "winnow 0.7.14",
 ]
 
 [[package]]
@@ -4393,7 +4393,7 @@ dependencies = [
  "toml_datetime",
  "toml_parser",
  "toml_writer",
- "winnow 0.7.13",
+ "winnow 0.7.14",
 ]
 
 [[package]]
@@ -4402,7 +4402,7 @@ version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c0cbe268d35bdb4bb5a56a2de88d0ad0eb70af5384a99d648cd4b3d04039800e"
 dependencies = [
- "winnow 0.7.13",
+ "winnow 0.7.14",
 ]
 
 [[package]]
@@ -4499,9 +4499,9 @@ checksum = "8df9b6e13f2d32c91b9bd719c00d1958837bc7dec474d94952798cc8e69eeec3"
 
 [[package]]
 name = "tracing"
-version = "0.1.42"
+version = "0.1.41"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8eb41cbdb933e23b7929f47bb577710643157d7602ef3a2ebd3902b13ac5eda6"
+checksum = "784e0ac535deb450455cbfa28a6f0df145ea1bb7ae51b821cf5e7927fdcfbdd0"
 dependencies = [
  "log",
  "pin-project-lite",
@@ -4594,9 +4594,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-subscriber"
-version = "0.3.21"
+version = "0.3.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bee4bf13715d00789f2a099fd05d127c012bddc5c6628f2c8968374c1820c01d"
+checksum = "2054a14f5307d601f88daf0553e1cbf472acc4f2c51afab632431cdcd72124d5"
 dependencies = [
  "matchers",
  "nu-ansi-term",
@@ -5596,9 +5596,9 @@ dependencies = [
 
 [[package]]
 name = "winnow"
-version = "0.7.13"
+version = "0.7.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21a0236b59786fed61e2a80582dd500fe61f18b5dca67a4a067d0bc9039339cf"
+checksum = "5a5364e9d77fcdeeaa6062ced926ee3381faa2ee02d3eb83a5c27a8825540829"
 dependencies = [
  "memchr",
 ]

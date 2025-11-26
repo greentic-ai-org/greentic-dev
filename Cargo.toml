@@ -39,8 +39,8 @@ sha2 = "0.10"
 time = { version = "0.3", features = ["macros", "formatting"] }
 wit-component = "0.242"
 wit-parser = "0.242"
-greentic-interfaces = { version = "0.4.34", default-features = false, features = ["describe-v1"] }
-greentic-types = { version = "0.4.4", features = ["serde"] }
+greentic-interfaces = { version = "0.4", default-features = false, features = ["describe-v1"] }
+greentic-types = { version = "0.4", features = ["serde"] }
 greentic-flow = "0.4"
 greentic-pack = "0.4"
 greentic-runner = "0.4"

@@ -10,6 +10,8 @@ use greentic_pack::builder::{
     NodeRef as PackNodeRef, PackBuilder, PackMeta, Provenance, Signing,
 };
 use greentic_pack::events::EventsSection;
+use greentic_pack::messaging::MessagingSection;
+use greentic_pack::repo::RepoPackSection;
 use greentic_types::PackKind;
 use semver::Version;
 use serde::Deserialize;
@@ -249,6 +251,8 @@ fn load_pack_meta(
     let license = config.license;
     let kind = config.kind;
     let events = config.events;
+    let repo = config.repo;
+    let messaging = config.messaging;
     let imports = config
         .imports
         .unwrap_or_default()
@@ -280,6 +284,8 @@ fn load_pack_meta(
         entry_flows,
         created_at_utc,
         events,
+        repo,
+        messaging,
         annotations,
     })
 }
@@ -339,6 +345,8 @@ struct PackMetaToml {
     license: Option<String>,
     entry_flows: Option<Vec<String>>,
     events: Option<EventsSection>,
+    repo: Option<RepoPackSection>,
+    messaging: Option<MessagingSection>,
     imports: Option<Vec<ImportToml>>,
     annotations: Option<toml::value::Table>,
     created_at_utc: Option<String>,
