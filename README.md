@@ -35,6 +35,20 @@ From crates.io:
 cargo install greentic-dev
 ```
 
+Want faster installs from prebuilt release artifacts?
+
+```bash
+cargo install cargo-binstall
+cargo binstall greentic-dev
+```
+
+Optional companion binaries (used by `greentic-dev component …` and `greentic-dev pack …`) can also be pulled from releases instead of building from source:
+
+```bash
+cargo binstall greentic-component
+cargo binstall greentic-pack --bin packc
+```
+
 Need the latest commit or working from a fork?
 
 ```bash
@@ -50,8 +64,8 @@ Once installed, `greentic-dev` becomes a single entry point for flow validation 
 > **Requirements**
 >
 > - Rust 1.89+ (the repo pins this via `rust-toolchain.toml`)
-> - The component subcommands delegate to the `greentic-component` CLI. Install `greentic-component >= 0.3.2` (for example `cargo install greentic-component --force --version 0.3`) so `greentic-dev component new/templates/doctor` can run. You can also point to a custom binary and set defaults via `~/.greentic/config.toml`:
-> - The pack scaffolding command delegates to the `packc` CLI shipped with `greentic-pack`. Install it via `cargo install greentic-pack --bin packc --force` (or set `[tools.packc].path` in `~/.greentic/config.toml`) so `greentic-dev pack new` can run.
+> - The component subcommands delegate to the `greentic-component` CLI. Install `greentic-component >= 0.3.2` (`cargo binstall greentic-component` for prebuilt binaries, or `cargo install greentic-component --force --version 0.3`) so `greentic-dev component new/templates/doctor` can run. You can also point to a custom binary and set defaults via `~/.greentic/config.toml`:
+> - The pack scaffolding command delegates to the `packc` CLI shipped with `greentic-pack`. Install it via `cargo binstall greentic-pack --bin packc` for a prebuilt binary (or `cargo install greentic-pack --bin packc --force`), or set `[tools.packc].path` in `~/.greentic/config.toml` so `greentic-dev pack new` can run.
 >
 > ```toml
 > [tools.greentic-component]

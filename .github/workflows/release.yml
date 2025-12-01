@@ -14,7 +14,7 @@ on:
       - "greentic-dev-v*"
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -79,3 +79,103 @@ jobs:
               exit 1
             fi
           fi
+
+  dist:
+    name: Build release binaries (${{ matrix.target }})
+    needs: publish
+    if: startsWith(github.ref, 'refs/tags/greentic-dev-v')
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: macos-13
+            target: x86_64-apple-darwin
+          - os: macos-14
+            target: aarch64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    env:
+      CARGO_TERM_COLOR: always
+      CARGO_NET_RETRY: "10"
+      CARGO_HTTP_CHECK_REVOKE: "false"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Configure cargo directories
+        run: |
+          echo "CARGO_HOME=${{ runner.temp }}/cargo-${{ github.job }}-${{ github.run_id }}" >> "$GITHUB_ENV"
+          echo "CARGO_TARGET_DIR=${{ runner.temp }}/target-${{ github.job }}-${{ github.run_id }}" >> "$GITHUB_ENV"
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.CARGO_HOME }}
+            ${{ env.CARGO_TARGET_DIR }}
+          key: release-${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build and package ${{ matrix.target }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VERSION=$(cargo metadata --format-version 1 --no-deps | python - <<'PY'
+import json, sys
+metadata = json.load(sys.stdin)
+for pkg in metadata["packages"]:
+    if pkg.get("name") == "greentic-dev":
+        print(pkg["version"])
+        sys.exit(0)
+sys.exit("failed to find greentic-dev version")
+PY
+          )
+
+          TARGET="${{ matrix.target }}"
+          ARTIFACT_DIR="dist"
+          STAGING="$ARTIFACT_DIR/greentic-dev-v${VERSION}-${TARGET}"
+
+          cargo fetch --locked --target "$TARGET"
+          cargo build --workspace --locked --all-features --release --target "$TARGET"
+
+          BIN_PATH="$CARGO_TARGET_DIR/$TARGET/release/greentic-dev"
+          if [[ "$TARGET" == *windows* ]]; then
+            BIN_PATH+=".exe"
+          fi
+
+          mkdir -p "$STAGING"
+          cp "$BIN_PATH" "$STAGING/"
+          cp README.md LICENSE-MIT LICENSE-APACHE "$STAGING/"
+
+          tar czf "$STAGING.tar.gz" -C "$STAGING" .
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: greentic-dev-${{ matrix.target }}
+          path: dist/greentic-dev-v*-${{ matrix.target }}.tar.gz
+          if-no-files-found: error
+
+  release:
+    name: GitHub Release
+    needs: [publish, dist]
+    if: startsWith(github.ref, 'refs/tags/greentic-dev-v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: List release assets
+        run: ls -R dist
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: dist/**/*.tar.gz
+          generate_release_notes: true
