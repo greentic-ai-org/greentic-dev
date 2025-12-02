@@ -123,13 +123,13 @@ jobs:
           set -euo pipefail
 
           VERSION=$(cargo metadata --format-version 1 --no-deps | python - <<'PY'
-import json, sys
-metadata = json.load(sys.stdin)
-for pkg in metadata["packages"]:
-    if pkg.get("name") == "greentic-dev":
-        print(pkg["version"])
-        sys.exit(0)
-sys.exit("failed to find greentic-dev version")
+          import json, sys
+          metadata = json.load(sys.stdin)
+          for pkg in metadata["packages"]:
+              if pkg.get("name") == "greentic-dev":
+                  print(pkg["version"])
+                  sys.exit(0)
+          sys.exit("failed to find greentic-dev version")
 PY
           )
 
