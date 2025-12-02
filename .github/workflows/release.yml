@@ -1,6 +1,8 @@
 name: Release
 
 on:
+  # Branch pushes to master: CI + publish to crates.io (no GitHub Release).
+  # Tag pushes (v*/greentic-dev-v*): build artifacts + publish + GitHub Release.
   workflow_dispatch:
     inputs:
       publish:
@@ -23,7 +25,7 @@ concurrency:
 
 jobs:
   publish:
-    name: Package/Publish (serialized)
+    name: CI (build/test) + Publish on tags
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -61,7 +63,8 @@ jobs:
       - name: Cargo package (dry-run)
         run: cargo package --locked --allow-dirty --no-verify || true
 
-      - name: Publish (optional)
+      - name: Publish to crates.io
+        # Always publish on push; manual workflow_dispatch can force publish, too.
         if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true')
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
@@ -73,6 +76,7 @@ jobs:
             printf "%s\n" "$output"
             if printf "%s\n" "$output" | grep -qi "already exists on crates.io index"; then
               echo "crate version already published; skipping publish step."
+              echo "crate version already on crates.io; no new publish performed."
             else
               exit 1
             fi
@@ -80,8 +84,10 @@ jobs:
 
   dist:
     name: Build release binaries (${{ matrix.target }})
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    # Build artifacts only for tag refs (or manual dispatch).
+    if: (github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/tags/greentic-dev-v'))) || github.event_name == 'workflow_dispatch'
     runs-on: ${{ matrix.os }}
+    needs: publish
     strategy:
       matrix:
         include:
@@ -146,8 +152,9 @@ jobs:
 
   release:
     name: GitHub Release
-    needs: dist
-    if: (startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/tags/greentic-dev-v')) && needs.dist.result == 'success'
+    needs: [publish, dist]
+    # GitHub Release after artifacts and publish complete (no tag gating).
+    if: needs.dist.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Download build artifacts
