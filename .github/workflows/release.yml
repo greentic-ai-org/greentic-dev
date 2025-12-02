@@ -31,8 +31,8 @@ jobs:
       CARGO_TERM_COLOR: always
       CARGO_NET_RETRY: "10"
       CARGO_HTTP_CHECK_REVOKE: "false"
-      CARGO_HOME: ${{ runner.temp }}/cargo-${{ github.job }}-${{ github.run_id }}
-      CARGO_TARGET_DIR: ${{ runner.temp }}/target-${{ github.job }}-${{ github.run_id }}
+      CARGO_HOME: ${{ env.RUNNER_TEMP }}/cargo-${{ github.job }}-${{ github.run_id }}
+      CARGO_TARGET_DIR: ${{ env.RUNNER_TEMP }}/target-${{ github.job }}-${{ github.run_id }}
 
     steps:
       - uses: actions/checkout@v4
@@ -96,8 +96,8 @@ jobs:
       CARGO_TERM_COLOR: always
       CARGO_NET_RETRY: "10"
       CARGO_HTTP_CHECK_REVOKE: "false"
-      CARGO_HOME: ${{ runner.temp }}/cargo-${{ github.job }}-${{ github.run_id }}
-      CARGO_TARGET_DIR: ${{ runner.temp }}/target-${{ github.job }}-${{ github.run_id }}
+      CARGO_HOME: ${{ env.RUNNER_TEMP }}/cargo-${{ github.job }}-${{ github.run_id }}
+      CARGO_TARGET_DIR: ${{ env.RUNNER_TEMP }}/target-${{ github.job }}-${{ github.run_id }}
 
     steps:
       - uses: actions/checkout@v4
