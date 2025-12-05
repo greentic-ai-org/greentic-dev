@@ -8,6 +8,7 @@ mod mcp_cmd;
 mod pack_build;
 mod pack_run;
 mod pack_verify;
+mod path_safety;
 mod util;
 
 use anyhow::Result;

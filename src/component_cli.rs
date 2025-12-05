@@ -16,6 +16,8 @@ use time::format_description::well_known::Rfc3339;
 use wit_component::{DecodedWasm, decode as decode_component};
 use wit_parser::{Resolve, WorldId, WorldItem};
 
+use crate::path_safety::normalize_under_root;
+
 static WORKSPACE_ROOT: Lazy<PathBuf> = Lazy::new(|| PathBuf::from(env!("CARGO_MANIFEST_DIR")));
 
 const TEMPLATE_COMPONENT_CARGO: &str = include_str!(concat!(
@@ -214,12 +216,10 @@ pub struct PackArgs {
 
 pub fn new_component(args: NewComponentArgs) -> Result<()> {
     let context = TemplateContext::new(&args.name)?;
+    let workspace_root = workspace_root()?;
     let base_dir = match args.dir {
-        Some(ref dir) if dir.is_absolute() => dir.clone(),
-        Some(dir) => env::current_dir()
-            .with_context(|| "failed to resolve current directory")?
-            .join(dir),
-        None => env::current_dir().with_context(|| "failed to resolve current directory")?,
+        Some(dir) => normalize_under_root(&workspace_root, &dir)?,
+        None => workspace_root.clone(),
     };
     fs::create_dir_all(&base_dir)
         .with_context(|| format!("failed to prepare base directory {}", base_dir.display()))?;
@@ -271,15 +271,26 @@ pub fn new_component(args: NewComponentArgs) -> Result<()> {
 }
 
 pub fn validate_command(args: ValidateArgs) -> Result<()> {
-    let report = validate_component(&args.path, !args.skip_build)?;
+    let workspace_root = workspace_root()?;
+    let report = validate_component(&workspace_root, &args.path, !args.skip_build)?;
     print_validation_summary(&report);
     Ok(())
 }
 
 pub fn pack_command(args: PackArgs) -> Result<()> {
-    let report = validate_component(&args.path, !args.skip_build)?;
+    let workspace_root = workspace_root()?;
+    let report = validate_component(&workspace_root, &args.path, !args.skip_build)?;
     let base_out = match args.out_dir {
-        Some(ref dir) if dir.is_absolute() => dir.clone(),
+        Some(ref dir) if dir.is_absolute() => {
+            bail!("--out-dir must be relative to the component directory")
+        }
+        Some(ref dir)
+            if dir
+                .components()
+                .any(|c| matches!(c, std::path::Component::ParentDir)) =>
+        {
+            bail!("--out-dir must not contain parent segments (`..`)")
+        }
         Some(ref dir) => report.component_dir.join(dir),
         None => report.component_dir.join("packs"),
     };
@@ -600,22 +611,22 @@ fn print_validation_summary(report: &ValidationReport) {
     }
 }
 
-fn validate_component(path: &Path, build: bool) -> Result<ValidationReport> {
-    let component_dir = resolve_component_dir(path)?;
+fn validate_component(workspace_root: &Path, path: &Path, build: bool) -> Result<ValidationReport> {
+    let component_dir = normalize_under_root(workspace_root, path)?;
 
     if build {
         ensure_cargo_component_installed()?;
         run_cargo_component_build(&component_dir)?;
     }
 
-    let provider_path = component_dir.join("provider.toml");
+    let provider_path = normalize_under_root(&component_dir, Path::new("provider.toml"))?;
     let provider = load_provider(&provider_path)?;
 
     let versions = Versions::load()?;
     ensure_version_alignment(&provider, &versions)?;
 
     let mut attempted = Vec::new();
-    let mut artifact_path = None;
+    let mut artifact_path: Option<PathBuf> = None;
     for candidate in candidate_artifact_paths(&provider.artifact.path) {
         let resolved = resolve_path(&component_dir, Path::new(&candidate));
         attempted.push(resolved.clone());
@@ -625,7 +636,12 @@ fn validate_component(path: &Path, build: bool) -> Result<ValidationReport> {
         }
     }
     let artifact_path = match artifact_path {
-        Some(path) => path,
+        Some(path) => normalize_under_root(&component_dir, &path).with_context(|| {
+            format!(
+                "artifact path escapes component directory {}",
+                component_dir.display()
+            )
+        })?,
         None => {
             let paths = attempted
                 .into_iter()
@@ -703,18 +719,6 @@ fn validate_component(path: &Path, build: bool) -> Result<ValidationReport> {
         world,
         packages,
     })
-}
-
-fn resolve_component_dir(path: &Path) -> Result<PathBuf> {
-    let dir = if path.is_absolute() {
-        path.to_path_buf()
-    } else {
-        env::current_dir()
-            .context("unable to determine current directory")?
-            .join(path)
-    };
-    dir.canonicalize()
-        .with_context(|| format!("failed to canonicalize {}", dir.display()))
 }
 
 fn resolve_path(base: &Path, raw: impl AsRef<Path>) -> PathBuf {
@@ -881,4 +885,11 @@ fn world_to_package_id(world: &str) -> Option<String> {
     let (pkg_part, rest) = world.split_once('/')?;
     let (_, version) = rest.rsplit_once('@')?;
     Some(format!("{pkg_part}@{version}"))
+}
+
+fn workspace_root() -> Result<PathBuf> {
+    env::current_dir()
+        .context("unable to determine current directory")?
+        .canonicalize()
+        .context("failed to canonicalize workspace root")
 }

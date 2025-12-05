@@ -5,8 +5,14 @@ use anyhow::{Context, Result, bail};
 use greentic_mcp::{ToolMap, load_tool_map_config};
 use serde::Serialize;
 
+use crate::path_safety::normalize_under_root;
+
 pub fn doctor(target: &str, json: bool) -> Result<()> {
-    let config_path = locate_toolmap(target)?;
+    let workspace_root = std::env::current_dir()
+        .context("failed to resolve workspace root")?
+        .canonicalize()
+        .context("failed to canonicalize workspace root")?;
+    let config_path = locate_toolmap(&workspace_root, target)?;
     let config = load_tool_map_config(&config_path)
         .with_context(|| format!("failed to load MCP tool map from {}", config_path.display()))?;
     let map = ToolMap::from_config(&config).context("tool map contains duplicate tool names")?;
@@ -24,19 +30,21 @@ pub fn doctor(target: &str, json: bool) -> Result<()> {
     Ok(())
 }
 
-fn locate_toolmap(target: &str) -> Result<PathBuf> {
+fn locate_toolmap(workspace_root: &Path, target: &str) -> Result<PathBuf> {
     let initial = PathBuf::from(target);
-    let candidates = if initial.is_absolute() {
-        vec![initial]
-    } else {
-        vec![initial.clone(), PathBuf::from("providers").join(&initial)]
-    };
+    if initial.is_absolute() {
+        bail!("tool map path must be relative to the workspace root");
+    }
+
+    let candidates = [initial.clone(), PathBuf::from("providers").join(&initial)];
 
     for candidate in candidates {
-        if candidate.is_file() {
-            return Ok(candidate);
+        let joined = workspace_root.join(&candidate);
+        if joined.is_file() {
+            return normalize_under_root(workspace_root, &candidate);
         }
-        if candidate.is_dir() {
+        if joined.is_dir() {
+            let safe_dir = normalize_under_root(workspace_root, &candidate)?;
             for name in [
                 "toolmap.yaml",
                 "toolmap.yml",
@@ -44,7 +52,7 @@ fn locate_toolmap(target: &str) -> Result<PathBuf> {
                 "mcp.yaml",
                 "mcp.json",
             ] {
-                let file = candidate.join(name);
+                let file = safe_dir.join(name);
                 if file.is_file() {
                     return Ok(file);
                 }

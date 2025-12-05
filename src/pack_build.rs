@@ -1,18 +1,20 @@
 use std::collections::HashMap;
+use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use anyhow::{Context, Result, bail};
 use greentic_flow::flow_bundle::load_and_validate_bundle;
+use greentic_pack::PackKind;
 use greentic_pack::builder::{
-    ComponentArtifact, ComponentPin as PackComponentPin, FlowBundle as PackFlowBundle, ImportRef,
-    NodeRef as PackNodeRef, PACK_VERSION, PackBuilder, PackMeta, Provenance, Signing,
+    ComponentArtifact, ComponentDescriptor, ComponentPin as PackComponentPin, DistributionSection,
+    FlowBundle as PackFlowBundle, ImportRef, NodeRef as PackNodeRef, PACK_VERSION, PackBuilder,
+    PackMeta, Provenance, Signing,
 };
 use greentic_pack::events::EventsSection;
 use greentic_pack::messaging::MessagingSection;
 use greentic_pack::repo::{InterfaceBinding, RepoPackSection};
-use greentic_types::PackKind;
 use semver::Version;
 use serde::Deserialize;
 use serde_json::{Value as JsonValue, json};
@@ -22,6 +24,7 @@ use time::format_description::well_known::Rfc3339;
 use crate::component_resolver::{
     ComponentResolver, NodeSchemaError, ResolvedComponent, ResolvedNode,
 };
+use crate::path_safety::normalize_under_root;
 
 #[derive(Debug, Clone, Copy)]
 pub enum PackSigning {
@@ -45,9 +48,33 @@ pub fn run(
     meta_path: Option<&Path>,
     component_dir: Option<&Path>,
 ) -> Result<()> {
-    build_once(flow_path, output_path, signing, meta_path, component_dir)?;
+    let workspace_root = env::current_dir()
+        .context("failed to resolve workspace root")?
+        .canonicalize()
+        .context("failed to canonicalize workspace root")?;
+    let safe_flow = normalize_under_root(&workspace_root, flow_path)?;
+    let safe_meta = meta_path
+        .map(|path| normalize_under_root(&workspace_root, path))
+        .transpose()?;
+    let safe_component_dir = component_dir
+        .map(|dir| normalize_under_root(&workspace_root, dir))
+        .transpose()?;
+
+    build_once(
+        &safe_flow,
+        output_path,
+        signing,
+        safe_meta.as_deref(),
+        safe_component_dir.as_deref(),
+    )?;
     if strict_mode_enabled() {
-        verify_determinism(flow_path, output_path, signing, meta_path, component_dir)?;
+        verify_determinism(
+            &safe_flow,
+            output_path,
+            signing,
+            safe_meta.as_deref(),
+            safe_component_dir.as_deref(),
+        )?;
     }
     Ok(())
 }
@@ -276,6 +303,8 @@ fn load_pack_meta(
             .unwrap_or_default()
     });
     let annotations = config.annotations.map(toml_to_json_map).unwrap_or_default();
+    let distribution = config.distribution;
+    let components = config.components.unwrap_or_default();
 
     Ok(PackMeta {
         pack_version,
@@ -297,6 +326,8 @@ fn load_pack_meta(
         messaging,
         interfaces,
         annotations,
+        distribution,
+        components,
     })
 }
 
@@ -365,6 +396,8 @@ struct PackMetaToml {
     imports: Option<Vec<ImportToml>>,
     annotations: Option<toml::value::Table>,
     created_at_utc: Option<String>,
+    distribution: Option<DistributionSection>,
+    components: Option<Vec<ComponentDescriptor>>,
 }
 
 #[derive(Debug, Deserialize)]

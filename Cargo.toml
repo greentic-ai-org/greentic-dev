@@ -1,6 +1,6 @@
 [package]
 name = "greentic-dev"
-version = "0.4.7"
+version = "0.4.9"
 edition = "2024"
 description = "Developer CLI and local tooling for Greentic flows, packs, and components"
 license = "MIT OR Apache-2.0"
@@ -16,10 +16,10 @@ include = [
     "Cargo.toml",
 ]
 
-[package.metadata.binstall]
-pkg-url = "https://github.com/greentic-ai/greentic-dev/releases/download/greentic-dev-v{ version }/greentic-dev-v{ version }-{ target }.tgz"
-bin-dir = "{ bin }{ binary-ext }"
-pkg-fmt = "tgz"
+#[package.metadata.binstall]
+#pkg-url = "https://github.com/greentic-ai/greentic-dev/releases/download/greentic-dev-v{ version }/greentic-dev-v{ version }-{ target }.tgz"
+#bin-dir = "{ bin }{ binary-ext }"
+#pkg-fmt = "tgz"
 
 [workspace]
 members = ["crates/dev-viewer", "xtask"]
@@ -42,8 +42,8 @@ toml_edit = "0.23"
 semver = "1.0"
 sha2 = "0.10"
 time = { version = "0.3", features = ["macros", "formatting"] }
-wit-component = "0.242"
-wit-parser = "0.242"
+wit-component = "0.243"
+wit-parser = "0.243"
 greentic-interfaces = { version = "0.4", default-features = false, features = ["describe-v1"] }
 greentic-types = { version = "0.4", features = ["serde"] }
 greentic-flow = "0.4"
