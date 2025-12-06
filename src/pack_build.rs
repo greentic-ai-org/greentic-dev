@@ -162,7 +162,12 @@ fn verify_determinism(
     let temp_pack = temp_dir.path().join("deterministic.gtpack");
     build_once(flow_path, &temp_pack, signing, meta_path, component_dir)
         .context("determinism build failed")?;
-    let expected = fs::read(output_path).context("failed to read primary pack for determinism")?;
+    let workspace_root = env::current_dir()
+        .context("failed to resolve workspace root")?
+        .canonicalize()
+        .context("failed to canonicalize workspace root")?;
+    let safe_output = normalize_under_root(&workspace_root, output_path)?;
+    let expected = fs::read(&safe_output).context("failed to read primary pack for determinism")?;
     let actual = fs::read(&temp_pack).context("failed to read temp pack for determinism")?;
     if expected != actual {
         bail!("LOCAL_CHECK_STRICT detected non-deterministic pack output");

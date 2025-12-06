@@ -6,6 +6,7 @@ use serde_yaml_bw::Value as YamlValue;
 
 use super::registry::DescribeRegistry;
 use super::schema::{schema_id_from_json, validate_yaml_against_schema};
+use crate::path_safety::normalize_under_root;
 
 #[derive(Clone, Debug, Default)]
 pub struct ComponentSchema {
@@ -91,10 +92,23 @@ where
         P: AsRef<Path>,
     {
         let path_ref = path.as_ref();
-        let source = fs::read_to_string(path_ref).map_err(|error| FlowValidationError::Io {
-            path: path_ref.to_path_buf(),
-            error,
-        })?;
+        let root = std::env::current_dir()
+            .map_err(|error| FlowValidationError::Io {
+                path: path_ref.to_path_buf(),
+                error,
+            })?
+            .canonicalize()
+            .map_err(|error| FlowValidationError::Io {
+                path: path_ref.to_path_buf(),
+                error,
+            })?;
+        let safe =
+            normalize_under_root(&root, path_ref).map_err(|error| FlowValidationError::Io {
+                path: path_ref.to_path_buf(),
+                error: std::io::Error::other(error.to_string()),
+            })?;
+        let source = fs::read_to_string(&safe)
+            .map_err(|error| FlowValidationError::Io { path: safe, error })?;
         self.validate_str(&source)
     }
 
