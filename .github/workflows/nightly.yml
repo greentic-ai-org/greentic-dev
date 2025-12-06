@@ -28,8 +28,8 @@ jobs:
 
       - name: Build + Test (full, conformance on)
         run: |
-          cargo build --workspace --locked --features conformance
-          GOLDEN_ACCEPT=0 cargo test --workspace --locked --features conformance
+          cargo build --workspace --locked --all-features
+          GOLDEN_ACCEPT=0 cargo test --workspace --locked --all-features
 
       - name: Validate all example flows (dry run)
         run: |
