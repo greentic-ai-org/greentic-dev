@@ -172,9 +172,11 @@ so you immediately know which fields rely on defaults versus user input.
 | Build a pack                    | `greentic-dev pack build -f <flow>.ygtc -o dist/out.gtpack`             |
 | Run a pack locally              | `greentic-dev pack run -p dist/out.gtpack [--mocks on] [--allow host]`  |
 | Verify a built pack             | `greentic-dev pack verify -p dist/out.gtpack [--policy strict|devok]`   |
+| Init a pack from distributor    | `greentic-dev pack init --from pack://org/name@1.0.0 [--profile dev]`   |
 | Scaffold a pack workspace       | `greentic-dev pack new -- --name demo-pack` *(delegated to packc)*      |
 | View transcript                 | `cargo run -p dev-viewer -- --file .greentic/transcripts/<file>.yaml`   |
 | Scaffold a component            | `greentic-dev component new <name>`                                     |
+| Add a remote component          | `greentic-dev component add component://org/name@^1.0 [--profile dev]`  |
 | Validate a component            | `greentic-dev component validate --path <dir>`                          |
 | Pack a component                | `greentic-dev component pack --path <dir>`                              |
 | List component templates        | `greentic-dev component templates --json`                               |
@@ -188,6 +190,24 @@ so you immediately know which fields rely on defaults versus user input.
 
 Need to exercise only the component integration tests? Use `make itests`—it automatically skips when `greentic-component` is not on your `PATH`.
 _Component commands above delegate to the `greentic-component` CLI, so new subcommands or flags are available here as soon as they land upstream._
+
+### Distributor profiles (for `component add` / `pack init`)
+
+Configure distributor endpoints and tokens in `~/.greentic/config.toml` (or point `GREENTIC_CONFIG` to an alternate file):
+
+```toml
+[distributor.default]
+url = "https://distributor.greentic.cloud"
+token = "env:GREENTIC_TOKEN" # resolved via environment variable
+
+[distributor.dev]
+url = "http://localhost:7070"
+token = ""
+```
+
+Select a profile with `--profile <name>` or set `GREENTIC_DISTRIBUTOR_PROFILE`.
+
+For a deeper, example-driven walkthrough, see `docs/programmer-guide.md`.
 
 ---
 

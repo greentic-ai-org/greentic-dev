@@ -1,6 +1,6 @@
 [package]
 name = "greentic-dev"
-version = "0.4.10"
+version = "0.4.11"
 edition = "2024"
 description = "Developer CLI and local tooling for Greentic flows, packs, and components"
 license = "MIT OR Apache-2.0"
@@ -55,6 +55,9 @@ jsonschema = "0.37"
 tempfile = "3"
 dirs = "6"
 which = "8"
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+zip = { version = "0.6", default-features = false, features = ["deflate"] }
+bytes = "1.7"
 
 [workspace.metadata.dist]
 cargo-dist-version = "0.24.1"
@@ -69,3 +72,6 @@ targets = [
 
 [workspace.metadata.dist.package.greentic-dev]
 all-features = true
+
+[dev-dependencies]
+httpmock = "0.7"

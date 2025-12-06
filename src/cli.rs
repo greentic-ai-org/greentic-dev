@@ -19,8 +19,9 @@ pub enum Command {
     /// Pack tooling (build deterministic packs, run locally)
     #[command(subcommand)]
     Pack(PackCommand),
-    /// Component tooling (delegates to `greentic-component`)
-    Component(ComponentPassthroughArgs),
+    /// Component tooling (delegates to `greentic-component` or uses built-ins)
+    #[command(subcommand)]
+    Component(ComponentCommand),
     /// Manage greentic-dev configuration
     #[command(subcommand)]
     Config(ConfigCommand),
@@ -54,6 +55,8 @@ pub enum PackCommand {
     Run(PackRunArgs),
     /// Verify a built pack archive (.gtpack)
     Verify(PackVerifyArgs),
+    /// Initialize a pack workspace from a remote coordinate
+    Init(PackInitArgs),
     /// Scaffold a pack workspace via the `packc` CLI
     New(PackNewArgs),
 }
@@ -118,6 +121,15 @@ pub struct PackVerifyArgs {
     pub json: bool,
 }
 
+#[derive(Args, Debug)]
+pub struct PackInitArgs {
+    /// Remote pack coordinate (e.g. pack://org/name@1.0.0)
+    pub from: String,
+    /// Distributor profile to use (overrides GREENTIC_DISTRIBUTOR_PROFILE/env config)
+    #[arg(long = "profile")]
+    pub profile: Option<String>,
+}
+
 #[derive(Args, Debug, Clone, Default)]
 #[command(disable_help_flag = true)]
 pub struct PackNewArgs {
@@ -130,15 +142,25 @@ pub struct PackNewArgs {
     pub passthrough: Vec<String>,
 }
 
-#[derive(Args, Debug, Clone, Default)]
-pub struct ComponentPassthroughArgs {
-    /// Arguments passed directly to the `greentic-component` CLI
-    #[arg(
-        value_name = "ARGS",
-        trailing_var_arg = true,
-        allow_hyphen_values = true
-    )]
-    pub passthrough: Vec<String>,
+#[derive(Subcommand, Debug, Clone)]
+pub enum ComponentCommand {
+    /// Add a remote component to the current workspace via the distributor
+    Add(ComponentAddArgs),
+    /// Delegate to the `greentic-component` CLI (default passthrough)
+    #[command(external_subcommand)]
+    Passthrough(Vec<String>),
+}
+
+#[derive(Args, Debug, Clone)]
+pub struct ComponentAddArgs {
+    /// Remote component coordinate (e.g. component://org/name@^1.0)
+    pub coordinate: String,
+    /// Distributor profile to use (overrides GREENTIC_DISTRIBUTOR_PROFILE/env config)
+    #[arg(long = "profile")]
+    pub profile: Option<String>,
+    /// Resolution intent (dev or runtime)
+    #[arg(long = "intent", default_value = "dev", value_enum)]
+    pub intent: DevIntentArg,
 }
 
 #[cfg(feature = "mcp")]
@@ -199,6 +221,12 @@ pub enum MockSettingArg {
     Off,
 }
 
+#[derive(Copy, Clone, Debug, ValueEnum)]
+pub enum DevIntentArg {
+    Dev,
+    Runtime,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -214,11 +242,11 @@ mod tests {
             "demo",
             "--json",
         ]);
-        let Command::Component(args) = cli.command else {
+        let Command::Component(ComponentCommand::Passthrough(args)) = cli.command else {
             panic!("expected component passthrough variant");
         };
         assert_eq!(
-            args.passthrough,
+            args,
             vec![
                 "new".to_string(),
                 "--name".into(),

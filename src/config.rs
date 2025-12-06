@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 
@@ -11,6 +12,9 @@ pub struct GreenticConfig {
     #[allow(dead_code)]
     #[serde(default)]
     pub defaults: DefaultsSection,
+    #[allow(dead_code)]
+    #[serde(default)]
+    pub distributor: DistributorSection,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -40,8 +44,30 @@ pub struct ComponentDefaults {
     pub template: Option<String>,
 }
 
+#[derive(Debug, Default, Deserialize)]
+pub struct DistributorSection {
+    /// Map of profile name -> profile configuration.
+    #[allow(dead_code)]
+    #[serde(default, flatten)]
+    pub profiles: HashMap<String, DistributorProfileConfig>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct DistributorProfileConfig {
+    #[allow(dead_code)]
+    pub url: String,
+    #[allow(dead_code)]
+    #[serde(default)]
+    pub token: Option<String>,
+}
+
 pub fn load() -> Result<GreenticConfig> {
-    let Some(path) = config_path() else {
+    let path_override = std::env::var("GREENTIC_CONFIG").ok();
+    load_from(path_override.as_deref())
+}
+
+pub fn load_from(path_override: Option<&str>) -> Result<GreenticConfig> {
+    let Some(path) = config_path_override(path_override) else {
         return Ok(GreenticConfig::default());
     };
 
@@ -54,6 +80,13 @@ pub fn load() -> Result<GreenticConfig> {
     let config: GreenticConfig = toml::from_str(&raw)
         .with_context(|| format!("failed to parse config at {}", path.display()))?;
     Ok(config)
+}
+
+fn config_path_override(path_override: Option<&str>) -> Option<PathBuf> {
+    if let Some(raw) = path_override {
+        return Some(PathBuf::from(raw));
+    }
+    config_path()
 }
 
 pub fn config_path() -> Option<PathBuf> {

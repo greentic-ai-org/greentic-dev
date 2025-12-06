@@ -16,9 +16,10 @@ use clap::Parser;
 #[cfg(feature = "mcp")]
 use greentic_dev::cli::McpCommand;
 use greentic_dev::cli::{
-    Cli, Command, FlowCommand, MockSettingArg, PackCommand, PackSignArg, RunPolicyArg,
-    VerifyPolicyArg,
+    Cli, Command, ComponentCommand, DevIntentArg, FlowCommand, MockSettingArg, PackCommand,
+    PackSignArg, RunPolicyArg, VerifyPolicyArg,
 };
+use greentic_dev::pack_init::{PackInitIntent, run as pack_init_run, run_component_add};
 
 use crate::pack_build::PackSigning;
 use crate::pack_run::{MockSetting, RunPolicy};
@@ -59,9 +60,20 @@ fn main() -> Result<()> {
             PackCommand::Verify(args) => {
                 pack_verify::run(&args.pack, args.policy.into(), args.json)
             }
+            PackCommand::Init(args) => pack_init_run(&args.from, args.profile.as_deref()),
             PackCommand::New(args) => cmd::pack::run_new(&args),
         },
-        Command::Component(component) => cmd::component::run_passthrough(&component),
+        Command::Component(component) => match component {
+            ComponentCommand::Add(args) => run_component_add(
+                &args.coordinate,
+                args.profile.as_deref(),
+                match args.intent {
+                    DevIntentArg::Dev => PackInitIntent::Dev,
+                    DevIntentArg::Runtime => PackInitIntent::Runtime,
+                },
+            ),
+            ComponentCommand::Passthrough(args) => cmd::component::run_passthrough(&args),
+        },
         Command::Config(config_cmd) => cmd::config::run(config_cmd),
         #[cfg(feature = "mcp")]
         Command::Mcp(mcp) => match mcp {
