@@ -1,0 +1,6 @@
+{
+  "adapters": {
+    "messaging.telegram": ["sendMessage", "editMessage"],
+    "email.google": ["send", "draft.create"]
+  }
+}

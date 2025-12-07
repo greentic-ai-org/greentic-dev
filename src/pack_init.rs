@@ -68,11 +68,13 @@ pub fn run(from: &str, profile: Option<&str>) -> Result<()> {
     Ok(())
 }
 
+/// Fetch a component via distributor and cache it locally.
+/// Returns the cache directory containing the component artifact/flows.
 pub fn run_component_add(
     coordinate: &str,
     profile: Option<&str>,
     intent: PackInitIntent,
-) -> Result<()> {
+) -> Result<PathBuf> {
     let config = config::load()?;
     let profile = resolve_profile(&config, profile)?;
     let client = DevDistributorClient::from_profile(profile.clone())?;
@@ -96,7 +98,7 @@ pub fn run_component_add(
     }
 
     let bytes = client.download_artifact(&resolved.artifact_download_path)?;
-    let cache_path = write_component_to_cache(&resolved, &bytes)?;
+    let (cache_dir, cache_path) = write_component_to_cache(&resolved, &bytes)?;
     update_workspace_manifest(&resolved, &cache_path)?;
 
     println!(
@@ -108,7 +110,7 @@ pub fn run_component_add(
         "Updated workspace manifest at {}",
         manifest_path()?.display()
     );
-    Ok(())
+    Ok(cache_dir)
 }
 
 fn default_platform() -> String {
@@ -139,7 +141,10 @@ fn cache_base_dir() -> Result<PathBuf> {
     Ok(base)
 }
 
-fn write_component_to_cache(resolved: &DevResolveResponse, bytes: &Bytes) -> Result<PathBuf> {
+fn write_component_to_cache(
+    resolved: &DevResolveResponse,
+    bytes: &Bytes,
+) -> Result<(PathBuf, PathBuf)> {
     let mut path = cache_base_dir()?;
     path.push("components");
     let slug = cache_slug(resolved);
@@ -148,7 +153,7 @@ fn write_component_to_cache(resolved: &DevResolveResponse, bytes: &Bytes) -> Res
     let file_path = path.join("artifact.wasm");
     fs::write(&file_path, bytes)
         .with_context(|| format!("failed to write {}", file_path.display()))?;
-    Ok(file_path)
+    Ok((path, file_path))
 }
 
 fn write_pack_to_cache(resolved: &DevResolveResponse, bytes: &Bytes) -> Result<PathBuf> {

@@ -1,0 +1,46 @@
+id: weather_bot
+title: Weather via Messaging
+description: Ask for a city, call Weather API, reply with a multi-day text template, then end.
+type: messaging
+
+parameters:
+  days_default: 3
+
+nodes:
+  in:
+    qa.process:
+      welcome: "Hi there! Let's get your weather forecast."
+      questions:
+        - id: q_location
+          prompt: "👉 What location would you like a forecast for?"
+          answer_type: text
+          max_words: 3
+    routing:
+      - to: forecast_weather
+
+  forecast_weather:
+    mcp.exec:
+      component: weather_api
+      action: forecast_weather
+      args:
+        q: in.q_location
+        days: parameters.days_default
+    routing:
+      - to: weather_text
+
+  weather_text:
+    templating.handlebars:
+      text: |
+        Weather for {{forecast_weather.payload.location.name}}, {{forecast_weather.payload.location.country}}:
+
+        Now: {{forecast_weather.payload.current.condition.text}}, {{forecast_weather.payload.current.temp_c}}°C
+        Wind: {{forecast_weather.payload.current.wind_kph}} kph | Humidity: {{forecast_weather.payload.current.humidity}}%
+
+        Forecast (next {{parameters.days_default}} day(s)):
+        {{#forecast_weather.payload.forecast}}
+        - {{date}}: ↑ {{day.maxtemp_c}}°C | ↓ {{day.mintemp_c}}°C — {{day.condition.text}}
+        {{/forecast_weather.payload.forecast}}
+
+        Thanks! Type /start to check another city.
+    routing:
+      - out: true

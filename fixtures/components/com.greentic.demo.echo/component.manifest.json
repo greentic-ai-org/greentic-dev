@@ -1,0 +1,80 @@
+{
+  "id": "com.greentic.demo.echo",
+  "name": "Echo Component",
+  "version": "0.3.0",
+  "world": "root:root/root",
+  "describe_export": "describe",
+  "supports": ["messaging", "events"],
+  "profiles": {
+    "default": "stateless",
+    "supported": ["stateless", "cached"]
+  },
+  "capabilities": {
+    "wasi": {
+      "filesystem": {
+        "mode": "read_only",
+        "mounts": [
+          {
+            "name": "assets",
+            "host_class": "assets",
+            "guest_path": "/assets"
+          }
+        ]
+      },
+      "env": {
+        "allow": ["RUST_LOG"]
+      },
+      "random": true,
+      "clocks": true
+    },
+    "host": {
+      "secrets": {
+        "required": ["KV_API_TOKEN"]
+      },
+      "state": {
+        "read": true,
+        "write": false
+      },
+      "messaging": {
+        "inbound": true,
+        "outbound": true
+      },
+      "events": {
+        "inbound": false,
+        "outbound": true
+      },
+      "http": {
+        "client": true,
+        "server": false
+      },
+      "telemetry": {
+        "scope": "pack"
+      }
+    }
+  },
+  "limits": {
+    "memory_mb": 128,
+    "wall_time_ms": 60000,
+    "fuel": 1000,
+    "files": 16
+  },
+  "telemetry": {
+    "span_prefix": "component.echo",
+    "attributes": {
+      "component": "echo"
+    },
+    "emit_node_spans": true
+  },
+  "provenance": {
+    "builder": "greentic-dev@0.5.0",
+    "git_commit": "abcdef1",
+    "toolchain": "rustc 1.80.0",
+    "built_at_utc": "2024-05-01T12:00:00Z"
+  },
+  "artifacts": {
+    "component_wasm": "component.wasm"
+  },
+  "hashes": {
+    "component_wasm": "blake3:d16030e523b5117990de34af8c3d7981717fc7f603b2f0b15507b6f388ffb1e3"
+  }
+}

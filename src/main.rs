@@ -2,7 +2,6 @@ mod cmd;
 mod component_resolver;
 mod config;
 mod delegate;
-mod flow_cmd;
 #[cfg(feature = "mcp")]
 mod mcp_cmd;
 mod pack_build;
@@ -19,6 +18,7 @@ use greentic_dev::cli::{
     Cli, Command, ComponentCommand, DevIntentArg, FlowCommand, MockSettingArg, PackCommand,
     PackSignArg, RunPolicyArg, VerifyPolicyArg,
 };
+use greentic_dev::flow_cmd;
 use greentic_dev::pack_init::{PackInitIntent, run as pack_init_run, run_component_add};
 
 use crate::pack_build::PackSigning;
@@ -31,6 +31,7 @@ fn main() -> Result<()> {
     match cli.command {
         Command::Flow(flow) => match flow {
             FlowCommand::Validate(args) => flow_cmd::validate(&args.file, args.json),
+            FlowCommand::AddStep(args) => flow_cmd::run_add_step(args),
         },
         Command::Pack(pack) => match pack {
             PackCommand::Build(args) => pack_build::run(
@@ -64,14 +65,17 @@ fn main() -> Result<()> {
             PackCommand::New(args) => cmd::pack::run_new(&args),
         },
         Command::Component(component) => match component {
-            ComponentCommand::Add(args) => run_component_add(
-                &args.coordinate,
-                args.profile.as_deref(),
-                match args.intent {
-                    DevIntentArg::Dev => PackInitIntent::Dev,
-                    DevIntentArg::Runtime => PackInitIntent::Runtime,
-                },
-            ),
+            ComponentCommand::Add(args) => {
+                let _ = run_component_add(
+                    &args.coordinate,
+                    args.profile.as_deref(),
+                    match args.intent {
+                        DevIntentArg::Dev => PackInitIntent::Dev,
+                        DevIntentArg::Runtime => PackInitIntent::Runtime,
+                    },
+                )?;
+                Ok(())
+            }
             ComponentCommand::Passthrough(args) => cmd::component::run_passthrough(&args),
         },
         Command::Config(config_cmd) => cmd::config::run(config_cmd),

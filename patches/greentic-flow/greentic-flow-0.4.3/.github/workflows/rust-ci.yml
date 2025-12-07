@@ -1,0 +1,65 @@
+name: Rust CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+
+jobs:
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          override: true
+          components: rustfmt
+      - name: rustc --version
+        run: rustc --version
+      - name: cargo fmt --check
+        run: cargo fmt --check
+
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          override: true
+          components: clippy
+      - name: rustc --version
+        run: rustc --version
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          override: true
+      - name: rustc --version
+        run: rustc --version
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo test
+        run: cargo test --all-features
+      - name: ygtc-lint --json smoke
+        run: |
+          cargo build --quiet --bin ygtc-lint
+          ./target/debug/ygtc-lint --json tests/data/flow_ok.ygtc | python3 -c 'import json,sys; data=json.load(sys.stdin); assert data.get("ok") is True, data'
+      - name: verify published schema $id
+        run: |
+          url="https://raw.githubusercontent.com/greentic-ai/greentic-flow/refs/heads/master/schemas/ygtc.flow.schema.json"
+          curl -sSf "$url" -o /tmp/published-schema.json
+          python - <<'PY'
+          import json
+          published = json.load(open("/tmp/published-schema.json"))
+          local = json.load(open("schemas/ygtc.flow.schema.json"))
+          if published.get("$id") != local.get("$id"):
+              raise SystemExit(f"schema $id mismatch: remote={published.get('$id')} local={local.get('$id')}")
+          PY

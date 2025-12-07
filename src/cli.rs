@@ -35,6 +35,8 @@ pub enum Command {
 pub enum FlowCommand {
     /// Validate a flow YAML file and emit the canonical bundle JSON
     Validate(FlowValidateArgs),
+    /// Add a configured component step to a flow via config-flow
+    AddStep(FlowAddStepArgs),
 }
 
 #[derive(Args, Debug)]
@@ -45,6 +47,24 @@ pub struct FlowValidateArgs {
     /// Emit compact JSON instead of pretty-printing
     #[arg(long = "json")]
     pub json: bool,
+}
+
+#[derive(Args, Debug)]
+pub struct FlowAddStepArgs {
+    /// Flow identifier (maps to flows/<id>.ygtc)
+    pub flow_id: String,
+    /// Component coordinate (store://... or repo://...). If omitted, greentic-dev will prompt.
+    #[arg(long = "coordinate")]
+    pub coordinate: Option<String>,
+    /// Distributor profile to use (overrides GREENTIC_DISTRIBUTOR_PROFILE/env config)
+    #[arg(long = "profile")]
+    pub profile: Option<String>,
+    /// Config flow selection
+    #[arg(long = "mode", value_enum)]
+    pub mode: Option<ConfigFlowModeArg>,
+    /// Automatically append routing from an existing node (if provided)
+    #[arg(long = "after")]
+    pub after: Option<String>,
 }
 
 #[derive(Subcommand, Debug)]
@@ -221,6 +241,11 @@ pub enum MockSettingArg {
     Off,
 }
 
+#[derive(Copy, Clone, Debug, ValueEnum)]
+pub enum ConfigFlowModeArg {
+    Default,
+    Custom,
+}
 #[derive(Copy, Clone, Debug, ValueEnum)]
 pub enum DevIntentArg {
     Dev,

@@ -1,0 +1,5 @@
+id: missing_type
+nodes:
+  in:
+    qa.process:
+      welcome: "hi"

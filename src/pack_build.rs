@@ -4,8 +4,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use anyhow::{Context, Result, bail};
-use greentic_flow::flow_bundle::load_and_validate_bundle;
+use anyhow::{Context, Result, anyhow, bail};
+use greentic_flow::flow_bundle::{blake3_hex, canonicalize_json, load_and_validate_bundle};
 use greentic_pack::PackKind;
 use greentic_pack::builder::{
     ComponentArtifact, ComponentDescriptor, ComponentPin as PackComponentPin, DistributionSection,
@@ -16,6 +16,7 @@ use greentic_pack::events::EventsSection;
 use greentic_pack::messaging::MessagingSection;
 use greentic_pack::repo::{InterfaceBinding, RepoPackSection};
 use semver::Version;
+use semver::VersionReq;
 use serde::Deserialize;
 use serde_json::{Value as JsonValue, json};
 use time::OffsetDateTime;
@@ -102,6 +103,16 @@ fn build_once(
     let mut schema_errors = Vec::new();
 
     for node in &bundle.nodes {
+        if is_builtin_component(&node.component.name) {
+            if node.component.name == "component.exec"
+                && let Some(exec_node) =
+                    resolve_component_exec_node(&mut resolver, node, &flow_doc_json)?
+            {
+                schema_errors.extend(resolver.validate_node(&exec_node)?);
+                resolved_nodes.push(exec_node);
+            }
+            continue;
+        }
         let resolved = resolver.resolve_node(node, &flow_doc_json)?;
         schema_errors.extend(resolver.validate_node(&resolved)?);
         resolved_nodes.push(resolved);
@@ -115,7 +126,7 @@ fn build_once(
 
     let meta = load_pack_meta(meta_path, &bundle)?;
     let mut builder = PackBuilder::new(meta)
-        .with_flow(to_pack_flow_bundle(&bundle))
+        .with_flow(to_pack_flow_bundle(&bundle, &flow_doc_json, &flow_source))
         .with_signing(signing.into())
         .with_provenance(build_provenance());
 
@@ -176,14 +187,22 @@ fn verify_determinism(
     Ok(())
 }
 
-fn to_pack_flow_bundle(bundle: &greentic_flow::flow_bundle::FlowBundle) -> PackFlowBundle {
+fn to_pack_flow_bundle(
+    bundle: &greentic_flow::flow_bundle::FlowBundle,
+    flow_doc_json: &JsonValue,
+    flow_yaml: &str,
+) -> PackFlowBundle {
+    let canonical_json = canonicalize_json(flow_doc_json);
+
     PackFlowBundle {
         id: bundle.id.clone(),
         kind: bundle.kind.clone(),
         entry: bundle.entry.clone(),
-        yaml: bundle.yaml.clone(),
-        json: bundle.json.clone(),
-        hash_blake3: bundle.hash_blake3.clone(),
+        yaml: flow_yaml.to_string(),
+        json: canonical_json.clone(),
+        hash_blake3: blake3_hex(
+            serde_json::to_vec(&canonical_json).expect("canonical flow JSON serialization"),
+        ),
         nodes: bundle
             .nodes
             .iter()
@@ -224,6 +243,57 @@ fn collect_component_artifacts(nodes: &[ResolvedNode]) -> Vec<ComponentArtifact>
         map.entry(key).or_insert_with(|| to_artifact(component));
     }
     map.into_values().collect()
+}
+
+fn is_builtin_component(name: &str) -> bool {
+    name == "component.exec"
+        || name == "flow.call"
+        || name == "session.wait"
+        || name.starts_with("emit")
+}
+
+fn resolve_component_exec_node(
+    resolver: &mut ComponentResolver,
+    node: &greentic_flow::flow_bundle::NodeRef,
+    flow_doc_json: &JsonValue,
+) -> Result<Option<ResolvedNode>> {
+    let nodes = flow_doc_json
+        .get("nodes")
+        .and_then(|value| value.as_object())
+        .ok_or_else(|| anyhow!("flow document missing nodes map"))?;
+    let Some(node_value) = nodes.get(&node.node_id) else {
+        bail!("node {} missing from flow document", node.node_id);
+    };
+    let payload = node_value
+        .get("component.exec")
+        .ok_or_else(|| anyhow!("component.exec payload missing for node {}", node.node_id))?;
+    let component_ref = payload
+        .get("component")
+        .and_then(|value| value.as_str())
+        .ok_or_else(|| {
+            anyhow!(
+                "component.exec requires `component` for node {}",
+                node.node_id
+            )
+        })?;
+    let (name, version_req) = parse_component_ref(component_ref)?;
+    let resolved_component = resolver.resolve_component(&name, &version_req)?;
+    Ok(Some(ResolvedNode {
+        node_id: node.node_id.clone(),
+        component: resolved_component,
+        pointer: format!("/nodes/{}", node.node_id),
+        config: payload.clone(),
+    }))
+}
+
+fn parse_component_ref(raw: &str) -> Result<(String, VersionReq)> {
+    if let Some((name, ver)) = raw.split_once('@') {
+        let vr = VersionReq::parse(ver.trim())
+            .with_context(|| format!("invalid version requirement `{ver}`"))?;
+        Ok((name.trim().to_string(), vr))
+    } else {
+        Ok((raw.trim().to_string(), VersionReq::default()))
+    }
 }
 
 fn to_artifact(component: &Arc<ResolvedComponent>) -> ComponentArtifact {

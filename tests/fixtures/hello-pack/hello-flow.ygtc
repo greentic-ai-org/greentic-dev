@@ -1,0 +1,18 @@
+id: hello-flow
+type: messaging
+description: "Minimal hello-world smoke flow"
+start: start
+nodes:
+  start:
+    component.exec:
+      component: "dev.greentic.echo"
+      op: "echo"
+      input:
+        message: "Hello from greentic-dev smoke test!"
+    routing:
+      - to: log
+  log:
+    emit.log:
+      message: "Smoke test finished"
+    routing:
+      - out: true

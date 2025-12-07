@@ -1,0 +1,18 @@
+{
+  "id": "greentic.repo_ui_actions_dummy",
+  "name": "Repo UI Actions Dummy",
+  "version": "0.0.1",
+  "world": "root:root/root",
+  "describe_export": "describe",
+  "supports": ["messaging"],
+  "profiles": {"default": "dev", "supported": ["dev"]},
+  "capabilities": {"wasi": {}, "host": {}},
+  "artifacts": {"component_wasm": "component.wasm"},
+  "hashes": {"component_wasm": "blake3:7ea05b10263d6a238ccb16f72b5eb918fa76c03295a1312cfda57f9ee471d352"},
+  "provenance": {
+    "builder": "fixture",
+    "git_commit": "0000000",
+    "toolchain": "rustc",
+    "built_at_utc": "2024-01-01T00:00:00Z"
+  }
+}

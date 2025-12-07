@@ -1,6 +1,6 @@
 [package]
 name = "greentic-dev"
-version = "0.4.11"
+version = "0.4.12"
 edition = "2024"
 description = "Developer CLI and local tooling for Greentic flows, packs, and components"
 license = "MIT OR Apache-2.0"
@@ -24,6 +24,9 @@ include = [
 [workspace]
 members = ["crates/dev-viewer", "xtask"]
 resolver = "2"
+
+[patch.crates-io]
+greentic-runner-host = { path = "patches/greentic-runner-host/greentic-runner-host-0.4.6" }
 
 [features]
 default = []
@@ -58,6 +61,8 @@ which = "8"
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 zip = { version = "0.6", default-features = false, features = ["deflate"] }
 bytes = "1.7"
+async-compression = "0.4"
+tracing-subscriber = { version = "0.3", features = ["fmt"] }
 
 [workspace.metadata.dist]
 cargo-dist-version = "0.24.1"
@@ -74,4 +79,4 @@ targets = [
 all-features = true
 
 [dev-dependencies]
-httpmock = "0.7"
+httpmock = "0.8"

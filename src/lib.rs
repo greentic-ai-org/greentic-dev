@@ -4,6 +4,7 @@ pub mod component_resolver;
 pub mod config;
 pub mod dev_runner;
 pub mod distributor;
+pub mod flow_cmd;
 pub mod pack_build;
 pub mod pack_init;
 pub mod pack_run;

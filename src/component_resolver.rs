@@ -80,6 +80,14 @@ impl ComponentResolver {
         }
     }
 
+    pub fn resolve_component(
+        &mut self,
+        name: &str,
+        version_req: &VersionReq,
+    ) -> Result<Arc<ResolvedComponent>> {
+        self.load_component(name, version_req)
+    }
+
     pub fn resolve_node(&mut self, node: &NodeRef, flow_doc: &JsonValue) -> Result<ResolvedNode> {
         let component_key = &node.component;
         let pointer = format!("/nodes/{}/{}", node.node_id, component_key.name);

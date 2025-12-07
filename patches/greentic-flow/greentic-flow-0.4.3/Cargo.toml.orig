@@ -1,0 +1,37 @@
+[package]
+name = "greentic-flow"
+version = "0.4.3"
+edition = "2024"
+rust-version = "1.88"
+license = "MIT"
+description = "Generic YGTC flow schema/loader/IR for self-describing component nodes."
+repository = "https://github.com/greentic-ai/greentic-flow"
+
+[features]
+default = []
+toml = ["dep:toml"]
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+greentic-interfaces = "0.4"
+greentic-types = { version = "0.4", features = ["telemetry-autoinit"] }
+serde = { version = "1", features = ["derive"] }
+serde_yaml_bw = "2"
+serde_json = "1"
+jsonschema = { version = "0.37"}
+thiserror = "2"
+regex = "1"
+indexmap = { version = "2", features = ["serde"] }
+lazy_static = "1"
+toml = { version = "0.9", optional = true }
+tracing = "0.1"
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+blake3 = "1"
+pathdiff = "0.2"
+
+[dev-dependencies]
+assert_cmd = "2"
+pretty_assertions = "1"
+insta = "1"
+tempfile = "3"

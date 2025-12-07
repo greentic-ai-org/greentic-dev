@@ -1,0 +1,6 @@
+id: bad
+type: messaging
+nodes:
+  x:
+    qa.process: { welcome: "Hi" }
+    mcp.exec: { component: "foo" }

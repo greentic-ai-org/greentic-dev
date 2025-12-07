@@ -6,9 +6,9 @@
     "wasi": {},
     "host": {}
   },
-  "describe_export": "describe",
+  "describe_export": "get-manifest",
   "hashes": {
-    "component_wasm": "blake3:784a524f32100cf2220f9f6b3c02280b8925a3415b2ddf60917a3d83fb04930c"
+    "component_wasm": "blake3:68ac29289794823124c368d9c1b6c765552d69dca8108e7d6325c965a16b891e"
   },
   "id": "dev.greentic.echo",
   "limits": {
@@ -34,5 +34,5 @@
     "toolchain": "rustc"
   },
   "version": "0.1.0",
-  "world": "root:root/root"
+  "world": "greentic:component/component@0.4.0"
 }

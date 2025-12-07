@@ -1,0 +1,20 @@
+[package]
+name = "dev-echo"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+greentic-interfaces-guest = { version = "0.4.52", default-features = false, features = ["component-node"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[package.metadata.component]
+target = "wasm32-wasip2"
+
+[package.metadata.component.bindings]
+world = "component"
+# use the greentic interfaces wit
+path = "../../.." # placeholder

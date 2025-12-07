@@ -1,0 +1,18 @@
+id: adapter_fail
+type: messaging
+
+nodes:
+  in:
+    messaging.telegram.deleteUniverse:
+      chat_id: "1234"
+      text: "This should fail"
+    routing:
+      - to: email_notify
+
+  email_notify:
+    email.google.beamMeUp:
+      to: "team@greentic.dev"
+      subject: "Adapter FAIL"
+      body: "Adapters should not resolve."
+    routing:
+      - out: true

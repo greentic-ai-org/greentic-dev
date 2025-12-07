@@ -8,14 +8,15 @@ use greentic_dev::{
 
 #[test]
 fn pack_build_run_verify_smoke() {
+    // This uses the workspace-built runner/host (with local [patch.crates-io] overrides)
+    // so the flow/component ids from the fixture pack are preserved end-to-end.
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let flow_path = root.join("examples/flows/min.ygtc");
+    let flow_path = root.join("tests/fixtures/hello-pack/hello-flow.ygtc");
     let component_dir = root.join("fixtures/components");
 
     let temp = tempfile::tempdir().expect("tempdir");
     let pack_path = temp.path().join("smoke.gtpack");
     let artifacts_dir = temp.path().join("artifacts");
-
     pack_build::run(
         &flow_path,
         &pack_path,

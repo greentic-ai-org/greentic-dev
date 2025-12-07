@@ -1,0 +1,32 @@
+id: component-qa-process.custom
+type: component-config
+description: "Guided config for component-qa-process (test fixture)"
+nodes:
+  ask_config:
+    questions:
+      fields:
+        - id: welcome_template
+          prompt: "Welcome message shown to users:"
+          type: string
+          default: "Hi there!"
+        - id: temperature
+          prompt: "How creative should answers be? (0.0 - 1.0):"
+          type: number
+          default: 0.2
+    routing:
+      - to: emit_config
+  emit_config:
+    template: |
+      {
+        "node_id": "qa_step",
+        "node": {
+          "qa": {
+            "component": "component-qa-process",
+            "welcome_template": "{{state.welcome_template}}",
+            "temperature": "{{state.temperature}}"
+          },
+          "routing": [
+            { "to": "NEXT_NODE_PLACEHOLDER" }
+          ]
+        }
+      }
