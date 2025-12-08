@@ -1,6 +1,0 @@
-id: flow_ok
-type: messaging
-nodes:
-  in:
-    qa.process:
-      welcome: "Hello from flow_ok"

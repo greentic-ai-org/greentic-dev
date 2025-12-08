@@ -1,6 +1,0 @@
-id: smoke_example
-type: messaging
-nodes:
-  in:
-    qa.process:
-      welcome: "Hello from CI smoke test"
