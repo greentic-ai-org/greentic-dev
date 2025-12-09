@@ -51,7 +51,8 @@
 - No explicit TODO/FIXME/HACK markers or `unimplemented!/todo!` stubs found in the codebase during scan.
 
 ## 4. Broken, Failing, or Conflicting Areas
-- **Workflow fragility (improving):** `.github/workflows/release.yml` was recently refactored (inline Python for version parsing) after prior YAML parsing failures. CI should confirm the workflow now validates and runs across all branches/tags.
+- None observed after bumping to `greentic-runner-host`/`desktop` 0.4.10; pack smoke now passes end-to-end with `greentic-flow` 0.4.4 and the bundled `dev.greentic.echo` component.
 
 ## 5. Notes for Future Work
 - Verify the GitHub Actions release workflow after recent changes to ensure matrix builds and asset uploads run for both tag and master pushes without YAML errors.
+- Keep an eye on upstream runner/flow releases; currently using `greentic-flow` 0.4.4 with `greentic-runner-host`/`desktop` 0.4.10. Upgrade together as new versions land.

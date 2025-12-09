@@ -70,6 +70,15 @@ pub fn run(config: PackRunConfig<'_>) -> Result<()> {
         headers: Vec::new(),
         sample_all: true,
     });
+
+    // Avoid system proxy discovery (reqwest on macOS can panic in sandboxed CI).
+    unsafe {
+        std::env::set_var("NO_PROXY", "*");
+        std::env::set_var("HTTPS_PROXY", "");
+        std::env::set_var("HTTP_PROXY", "");
+        std::env::set_var("CFNETWORK_DISABLE_SYSTEM_PROXY", "1");
+    }
+
     let allow_hosts = config.allow_hosts.unwrap_or_default();
     let mocks_config = build_mocks_config(config.mocks, allow_hosts)?;
 

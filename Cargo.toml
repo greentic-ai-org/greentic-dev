@@ -1,6 +1,6 @@
 [package]
 name = "greentic-dev"
-version = "0.4.13"
+version = "0.4.14"
 edition = "2024"
 description = "Developer CLI and local tooling for Greentic flows, packs, and components"
 license = "MIT OR Apache-2.0"
@@ -60,6 +60,7 @@ zip = { version = "0.6", default-features = false, features = ["deflate"] }
 bytes = "1.7"
 async-compression = "0.4"
 tracing-subscriber = { version = "0.3", features = ["fmt"] }
+greentic-distributor-client = "0.4"
 
 [workspace.metadata.dist]
 cargo-dist-version = "0.24.1"

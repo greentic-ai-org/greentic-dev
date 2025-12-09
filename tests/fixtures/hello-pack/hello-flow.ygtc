@@ -12,7 +12,10 @@ nodes:
     routing:
       - to: log
   log:
-    emit.log:
-      message: "Smoke test finished"
+    component.exec:
+      component: "dev.greentic.echo"
+      op: "echo"
+      input:
+        message: "Smoke test finished"
     routing:
       - out: true
