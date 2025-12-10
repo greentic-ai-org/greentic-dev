@@ -1705,7 +1705,7 @@ dependencies = [
 
 [[package]]
 name = "greentic-dev"
-version = "0.4.14"
+version = "0.4.15"
 dependencies = [
  "anyhow",
  "async-compression",
@@ -1895,9 +1895,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-runner"
-version = "0.4.9"
+version = "0.4.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6eada7e83e2be839a9c14da6cf741fab2694b085530d080ad659135d3b02b738"
+checksum = "733dc431336e1f5f9b902ca518bd38c8697769af7772aeed1e32b061fd3488c1"
 dependencies = [
  "anyhow",
  "chrono",
