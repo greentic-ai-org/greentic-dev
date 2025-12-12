@@ -1,6 +1,6 @@
 # greentic-dev – schema-aware developer toolkit
 
-`greentic-dev` is the command-line toolbox we use to design, validate, and iterate on Greentic components before they ever hit production. It bundles a schema-aware flow runner, mock services, a transcript viewer, and a component scaffolder into one workspace so that building new automation feels repeatable and safe.
+`greentic-dev` is the command-line toolbox we use to design, validate, and iterate on Greentic components before they ever hit production. It bundles a schema-aware flow runner, mock services, a transcript viewer, and component tooling into one workspace so that building new automation feels repeatable and safe.
 
 If you want to:
 
@@ -64,22 +64,10 @@ Once installed, `greentic-dev` becomes a single entry point for flow validation 
 > **Requirements**
 >
 > - Rust 1.89+ (the repo pins this via `rust-toolchain.toml`)
-> - The component subcommands delegate to the `greentic-component` CLI. Install `greentic-component >= 0.3.2` (`cargo binstall greentic-component` for prebuilt binaries, or `cargo install greentic-component --force --version 0.3`) so `greentic-dev component new/templates/doctor` can run. You can also point to a custom binary and set defaults via `~/.greentic/config.toml`:
-> - The pack scaffolding command delegates to the `packc` CLI shipped with `greentic-pack`. Install it via `cargo binstall greentic-pack --bin packc` for a prebuilt binary (or `cargo install greentic-pack --bin packc --force`), or set `[tools.packc].path` in `~/.greentic/config.toml` so `greentic-dev pack new` can run.
+> - Component commands use the `greentic-component` crate in-process; install `greentic-component` if you want to invoke its CLI directly.
+> - Pack commands use `packc` in-process; install `greentic-pack`/`packc` if you want the standalone CLI.
 >
-> ```toml
-> [tools.greentic-component]
-> path = "/opt/bin/greentic-component"
->
-> [tools.packc]
-> path = "/opt/bin/packc"
->
-> [defaults.component]
-> org = "ai.greentic"
-> template = "rust-wasi-p2-min"
-> ```
->
-> Environment variables such as `GREENTIC_TEMPLATE_ROOT` and `GREENTIC_TEMPLATE_YEAR` are forwarded automatically, and you can opt into telemetry reporting by adding `--telemetry` to the component subcommands.
+> Flow authoring: flows now live inside `component.manifest.json` under `dev_flows`. If a flow is missing, run `greentic-component flow update` to regenerate config flows. `greentic-dev flow add-step` defaults to `--manifest ./component.manifest.json --flow default`.
 
 ---
 

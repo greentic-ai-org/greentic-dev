@@ -57,6 +57,12 @@ pub struct FlowValidateArgs {
 
 #[derive(Args, Debug)]
 pub struct FlowAddStepArgs {
+    /// Path to component.manifest.json (defaults to ./component.manifest.json)
+    #[arg(long = "manifest")]
+    pub manifest: Option<PathBuf>,
+    /// Flow identifier inside manifest.dev_flows (default: default)
+    #[arg(long = "flow", default_value = "default")]
+    pub flow: String,
     /// Flow identifier (maps to flows/<id>.ygtc)
     pub flow_id: String,
     /// Component coordinate (store://... or repo://...). If omitted, greentic-dev will prompt.

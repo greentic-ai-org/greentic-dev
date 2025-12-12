@@ -1645,9 +1645,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-component"
-version = "0.4.17"
+version = "0.4.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ca22ba1eccc5ecbd9ba965a70231ceee5f509c475e41c2392f41e9ee2c8e3fd"
+checksum = "927c1f279877e996234c1f9835231c5865523f8e2f93cf427513efc851ed15e3"
 dependencies = [
  "anyhow",
  "blake3",
@@ -1672,7 +1672,6 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
- "serde_yaml_bw",
  "sha2",
  "tempfile",
  "thiserror 2.0.17",
@@ -1705,7 +1704,7 @@ dependencies = [
 
 [[package]]
 name = "greentic-dev"
-version = "0.4.16"
+version = "0.4.17"
 dependencies = [
  "anyhow",
  "async-compression",

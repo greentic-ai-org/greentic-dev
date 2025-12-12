@@ -4,18 +4,38 @@ use std::path::{Path, PathBuf};
 use greentic_dev::cli::{ConfigFlowModeArg, FlowAddStepArgs};
 use greentic_dev::flow_cmd::parse_config_flow_output;
 use greentic_dev::flow_cmd::run_add_step;
+use serde_json::json;
 
 fn write_test_flow(root: &Path) {
-    let flows = root.join("flows");
-    fs::create_dir_all(&flows).unwrap();
-    let flow = "schema_version: 1
-id: demo
-type: component-config
-nodes:
-  start:
-    template: \"{}\"
-";
-    fs::write(flows.join("demo.ygtc"), flow).unwrap();
+    let manifest = json!({
+        "id": "dev.test",
+        "name": "Dev Test",
+        "version": "0.1.0",
+        "world": "greentic:component/component@0.4.0",
+        "describe_export": "get-manifest",
+        "supports": ["messaging"],
+        "profiles": { "default": "dev", "supported": ["dev"] },
+        "capabilities": { "wasi": {}, "host": {} },
+        "artifacts": { "component_wasm": "component.wasm" },
+        "hashes": { "component_wasm": "blake3:0" },
+        "config_schema": {},
+        "dev_flows": {
+            "demo": {
+                "format": "flow-ir-json",
+                "graph": {
+                    "nodes": {
+                        "start": { "routing": [] }
+                    },
+                    "edges": []
+                }
+            }
+        }
+    });
+    fs::write(
+        root.join("component.manifest.json"),
+        serde_json::to_string_pretty(&manifest).unwrap(),
+    )
+    .unwrap();
 }
 
 #[test]
@@ -70,17 +90,35 @@ fn flow_add_step_inserts_node() {
         profile: None,
         mode: Some(ConfigFlowModeArg::Default),
         after: Some("start".into()),
+        flow: "default".into(),
+        manifest: None,
     })
     .unwrap();
 
-    let updated =
-        fs::read_to_string(root.join("flows").join("demo.ygtc")).expect("flow should exist");
+    let updated = fs::read_to_string(root.join("component.manifest.json")).unwrap();
+    let doc: serde_json::Value = serde_json::from_str(&updated).unwrap();
+    let nodes = doc
+        .get("dev_flows")
+        .and_then(|f| f.get("demo"))
+        .and_then(|f| f.get("graph"))
+        .and_then(|f| f.get("nodes"))
+        .and_then(|n| n.as_object())
+        .expect("nodes map");
     assert!(
-        updated.contains("qa_step"),
+        nodes.contains_key("qa_step"),
         "expected new node to be inserted"
     );
+    let routing = nodes
+        .get("start")
+        .and_then(|node| node.get("routing"))
+        .and_then(|r| r.as_array())
+        .expect("routing array");
     assert!(
-        updated.contains("to: start"),
-        "expected routing to be updated"
+        routing.iter().any(|entry| entry
+            .get("to")
+            .and_then(|v| v.as_str())
+            .map(|s| s == "qa_step")
+            .unwrap_or(false)),
+        "expected routing to include qa_step"
     );
 }
