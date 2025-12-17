@@ -12,10 +12,12 @@ use greentic_component::cmd::{build, doctor, flow, hash, inspect, new, store, te
 use greentic_component::scaffold::engine::ScaffoldEngine;
 use greentic_dev::cmd;
 use greentic_dev::component_add::run_component_add;
+use greentic_dev::gui_dev::run_gui_command;
 use greentic_dev::mcp_cmd;
 use greentic_dev::pack_cli;
 use greentic_dev::pack_cli::{pack_inspect, pack_plan};
 use greentic_dev::pack_run::{self, MockSetting, RunPolicy};
+use greentic_dev::secrets_cli::run_secrets_command;
 use packc::cli as packc_cli;
 
 fn main() -> Result<()> {
@@ -66,7 +68,7 @@ fn main() -> Result<()> {
                             serde_json::from_str(&data).context("invalid mock external JSON")
                         })
                         .transpose()?,
-                    secrets_env_prefix: args.secrets_env_prefix.clone(),
+                    secrets_seed: args.secrets_seed.as_deref(),
                 })
             }
             PackCommand::Init(args) => pack_init_run(&args.from, args.profile.as_deref()),
@@ -112,6 +114,8 @@ fn main() -> Result<()> {
         Command::Mcp(mcp) => match mcp {
             McpCommand::Doctor(args) => mcp_cmd::doctor(&args.provider, args.json),
         },
+        Command::Gui(gui) => run_gui_command(gui),
+        Command::Secrets(secrets) => run_secrets_command(secrets),
     }
 }
 

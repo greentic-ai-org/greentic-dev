@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fs::File;
+use std::io::Read;
 use std::path::Path;
 use std::str::FromStr;
 
@@ -8,6 +9,7 @@ use greentic_pack::builder::PackManifest;
 use greentic_pack::events::EventProviderSpec;
 use greentic_pack::plan::infer_base_deployment_plan;
 use greentic_pack::reader::{SigningPolicy, open_pack};
+use greentic_types::SecretRequirement;
 use greentic_types::component::ComponentManifest;
 use greentic_types::{EnvId, TenantCtx, TenantId};
 use serde_json::json;
@@ -98,12 +100,14 @@ fn plan_for_pack(
     let load = open_pack(path, SigningPolicy::DevOk).map_err(|err| anyhow!(err.message))?;
     let connectors = load.manifest.meta.annotations.get("connectors");
     let components = load_component_manifests(path, &load.manifest)?;
+    let secret_requirements = load_secret_requirements(path)?;
 
     Ok(infer_base_deployment_plan(
         &load.manifest.meta,
         &load.manifest.flows,
         connectors,
         &components,
+        secret_requirements,
         tenant,
         environment,
     ))
@@ -141,6 +145,29 @@ fn load_component_manifests(
     }
 
     Ok(manifests)
+}
+
+fn load_secret_requirements(path: &Path) -> Result<Option<Vec<SecretRequirement>>> {
+    let file = File::open(path).with_context(|| format!("failed to open {}", path.display()))?;
+    let mut archive = ZipArchive::new(file)
+        .with_context(|| format!("{} is not a valid gtpack archive", path.display()))?;
+
+    for name in [
+        "assets/secret-requirements.json",
+        "secret-requirements.json",
+    ] {
+        if let Ok(mut entry) = archive.by_name(name) {
+            let mut buf = String::new();
+            entry
+                .read_to_string(&mut buf)
+                .context("failed to read secret requirements file")?;
+            let reqs: Vec<SecretRequirement> =
+                serde_json::from_str(&buf).context("secret requirements file is invalid JSON")?;
+            return Ok(Some(reqs));
+        }
+    }
+
+    Ok(None)
 }
 
 fn print_inspect_human(

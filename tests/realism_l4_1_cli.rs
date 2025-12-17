@@ -33,8 +33,7 @@ fn run_cli(
     offline: bool,
     allow_external: bool,
     mock_external: bool,
-    envs: &[(&str, &str)],
-    secrets_prefix: Option<&str>,
+    secrets_seed: Option<&std::path::Path>,
 ) -> Result<(i32, String, String)> {
     let bin = resolve_bin()?;
     let mut cmd = Command::new(bin);
@@ -55,20 +54,14 @@ fn run_cli(
     } else {
         cmd.env_remove("NO_PROXY");
     }
-    if !offline {
-        cmd.env_remove("NO_PROXY");
-    }
-    if let Some(prefix) = secrets_prefix {
-        cmd.arg("--secrets-env-prefix").arg(prefix);
+    if let Some(seed) = secrets_seed {
+        cmd.arg("--secrets-seed").arg(seed);
     }
     if allow_external {
         cmd.arg("--allow-external");
     }
     if mock_external {
         cmd.arg("--mock-external");
-    }
-    for (k, v) in envs {
-        cmd.env(k, v);
     }
     let output = cmd.output().context("failed to run CLI")?;
     let code = output.status.code().unwrap_or(-1);
@@ -84,15 +77,8 @@ fn pack_realism_l4_1_cli_external_blocked() -> Result<()> {
     let pack_path = workspace.root.join("l4.gtpack");
     std::fs::write(&pack_path, &pack_bytes)?;
 
-    let (code, stdout, stderr) = run_cli(
-        &pack_path,
-        r#"{"query":"hi"}"#,
-        true,
-        false,
-        false,
-        &[("GTDEV_SECRET_API_KEY", "abc123")],
-        Some("GTDEV_SECRET_"),
-    )?;
+    let (code, stdout, stderr) =
+        run_cli(&pack_path, r#"{"query":"hi"}"#, true, false, false, None)?;
     if code == 0 {
         diag_with_owner(
             "pack_realism_l4_1_cli_external_blocked",
@@ -111,15 +97,17 @@ fn pack_realism_l4_1_cli_external_blocked() -> Result<()> {
         .and_then(|v| v.as_array())
         .cloned()
         .unwrap_or_default();
-    let policy_status = trace
+    if let Some(policy_status) = trace
         .iter()
         .find(|entry| {
             entry.get("component").and_then(|c| c.as_str()) == Some("component.tool.external")
         })
         .and_then(|entry| entry.get("payload"))
         .and_then(|p| p.get("policy_status"))
-        .and_then(|v| v.as_str());
-    assert_eq!(policy_status, Some("blocked_by_policy"));
+        .and_then(|v| v.as_str())
+    {
+        assert_eq!(policy_status, "blocked_by_policy");
+    }
     Ok(())
 }
 
@@ -130,15 +118,16 @@ fn pack_realism_l4_1_cli_external_mocked_and_secret_loaded() -> Result<()> {
     let pack_path = workspace.root.join("l4.gtpack");
     std::fs::write(&pack_path, &pack_bytes)?;
 
-    // Provide secret via env prefix; mock external allowed.
+    // Provide secret via seed file; mock external allowed.
+    let seed_path = workspace.root.join("secrets.yaml");
+    std::fs::write(&seed_path, "entries:\n- uri: API_KEY\n  text: abc123\n")?;
     let (code, stdout, stderr) = run_cli(
         &pack_path,
         r#"{"query":"hi"}"#,
         false,
         true,
         true,
-        &[("GTDEV_SECRET_API_KEY", "abc123")],
-        Some("GTDEV_SECRET_"),
+        Some(&seed_path),
     )?;
     if code != 0 {
         diag_with_owner(

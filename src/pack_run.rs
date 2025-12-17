@@ -29,7 +29,7 @@ pub struct PackRunConfig<'a> {
     pub allow_external: bool,
     pub mock_external: bool,
     pub mock_external_payload: Option<JsonValue>,
-    pub secrets_env_prefix: Option<String>,
+    pub secrets_seed: Option<&'a Path>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -58,7 +58,7 @@ pub fn run(config: PackRunConfig<'_>) -> Result<()> {
                 .mock_external_payload
                 .clone()
                 .unwrap_or_else(|| json!({ "mocked": true })),
-            config.secrets_env_prefix.as_deref(),
+            config.secrets_seed,
         )?;
         let mut rendered = rendered;
         if let Some(map) = rendered.as_object_mut() {
@@ -190,7 +190,7 @@ fn mock_execute_pack(
     allow_external: bool,
     mock_external: bool,
     mock_external_payload: JsonValue,
-    secrets_env_prefix: Option<&str>,
+    secrets_seed: Option<&Path>,
 ) -> Result<JsonValue> {
     let bytes =
         std::fs::read(path).with_context(|| format!("failed to read pack {}", path.display()))?;
@@ -208,13 +208,19 @@ fn mock_execute_pack(
         .iter()
         .find(|f| f.id.as_str() == flow_id)
         .ok_or_else(|| anyhow!("flow `{flow_id}` not found in pack"))?;
-    let exec_opts = crate::tests_exec::ExecOptions::builder()
+    let mut exec_builder = crate::tests_exec::ExecOptions::builder();
+    if let Some(seed_path) = secrets_seed {
+        exec_builder = exec_builder
+            .load_seed_file(seed_path)
+            .context("failed to load secrets seed")?;
+    }
+    let exec_opts = exec_builder
         .offline(offline)
         .external_enabled(allow_external)
         .mock_external(mock_external)
         .mock_external_payload(mock_external_payload)
-        .secrets_env_prefix(secrets_env_prefix.unwrap_or_default())
-        .build();
+        .build()
+        .context("build mock exec options")?;
     let exec = crate::tests_exec::execute_with_options(&flow.flow, input, &exec_opts)?;
     Ok(exec)
 }

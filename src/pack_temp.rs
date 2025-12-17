@@ -6,6 +6,7 @@ use tempfile::TempDir;
 
 use packc::BuildArgs;
 use packc::build::{self, BuildOptions};
+use packc::runtime;
 
 /// Ensure we have a concrete .gtpack on disk. If the input is already a file, reuse it.
 /// If it is a directory, shell out to packc to build a temporary .gtpack and return its path.
@@ -37,7 +38,10 @@ fn build_packc_temp(source: &Path, gtpack_out: &Path, verbose: bool) -> Result<(
         sbom: Some(gtpack_out.with_extension("cdx.json")),
         gtpack_out: Some(gtpack_out.to_path_buf()),
         dry_run: false,
+        secrets_req: None,
+        default_secret_scope: None,
     };
-    let opts = BuildOptions::from_args(build_args)?;
+    let runtime = runtime::resolve_runtime(None, None, true, None)?;
+    let opts = BuildOptions::from_args(build_args, &runtime)?;
     build::run(&opts).context("packc build failed for temporary .gtpack")
 }

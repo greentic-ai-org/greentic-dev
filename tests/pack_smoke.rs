@@ -41,7 +41,7 @@ fn pack_build_run_verify_smoke() {
         allow_external: false,
         mock_external: false,
         mock_external_payload: None,
-        secrets_env_prefix: None,
+        secrets_seed: None,
     })
     .expect("pack run");
 

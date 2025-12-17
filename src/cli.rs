@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use crate::secrets_cli::SecretsCommand;
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use greentic_component::cmd::{
     build::BuildArgs as ComponentBuildArgs, doctor::DoctorArgs as ComponentDoctorArgs,
@@ -35,6 +36,12 @@ pub enum Command {
     /// MCP tooling
     #[command(subcommand)]
     Mcp(McpCommand),
+    /// GUI dev tooling (serve packs locally, stage dev packs)
+    #[command(subcommand)]
+    Gui(GuiCommand),
+    /// Secrets convenience wrappers
+    #[command(subcommand)]
+    Secrets(SecretsCommand),
 }
 
 #[derive(Subcommand, Debug)]
@@ -77,6 +84,76 @@ pub struct FlowAddStepArgs {
     /// Automatically append routing from an existing node (if provided)
     #[arg(long = "after")]
     pub after: Option<String>,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum GuiCommand {
+    /// Serve GUI packs locally via greentic-gui
+    Serve(GuiServeArgs),
+    /// Stage a local GUI pack from static assets
+    PackDev(GuiPackDevArgs),
+}
+
+#[derive(Args, Debug)]
+pub struct GuiServeArgs {
+    /// Path to gui-dev.yaml (defaults to discovery order)
+    #[arg(long = "config")]
+    pub config: Option<PathBuf>,
+    /// Address to bind (default: 127.0.0.1:8080)
+    #[arg(long = "bind")]
+    pub bind: Option<String>,
+    /// Domain reported to greentic-gui (default: localhost:8080)
+    #[arg(long = "domain")]
+    pub domain: Option<String>,
+    /// Override greentic-gui binary path (otherwise PATH is used)
+    #[arg(long = "gui-bin")]
+    pub gui_bin: Option<PathBuf>,
+    /// Disable cargo fallback when greentic-gui binary is missing
+    #[arg(long = "no-cargo-fallback")]
+    pub no_cargo_fallback: bool,
+    /// Open a browser after the server starts
+    #[arg(long = "open-browser")]
+    pub open_browser: bool,
+}
+
+#[derive(Args, Debug, Clone)]
+pub struct GuiPackDevArgs {
+    /// Directory containing built/static assets to stage
+    #[arg(long = "dir")]
+    pub dir: PathBuf,
+    /// Output directory for the staged pack (must be empty or absent)
+    #[arg(long = "output")]
+    pub output: PathBuf,
+    /// Kind of GUI pack to generate (controls manifest shape)
+    #[arg(long = "kind", value_enum, default_value = "layout")]
+    pub kind: GuiPackKind,
+    /// Entrypoint HTML file (relative to assets) for layout/feature manifests
+    #[arg(long = "entrypoint", default_value = "index.html")]
+    pub entrypoint: String,
+    /// Optional manifest to copy instead of generating one
+    #[arg(long = "manifest")]
+    pub manifest: Option<PathBuf>,
+    /// Feature route (only used when kind=feature)
+    #[arg(long = "feature-route")]
+    pub feature_route: Option<String>,
+    /// Feature HTML file (relative to assets; kind=feature)
+    #[arg(long = "feature-html", default_value = "index.html")]
+    pub feature_html: String,
+    /// Mark the feature route as authenticated (kind=feature)
+    #[arg(long = "feature-authenticated")]
+    pub feature_authenticated: bool,
+    /// Optional build command to run before staging
+    #[arg(long = "build-cmd")]
+    pub build_cmd: Option<String>,
+    /// Skip running the build command even if provided
+    #[arg(long = "no-build")]
+    pub no_build: bool,
+}
+
+#[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GuiPackKind {
+    Layout,
+    Feature,
 }
 
 #[derive(Subcommand, Debug)]
@@ -133,9 +210,9 @@ pub struct PackRunArgs {
     /// Path to JSON payload used for mocked external responses (mock exec only)
     #[arg(long = "mock-external-payload", hide = true)]
     pub mock_external_payload: Option<PathBuf>,
-    /// Prefix for env vars to load into the mock secrets store (mock exec only)
-    #[arg(long = "secrets-env-prefix", hide = true)]
-    pub secrets_env_prefix: Option<String>,
+    /// Secrets seed file applied to the mock secrets store (mock exec only)
+    #[arg(long = "secrets-seed", hide = true)]
+    pub secrets_seed: Option<PathBuf>,
     /// Enforcement policy for pack signatures
     #[arg(long = "policy", default_value = "devok", value_enum)]
     pub policy: RunPolicyArg,

@@ -118,13 +118,13 @@ fn pack_realism_l2_1_default_add_step_does_not_require_optional_fields() -> Resu
         .and_then(|v| v.as_object())
         .ok_or_else(|| anyhow::anyhow!("plain node missing"))?;
     // default path should not inject optional ask fields
-    if let Some(exec) = node.get("component.exec").and_then(|v| v.as_object()) {
-        if let Some(input) = exec.get("input").and_then(|v| v.as_object()) {
-            assert!(
-                !input.contains_key("base_url"),
-                "default add-step should not include prompt-only optional fields"
-            );
-        }
+    if let Some(exec) = node.get("component.exec").and_then(|v| v.as_object())
+        && let Some(input) = exec.get("input").and_then(|v| v.as_object())
+    {
+        assert!(
+            !input.contains_key("base_url"),
+            "default add-step should not include prompt-only optional fields"
+        );
     }
     Ok(())
 }

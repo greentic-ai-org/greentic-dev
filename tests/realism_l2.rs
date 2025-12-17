@@ -1,3 +1,5 @@
+#![allow(clippy::collapsible_if)]
+
 mod support;
 
 use anyhow::{Context, Result};

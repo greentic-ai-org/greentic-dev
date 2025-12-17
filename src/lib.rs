@@ -8,6 +8,7 @@ pub mod delegate;
 pub mod dev_runner;
 pub mod distributor;
 pub mod flow_cmd;
+pub mod gui_dev;
 pub mod mcp_cmd;
 pub mod pack_build;
 pub mod pack_cli;
@@ -16,6 +17,8 @@ pub mod pack_run;
 pub mod pack_temp;
 pub mod pack_verify;
 pub mod path_safety;
+pub mod secrets_cli;
+pub mod secrets_seed;
 pub mod tests_exec;
 pub mod util;
 

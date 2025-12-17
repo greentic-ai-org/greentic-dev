@@ -1,0 +1,10 @@
+{
+  "location": { "name": "London", "country": "UK" },
+  "forecast": {
+    "forecastday": [
+      { "date": "2025-01-01", "day": { "condition": { "text": "Sunny" }, "avgtemp_c": 12.3 } },
+      { "date": "2025-01-02", "day": { "condition": { "text": "Light rain" }, "avgtemp_c": 9.8 } },
+      { "date": "2025-01-03", "day": { "condition": { "text": "Cloudy" }, "avgtemp_c": 11.0 } }
+    ]
+  }
+}

@@ -127,27 +127,21 @@ fn flow_add_step_inserts_node() {
 
     let updated = fs::read_to_string(root.join("flows/demo.ygtc")).unwrap();
     let doc: serde_yaml::Value = serde_yaml::from_str(&updated).unwrap();
+    let tagless = |s: &str| serde_yaml::Value::String(s.to_string(), None);
     let nodes = doc
-        .get(serde_yaml::Value::String("nodes".to_string(), None))
+        .get(&tagless("nodes"))
         .and_then(|n| n.as_mapping())
         .expect("nodes map");
-    assert!(
-        nodes
-            .get(&serde_yaml::Value::String("qa_step".to_string(), None))
-            .is_some()
-    );
+    assert!(nodes.get(&tagless("qa_step")).is_some());
     let routing = nodes
-        .get(&serde_yaml::Value::String("start".to_string(), None))
-        .and_then(|node| {
-            node.as_mapping()
-                .and_then(|m| m.get(&serde_yaml::Value::String("routing".to_string(), None)))
-        })
+        .get(&tagless("start"))
+        .and_then(|node| node.as_mapping().and_then(|m| m.get(&tagless("routing"))))
         .and_then(|r| r.as_sequence())
         .expect("routing array");
     assert!(
         routing.iter().any(|entry| entry
             .as_mapping()
-            .and_then(|m| m.get(&serde_yaml::Value::String("to".to_string(), None)))
+            .and_then(|m| m.get(&tagless("to")))
             .and_then(|v| v.as_str())
             .map(|s| s == "qa_step")
             .unwrap_or(false)),

@@ -171,6 +171,8 @@ so you immediately know which fields rely on defaults versus user input.
 | Scaffold with org defaults      | `greentic-dev component new --name echo --org ai.greentic`              |
 | Doctor a component workspace    | `greentic-dev component doctor --path ./echo` *(delegated)*             |
 | Set default org/template        | `greentic-dev config set defaults.component.org ai.greentic`            |
+| Serve GUI packs locally         | `greentic-dev gui serve [--config <path>]`                              |
+| Stage a GUI dev pack            | `greentic-dev gui pack-dev --dir <assets> --output <pack-dir>`          |
 | Inspect MCP tool map (feature)  | `greentic-dev mcp doctor <toolmap>`                                     |
 | Run full test suite             | `cargo test`                                                            |
 | Lint everything                 | `cargo clippy --all-targets --all-features -- -D warnings`              |
@@ -196,6 +198,35 @@ token = ""
 Select a profile with `--profile <name>` or set `GREENTIC_DISTRIBUTOR_PROFILE`.
 
 For a deeper, example-driven walkthrough, see `docs/programmer-guide.md`.
+
+---
+
+## GUI dev workflow (packs + greentic-gui)
+
+`greentic-dev gui serve` runs greentic-gui against a local set of GUI packs. It discovers config in this order: `./gui-dev.yaml`, `./.greentic/gui-dev.yaml`, `~/.config/greentic-dev/gui-dev.yaml`. Defaults: bind `127.0.0.1:8080`, domain `localhost:8080`. greentic-gui is spawned from `--gui-bin`, `greentic-gui` on PATH, or `cargo run -p greentic-gui`.
+
+Example `gui-dev.yaml`:
+
+```yaml
+tenant: did:web:example
+domain: localhost:8080
+layout_pack: ./packs/layout
+auth_pack: ./packs/auth
+skin_pack: ./packs/skin
+feature_packs:
+  - ./packs/billing
+env:
+  LOG_LEVEL: debug
+```
+
+`greentic-dev gui pack-dev` stages a minimal GUI pack from static assets:
+
+```
+greentic-dev gui pack-dev --dir dist --output ./packs/layout --kind layout --entrypoint index.html
+greentic-dev gui pack-dev --dir dist --output ./packs/billing --kind feature --feature-route /invoices --feature-html invoices.html
+```
+
+Use `--manifest` to supply a custom manifest or `--build-cmd`/`--no-build` to control local builds. Output must be empty; assets are copied to `output/gui/assets`, and a manifest is generated if not provided.
 
 ---
 

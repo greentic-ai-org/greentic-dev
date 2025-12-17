@@ -131,7 +131,6 @@ fn pack_realism_l4_external_call_allowed_but_mocked() -> Result<()> {
         mock_external: true,
         secrets: Arc::new(mem),
         mock_external_payload: json!({"mocked": true, "source": "test-fixture", "data": {"n": 7}}),
-        ..ExecOptions::default()
     };
 
     let result =

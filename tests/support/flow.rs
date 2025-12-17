@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+#![allow(clippy::collapsible_if)]
 
 use std::collections::{HashMap, HashSet};
 use std::fs;
@@ -30,7 +31,7 @@ pub fn load_default_flow(manifest_path: &Path) -> Result<JsonValue> {
     let dev_flows = manifest
         .get("dev_flows")
         .and_then(|v| v.as_object())
-        .ok_or_else(|| missing_default_err())?;
+        .ok_or(missing_default_err())?;
     let Some(default) = dev_flows.get("default") else {
         return Err(missing_default_err());
     };

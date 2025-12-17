@@ -20,6 +20,7 @@ pub mod exec;
 pub mod flow;
 pub mod l3;
 pub mod l4;
+pub mod real_weather;
 
 pub static WORKDIR_LOCK: Mutex<()> = Mutex::new(());
 
@@ -171,8 +172,6 @@ pub fn load_gtpack(gtpack_path: &Path) -> Result<(PackManifest, HashMap<String, 
     Ok((manifest, components))
 }
 
-#[allow(dead_code)]
-#[allow(dead_code)]
 pub fn compute_blake3_hex(bytes: &[u8]) -> String {
     let mut hasher = Hasher::new();
     hasher.update(bytes);
@@ -209,8 +208,6 @@ fn ensure_default_dev_flow(manifest: &mut serde_json::Value) {
     );
 }
 
-#[allow(dead_code)]
-#[allow(dead_code)]
 pub fn diag(test: &str, stage: &str, workspace: &Workspace, note: &str) {
     diag_with_owner(test, stage, workspace, note, "greentic-dev");
 }

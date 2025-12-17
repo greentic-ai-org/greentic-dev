@@ -28,7 +28,7 @@ pub struct ExecOptionsBuilder {
     external_enabled: bool,
     mock_external: bool,
     mock_external_payload: JsonValue,
-    secrets_env_prefix: String,
+    seeds: HashMap<String, Vec<u8>>,
 }
 
 impl ExecOptionsBuilder {
@@ -52,20 +52,26 @@ impl ExecOptionsBuilder {
         self
     }
 
-    pub fn secrets_env_prefix(mut self, prefix: &str) -> Self {
-        self.secrets_env_prefix = prefix.to_string();
+    pub fn load_seed_file(mut self, path: &std::path::Path) -> Result<Self> {
+        let seeds = crate::secrets_seed::load_seed_file(path)?;
+        self.seeds.extend(seeds);
+        Ok(self)
+    }
+
+    pub fn seed_entry(mut self, key: &str, bytes: &[u8]) -> Self {
+        self.seeds.insert(key.to_string(), bytes.to_vec());
         self
     }
 
-    pub fn build(self) -> ExecOptions {
-        let secrets = MemorySecrets::from_env_prefix(&self.secrets_env_prefix);
-        ExecOptions {
+    pub fn build(self) -> Result<ExecOptions> {
+        let secrets = MemorySecrets::from_seed_map(&self.seeds);
+        Ok(ExecOptions {
             offline: self.offline,
             external_enabled: self.external_enabled,
             mock_external: self.mock_external,
             mock_external_payload: self.mock_external_payload,
             secrets: Arc::new(secrets),
-        }
+        })
     }
 }
 
@@ -79,22 +85,20 @@ impl MemorySecrets {
         Self::default()
     }
 
-    pub fn insert_str(&self, key: &str, value: &str) {
-        let mut guard = self.inner.lock().expect("mutex poisoned");
-        guard.insert(key.to_string(), value.as_bytes().to_vec());
-    }
-
-    pub fn from_env_prefix(prefix: &str) -> Self {
+    pub fn from_seed_map(map: &HashMap<String, Vec<u8>>) -> Self {
         let mgr = Self::new();
-        if prefix.is_empty() {
-            return mgr;
-        }
-        for (k, v) in std::env::vars() {
-            if let Some(stripped) = k.strip_prefix(prefix) {
-                mgr.insert_str(stripped, &v);
+        {
+            let mut guard = mgr.inner.lock().expect("mutex poisoned");
+            for (k, v) in map {
+                guard.insert(k.clone(), v.clone());
             }
         }
         mgr
+    }
+
+    pub fn insert_str(&self, key: &str, value: &str) {
+        let mut guard = self.inner.lock().expect("mutex poisoned");
+        guard.insert(key.to_string(), value.as_bytes().to_vec());
     }
 }
 
@@ -122,7 +126,7 @@ impl SecretsManager for MemorySecrets {
 }
 
 pub fn execute(flow: &Flow, input: &JsonValue) -> Result<JsonValue> {
-    let opts = ExecOptionsBuilder::default().build();
+    let opts = ExecOptionsBuilder::default().build()?;
     execute_with_options(flow, input, &opts)
 }
 
