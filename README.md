@@ -42,12 +42,7 @@ cargo install cargo-binstall
 cargo binstall greentic-dev
 ```
 
-Optional companion binaries (used by `greentic-dev component …` and `greentic-dev pack …`) can also be pulled from releases instead of building from source:
-
-```bash
-cargo binstall greentic-component
-cargo binstall greentic-pack --bin packc
-```
+`cargo binstall greentic-dev` installs the full companion tool bundle (including `greentic-component`, `packc`, `greentic-secrets`, and `greentic-gui`) so you don't need to install them separately.
 
 Need the latest commit or working from a fork?
 

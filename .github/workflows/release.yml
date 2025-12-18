@@ -117,13 +117,38 @@ jobs:
           cargo fetch --locked --target "$TARGET"
           cargo build --workspace --locked --all-features --release --target "$TARGET"
 
-          BIN_PATH="$CARGO_TARGET_DIR/$TARGET/release/greentic-dev"
+          BIN_EXT=""
           if [[ "$TARGET" == *windows* ]]; then
-            BIN_PATH+=".exe"
+            BIN_EXT=".exe"
           fi
 
           mkdir -p "$STAGING"
-          cp "$BIN_PATH" "$STAGING/"
+          cp "$CARGO_TARGET_DIR/$TARGET/release/greentic-dev$BIN_EXT" "$STAGING/"
+          cp "$CARGO_TARGET_DIR/$TARGET/release/packc$BIN_EXT" "$STAGING/"
+          cp "$CARGO_TARGET_DIR/$TARGET/release/greentic-component$BIN_EXT" "$STAGING/"
+
+          # Optional companion tools included only in release bundles.
+          # These are expected to be provided by sibling repos with matching version tags.
+          # If you don't want to ship them, remove these blocks and the `bundled-tools` bins.
+          fetch_tool() {
+            local repo="$1"
+            local tool="$2"
+            local url="https://github.com/${repo}/releases/download/v${VERSION}/${tool}-v${VERSION}-${TARGET}.tgz"
+            echo "[bundle] fetching ${tool} from ${url}"
+            tmpdir="$(mktemp -d)"
+            curl -fsSL "$url" -o "$tmpdir/${tool}.tgz"
+            tar xzf "$tmpdir/${tool}.tgz" -C "$tmpdir"
+            if [[ ! -f "$tmpdir/${tool}${BIN_EXT}" ]]; then
+              echo "[bundle] expected $tmpdir/${tool}${BIN_EXT} in archive; contents:"
+              ls -la "$tmpdir"
+              exit 1
+            fi
+            cp "$tmpdir/${tool}${BIN_EXT}" "$STAGING/"
+          }
+
+          fetch_tool "greentic-ai/greentic-gui" "greentic-gui"
+          fetch_tool "greentic-ai/greentic-secrets" "greentic-secrets"
+
           cp README.md LICENSE-MIT LICENSE-APACHE "$STAGING/"
 
           tar czf "$STAGING.tgz" -C "$STAGING" .

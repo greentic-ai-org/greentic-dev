@@ -1,6 +1,6 @@
 [package]
 name = "greentic-dev"
-version = "0.4.20"
+version = "0.4.21"
 edition = "2024"
 description = "Developer CLI and local tooling for Greentic flows, packs, and components"
 license = "MIT OR Apache-2.0"
@@ -16,9 +16,36 @@ include = [
     "Cargo.toml",
 ]
 
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/greentic-dev-v{ version }-{ target }.tgz"
+bin-dir = "{ bin }{ binary-ext }"
+
+[[bin]]
+name = "packc"
+path = "src/bin/packc.rs"
+
+[[bin]]
+name = "greentic-component"
+path = "src/bin/greentic-component.rs"
+
+[[bin]]
+name = "greentic-secrets"
+path = "src/bin/greentic-secrets.rs"
+required-features = ["bundled-tools"]
+
+[[bin]]
+name = "greentic-gui"
+path = "src/bin/greentic-gui.rs"
+required-features = ["bundled-tools"]
+
 [workspace]
 members = ["crates/dev-viewer", "xtask"]
 resolver = "2"
+
+[features]
+# This crate ships a multi-tool bin bundle via release artifacts. Some bins are
+# only meaningful when installed from those artifacts.
+bundled-tools = []
 
 [dependencies]
 anyhow = "1.0"
