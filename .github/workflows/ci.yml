@@ -24,12 +24,19 @@ jobs:
       CARGO_NET_RETRY: "10"
       CARGO_HTTP_CHECK_REVOKE: "false"
       RUSTFLAGS: "-D warnings"
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_TEST_DEBUG: "1"
 
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: false
           fetch-depth: 0
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /opt/ghc /usr/share/dotnet || true
+          docker system prune -af || true
 
       - name: Use repo rust-toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -48,7 +55,6 @@ jobs:
         with:
           path: |
             ${{ env.CARGO_HOME }}
-            ${{ env.CARGO_TARGET_DIR }}
           key: ci-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.job }}
           restore-keys: |
             ci-${{ runner.os }}-${{ github.job }}-
