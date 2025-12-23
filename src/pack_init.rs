@@ -22,7 +22,7 @@ pub enum PackInitIntent {
 }
 
 pub fn run(from: &str, profile: Option<&str>) -> Result<()> {
-    let config = config::load()?;
+    let config = config::load_with_meta(None)?;
     let profile = resolve_profile(&config, profile)?;
     let client = DevDistributorClient::from_profile(profile.clone())?;
 
@@ -75,7 +75,7 @@ pub fn run_component_add(
     profile: Option<&str>,
     intent: PackInitIntent,
 ) -> Result<PathBuf> {
-    let config = config::load()?;
+    let config = config::load_with_meta(None)?;
     let profile = resolve_profile(&config, profile)?;
     let client = DevDistributorClient::from_profile(profile.clone())?;
 

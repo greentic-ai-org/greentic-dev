@@ -355,7 +355,7 @@ pub struct McpDoctorArgs {
 
 #[derive(Subcommand, Debug)]
 pub enum ConfigCommand {
-    /// Set a key in ~/.greentic/config.toml (e.g. defaults.component.org)
+    /// Set a key in greentic-dev config (e.g. defaults.component.org)
     Set(ConfigSetArgs),
 }
 
@@ -365,7 +365,7 @@ pub struct ConfigSetArgs {
     pub key: String,
     /// Value to assign to the key (stored as a string)
     pub value: String,
-    /// Override config file path (default: ~/.greentic/config.toml)
+    /// Override config file path (default: $XDG_CONFIG_HOME/greentic-dev/config.toml)
     #[arg(long = "file")]
     pub file: Option<PathBuf>,
 }

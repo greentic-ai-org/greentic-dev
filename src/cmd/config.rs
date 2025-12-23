@@ -17,7 +17,7 @@ fn set_value(args: &ConfigSetArgs) -> Result<()> {
     let path = match &args.file {
         Some(path) => path.clone(),
         None => config::config_path().ok_or_else(|| {
-            anyhow!("failed to resolve ~/.greentic/config.toml (no home directory found)")
+            anyhow!("failed to resolve default config path (no home directory found)")
         })?,
     };
 

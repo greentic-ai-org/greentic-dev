@@ -5,7 +5,9 @@ use anyhow::{Context, Result, bail};
 use reqwest::blocking::Client;
 use reqwest::header::{AUTHORIZATION, CONTENT_TYPE};
 
-use crate::config::{DistributorProfileConfig, GreenticConfig};
+use crate::config::{
+    DefaultProfileSelection, DistributorProfileConfig, GreenticConfig, LoadedGreenticConfig,
+};
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -126,7 +128,7 @@ impl DistributorProfile {
             .clone()
             .unwrap_or_else(|| "dev".to_string());
         Ok(Self {
-            name: name.to_string(),
+            name: cfg.name.clone().unwrap_or_else(|| name.to_string()),
             url: base_url,
             token,
             tenant_id,
@@ -137,18 +139,52 @@ impl DistributorProfile {
 }
 
 pub fn resolve_profile(
-    config: &GreenticConfig,
+    config: &LoadedGreenticConfig,
     profile_arg: Option<&str>,
 ) -> Result<DistributorProfile> {
     let env_profile = std::env::var("GREENTIC_DISTRIBUTOR_PROFILE").ok();
-    let profile_name = profile_arg.or(env_profile.as_deref()).unwrap_or("default");
-    let map: &HashMap<String, DistributorProfileConfig> = &config.distributor.profiles;
-    let Some(profile_cfg) = map.get(profile_name) else {
-        bail!(
-            "distributor profile `{profile_name}` not found; configure it in ~/.config/greentic-dev/config.toml"
-        );
-    };
-    DistributorProfile::from_pair(profile_name, profile_cfg)
+    let map: HashMap<String, DistributorProfileConfig> = config.config.distributor_profiles();
+    let selection = select_profile(profile_arg, env_profile.as_deref(), &config.config);
+
+    match selection {
+        ProfileSelection::Inline(cfg) => {
+            let name = cfg.name.clone().unwrap_or_else(|| "default".to_string());
+            DistributorProfile::from_pair(&name, &cfg)
+        }
+        ProfileSelection::Named(profile_name) => {
+            let Some(profile_cfg) = map.get(&profile_name) else {
+                let mut available_profiles = map.keys().cloned().collect::<Vec<_>>();
+                available_profiles.sort();
+                let available = if available_profiles.is_empty() {
+                    "<none>".to_string()
+                } else {
+                    available_profiles.join(", ")
+                };
+                let loaded = config
+                    .loaded_from
+                    .as_ref()
+                    .map(|p| p.display().to_string())
+                    .unwrap_or_else(|| "(no config file loaded)".to_string());
+                let attempted = if config.attempted_paths.is_empty() {
+                    "(none)".to_string()
+                } else {
+                    config
+                        .attempted_paths
+                        .iter()
+                        .map(|p| p.display().to_string())
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                };
+                bail!(
+                    "distributor profile `{profile_name}` not found in {} (available: {}). searched config paths: {}. Override with --profile, GREENTIC_DISTRIBUTOR_PROFILE, or GREENTIC_DEV_CONFIG_FILE.",
+                    loaded,
+                    available,
+                    attempted
+                );
+            };
+            DistributorProfile::from_pair(&profile_name, profile_cfg)
+        }
+    }
 }
 
 fn resolve_token(raw: Option<String>) -> Result<Option<String>> {
@@ -162,6 +198,31 @@ fn resolve_token(raw: Option<String>) -> Result<Option<String>> {
     } else {
         Ok(Some(raw))
     }
+}
+
+fn select_profile(
+    arg: Option<&str>,
+    env: Option<&str>,
+    config: &GreenticConfig,
+) -> ProfileSelection {
+    if let Some(arg) = arg {
+        return ProfileSelection::Named(arg.to_string());
+    }
+    if let Some(env) = env {
+        return ProfileSelection::Named(env.to_string());
+    }
+    if let Some(default) = &config.distributor.default_profile {
+        return match default {
+            DefaultProfileSelection::Name(name) => ProfileSelection::Named(name.clone()),
+            DefaultProfileSelection::Inline(cfg) => ProfileSelection::Inline(cfg.clone()),
+        };
+    }
+    ProfileSelection::Named("default".to_string())
+}
+
+enum ProfileSelection {
+    Named(String),
+    Inline(DistributorProfileConfig),
 }
 
 #[derive(Debug, Clone)]

@@ -27,7 +27,7 @@ pub fn run_component_add(
     profile: Option<&str>,
     intent: PackInitIntent,
 ) -> Result<PathBuf> {
-    let cfg = config::load()?;
+    let cfg = config::load_with_meta(None)?;
     let profile = distributor::resolve_profile(&cfg, profile)?;
     let (component_id, version_req) = parse_coordinate(coordinate)?;
     let tenant_ctx = build_tenant_ctx(&profile)?;

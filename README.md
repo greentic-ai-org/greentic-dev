@@ -178,19 +178,36 @@ _Component commands above delegate to the `greentic-component` CLI, so new subco
 
 ### Distributor profiles (for `component add` / `pack init`)
 
-Configure distributor endpoints and tokens in `~/.greentic/config.toml` (or point `GREENTIC_CONFIG` to an alternate file):
+Config search order (first existing wins): `GREENTIC_DEV_CONFIG_FILE` → `GREENTIC_CONFIG_FILE` → `GREENTIC_CONFIG` → `$XDG_CONFIG_HOME/greentic-dev/config.toml` → `$HOME/.config/greentic-dev/config.toml` → `$HOME/.greentic/config.toml`. The loaded path and search list are reported in errors.
+
+Prefer the profile map form:
 
 ```toml
-[distributor.default]
-url = "https://distributor.greentic.cloud"
-token = "env:GREENTIC_TOKEN" # resolved via environment variable
+[distributor]
+default_profile = "default" # or set GREENTIC_DISTRIBUTOR_PROFILE/--profile
 
-[distributor.dev]
-url = "http://localhost:7070"
+[distributor.profiles.default]
+base_url = "https://distributor.greentic.cloud"
+token = "env:GREENTIC_TOKEN" # resolved via environment variable
+tenant_id = "prod"
+environment_id = "prod"
+
+[distributor.profiles.dev]
+base_url = "http://localhost:7070"
 token = ""
+tenant_id = "dev"
+environment_id = "dev"
 ```
 
-Select a profile with `--profile <name>` or set `GREENTIC_DISTRIBUTOR_PROFILE`.
+Inline defaults are also supported:
+
+```toml
+[distributor]
+default_profile = { name = "inline", base_url = "http://localhost:7070", tenant_id = "dev", environment_id = "dev" }
+```
+
+Select a profile with `--profile <name>` or `GREENTIC_DISTRIBUTOR_PROFILE`.
+Legacy `[distributor.<name>]` tables remain supported; they are merged with `distributor.profiles`.
 
 For a deeper, example-driven walkthrough, see `docs/programmer-guide.md`.
 

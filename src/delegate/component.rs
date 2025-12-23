@@ -84,7 +84,7 @@ fn resolve_program(config: &GreenticConfig) -> Result<ResolvedProgram> {
         Err(error) => {
             let config_hint = config::config_path()
                 .map(|path| path.display().to_string())
-                .unwrap_or_else(|| "~/.greentic/config.toml".to_string());
+                .unwrap_or_else(|| "$XDG_CONFIG_HOME/greentic-dev/config.toml".to_string());
             Err(anyhow!(
                 "failed to locate `{TOOL_NAME}` on PATH ({error}). Install it via `cargo install \
                  greentic-component` or set [tools.greentic-component].path in {config_hint}."

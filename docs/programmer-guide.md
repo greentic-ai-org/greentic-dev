@@ -11,23 +11,42 @@
 
 ## Configure distributor profiles
 
-Store profiles in `~/.greentic/config.toml` (or point `GREENTIC_CONFIG` elsewhere):
+Config search order (first existing wins): `GREENTIC_DEV_CONFIG_FILE` → `GREENTIC_CONFIG_FILE` → `GREENTIC_CONFIG` → `$XDG_CONFIG_HOME/greentic-dev/config.toml` → `$HOME/.config/greentic-dev/config.toml` → `$HOME/.greentic/config.toml`. The CLI reports the loaded path and the paths it tried.
+
+Recommended layout:
 
 ```toml
-[distributor.default]
-url = "https://distributor.greentic.cloud"
-token = "env:GREENTIC_TOKEN" # read from env var
+[distributor]
+default_profile = "default" # override via --profile or GREENTIC_DISTRIBUTOR_PROFILE
 
-[distributor.dev]
-url = "http://localhost:7070"
-token = "" # optional
+[distributor.profiles.default]
+base_url = "https://distributor.greentic.cloud"
+token = "env:GREENTIC_TOKEN" # read from env var
+tenant_id = "prod"
+environment_id = "prod"
+
+[distributor.profiles.dev]
+base_url = "http://localhost:7070"
+token = ""
+tenant_id = "dev"
+environment_id = "dev"
 ```
+
+Inline defaults are also supported:
+
+```toml
+[distributor]
+default_profile = { name = "inline", base_url = "http://localhost:7070", tenant_id = "dev", environment_id = "dev" }
+```
+
+Legacy `[distributor.<name>]` tables continue to work; they are merged with `distributor.profiles` when present.
 
 Runtime selection order:
 
 1. `--profile <name>` flag
 2. `GREENTIC_DISTRIBUTOR_PROFILE` env var
-3. `distributor.default`
+3. `distributor.default_profile` (string or inline)
+4. `default` profile name
 
 Tokens support `env:VARNAME` indirection; otherwise treated literally.
 
