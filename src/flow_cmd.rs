@@ -17,6 +17,8 @@ use tempfile::NamedTempFile;
 use greentic_types::FlowId;
 use greentic_types::component::ComponentManifest;
 
+const DEFAULT_CONFIG_FLOW_TYPE: &str = "component-config";
+
 pub fn validate(path: &Path, compact_json: bool) -> Result<()> {
     let root = std::env::current_dir()
         .context("failed to resolve workspace root")?
@@ -41,6 +43,21 @@ pub fn validate(path: &Path, compact_json: bool) -> Result<()> {
 
     println!("{serialized}");
     Ok(())
+}
+
+pub fn render_config_flow_yaml(config_flow_id: &str, graph: &JsonValue) -> Result<String> {
+    let mut graph_obj = graph
+        .as_object()
+        .cloned()
+        .ok_or_else(|| anyhow!("config flow `{config_flow_id}` graph is not an object"))?;
+    let ty = graph_obj
+        .entry("type".to_string())
+        .or_insert(JsonValue::String(DEFAULT_CONFIG_FLOW_TYPE.to_string()));
+    if !ty.is_string() {
+        *ty = JsonValue::String(DEFAULT_CONFIG_FLOW_TYPE.to_string());
+    }
+    let normalized = JsonValue::Object(graph_obj);
+    serde_yaml::to_string(&normalized).context("failed to render config flow graph to YAML")
 }
 
 pub fn run_add_step(args: FlowAddStepArgs) -> Result<()> {
@@ -80,9 +97,6 @@ pub fn run_add_step(args: FlowAddStepArgs) -> Result<()> {
             config_flow_id
         );
     };
-    if !config_flow.graph.is_object() {
-        bail!("config flow `{config_flow_id}` graph is not an object");
-    }
 
     let coord = args
         .coordinate
@@ -92,8 +106,7 @@ pub fn run_add_step(args: FlowAddStepArgs) -> Result<()> {
     let _bundle_dir = resolve_component_bundle(&coord, args.profile.as_deref())?;
 
     // Render the dev flow graph to YAML so the existing runner can consume it.
-    let config_flow_yaml = serde_yaml::to_string(&config_flow.graph)
-        .context("failed to render config flow graph to YAML")?;
+    let config_flow_yaml = render_config_flow_yaml(&config_flow_id, &config_flow.graph)?;
     let mut temp_flow =
         NamedTempFile::new().context("failed to create temporary config flow file")?;
     temp_flow
