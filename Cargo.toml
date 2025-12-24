@@ -18,6 +18,7 @@ include = [
 
 [package.metadata.binstall]
 pkg-url = "{ repo }/releases/download/v{ version }/greentic-dev-v{ version }-{ target }.tgz"
+pkg-fmt = "tgz"
 bin-dir = "{ bin }{ binary-ext }"
 
 [[bin]]
