@@ -1,4 +1,4 @@
-# greentic-dev Programmer Guide – distributor edition
+# greentic-dev Distributor Guide
 
 > Practical, slightly opinionated notes for building with greentic-dev now that Distributor integration is in play. Bring your own coffee.
 

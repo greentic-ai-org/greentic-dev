@@ -10,6 +10,14 @@ use std::sync::Mutex;
 
 static WORKDIR_LOCK: Mutex<()> = Mutex::new(());
 
+fn set_env(key: &str, value: &str) {
+    unsafe { std::env::set_var(key, value) }
+}
+
+fn remove_env(key: &str) {
+    unsafe { std::env::remove_var(key) }
+}
+
 fn write_test_manifest(root: &Path) {
     let manifest = json!({
         "id": "dev.test",
@@ -315,4 +323,105 @@ fn flow_add_step_errors_when_pack_flow_missing() {
         err.to_string().contains("Pack flow 'missing'"),
         "unexpected error: {err}"
     );
+}
+
+#[test]
+fn flow_add_step_respects_offline_without_stub() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path().to_path_buf();
+    write_test_manifest(&root);
+    write_pack_flow(&root);
+
+    let _guard = WORKDIR_LOCK.lock().unwrap();
+    let prev_dir = std::env::current_dir().unwrap();
+    std::env::set_current_dir(&root).unwrap();
+
+    let prev_offline = std::env::var("GREENTIC_DEV_OFFLINE").ok();
+    let prev_stub = std::env::var("GREENTIC_DEV_RESOLVE_STUB").ok();
+    set_env("GREENTIC_DEV_OFFLINE", "1");
+    remove_env("GREENTIC_DEV_RESOLVE_STUB");
+
+    let err = run_add_step(FlowAddStepArgs {
+        flow_id: "demo".into(),
+        coordinate: Some("component://greentic/example@^1".into()),
+        profile: None,
+        mode: Some(ConfigFlowModeArg::Default),
+        after: Some("start".into()),
+        flow: "default".into(),
+        manifest: None,
+    })
+    .expect_err("offline add-step should reject remote coordinate without stub");
+
+    if let Some(val) = prev_offline {
+        set_env("GREENTIC_DEV_OFFLINE", &val);
+    } else {
+        remove_env("GREENTIC_DEV_OFFLINE");
+    }
+    if let Some(val) = prev_stub {
+        set_env("GREENTIC_DEV_RESOLVE_STUB", &val);
+    } else {
+        remove_env("GREENTIC_DEV_RESOLVE_STUB");
+    }
+    std::env::set_current_dir(prev_dir).unwrap();
+
+    assert!(
+        err.to_string().contains("offline mode enabled"),
+        "unexpected error: {err}"
+    );
+}
+
+#[test]
+fn flow_add_step_uses_stubbed_resolve() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path().to_path_buf();
+    write_test_manifest(&root);
+    write_pack_flow(&root);
+
+    // Create a local artifact file referenced by the stub.
+    let artifact_path = root.join("artifact.wasm");
+    fs::write(&artifact_path, b"00").unwrap();
+
+    let stub = json!({
+        "artifact_path": artifact_path.display().to_string(),
+        "digest": "sha256:stub"
+    });
+    let stub_path = root.join("stub.json");
+    fs::write(&stub_path, serde_json::to_string(&stub).unwrap()).unwrap();
+
+    let _guard = WORKDIR_LOCK.lock().unwrap();
+    let prev_dir = std::env::current_dir().unwrap();
+    std::env::set_current_dir(&root).unwrap();
+
+    let prev_offline = std::env::var("GREENTIC_DEV_OFFLINE").ok();
+    let prev_stub = std::env::var("GREENTIC_DEV_RESOLVE_STUB").ok();
+    set_env("GREENTIC_DEV_OFFLINE", "1");
+    set_env(
+        "GREENTIC_DEV_RESOLVE_STUB",
+        stub_path.to_string_lossy().as_ref(),
+    );
+
+    run_add_step(FlowAddStepArgs {
+        flow_id: "demo".into(),
+        coordinate: Some("component://greentic/example@^1".into()),
+        profile: None,
+        mode: Some(ConfigFlowModeArg::Default),
+        after: Some("start".into()),
+        flow: "default".into(),
+        manifest: None,
+    })
+    .expect("stubbed resolve should allow offline add-step");
+
+    if let Some(val) = prev_offline {
+        set_env("GREENTIC_DEV_OFFLINE", &val);
+    } else {
+        remove_env("GREENTIC_DEV_OFFLINE");
+    }
+    if let Some(val) = prev_stub {
+        set_env("GREENTIC_DEV_RESOLVE_STUB", &val);
+    } else {
+        remove_env("GREENTIC_DEV_RESOLVE_STUB");
+    }
+    std::env::set_current_dir(prev_dir).unwrap();
+
+    assert_qa_step_inserted(&root);
 }

@@ -31,14 +31,18 @@ fn main() -> Result<()> {
         Command::Pack(pack) => match pack {
             PackCommand::Build(args) => packc("build", &args.passthrough),
             PackCommand::Lint(args) => packc("lint", &args.passthrough),
+            PackCommand::Components(args) => packc("components", &args.passthrough),
+            PackCommand::Update(args) => packc("update", &args.passthrough),
             PackCommand::New(args) => packc("new", &args.passthrough),
             PackCommand::Sign(args) => packc("sign", &args.passthrough),
             PackCommand::Verify(args) => packc("verify", &args.passthrough),
+            PackCommand::Gui(args) => packc("gui", &args.passthrough),
             PackCommand::Inspect(args) => pack_inspect(&args.path, args.policy, args.json),
             PackCommand::Plan(args) => pack_plan(&args),
             PackCommand::Events(evt) => match evt {
                 PackEventsCommand::List(args) => pack_cli::pack_events_list(&args),
             },
+            PackCommand::Config(args) => packc("config", &args.passthrough),
             PackCommand::Run(args) => {
                 let allow_hosts = args
                     .allow
@@ -72,6 +76,7 @@ fn main() -> Result<()> {
                 })
             }
             PackCommand::Init(args) => pack_init_run(&args.from, args.profile.as_deref()),
+            PackCommand::NewProvider(args) => pack_cli::pack_new_provider(&args),
         },
         Command::Component(component) => match component {
             ComponentCommand::Add(args) => {

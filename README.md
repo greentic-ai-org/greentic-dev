@@ -24,6 +24,7 @@ If you want to:
 | `scripts/build_pages.py` | Builds the GitHub Pages site by combining Rustdoc output with the markdown guides.    |
 
 You will also find mock-service helpers for HTTP, NATS, and vault-like secrets in the built-in runner modules, ready to be wired into flows.
+For a hands-on, end-to-end walkthrough (component → pack → run), see `docs/developer-guide.md`.
 
 ---
 
@@ -106,6 +107,22 @@ cargo run --features mcp -- mcp doctor fixtures/providers/dev
 
 which validates a `toolmap.yaml` (or directory) and reports tool health before you wire nodes to it.
 
+Registering provider extensions and inspecting them:
+
+```bash
+# add/update a provider entry inside PackManifest.extensions
+greentic-dev pack new-provider --pack manifest.cbor \
+  --id vendor.db \
+  --runtime vendor.db.runtime::greentic_provider@greentic:provider/runtime \
+  --manifest providers/vendor.db/provider.yaml \
+  --kind database
+
+# inspect provider extension contents in a built pack
+greentic-pack providers list dist/demo.gtpack
+greentic-pack providers info dist/demo.gtpack --id vendor.db
+greentic-pack providers validate dist/demo.gtpack
+```
+
 ---
 
 ## Why schema awareness matters
@@ -157,14 +174,16 @@ so you immediately know which fields rely on defaults versus user input.
 | Verify a built pack             | `greentic-dev pack verify -p dist/out.gtpack [--policy strict|devok]`   |
 | Init a pack from distributor    | `greentic-dev pack init --from pack://org/name@1.0.0 [--profile dev]`   |
 | Scaffold a pack workspace       | `greentic-dev pack new -- --name demo-pack` *(delegated to packc)*      |
+| Register a provider extension   | `greentic-dev pack new-provider --pack manifest.cbor --id vendor.db --runtime vendor.db.runtime::greentic_provider@greentic:provider/runtime [--kind <cap>] [--manifest providers/vendor.db/provider.yaml]` |
+| Inspect pack providers          | `greentic-pack providers list dist/out.gtpack` *(try `info` / `validate` too)* |
 | View transcript                 | `cargo run -p dev-viewer -- --file .greentic/transcripts/<file>.yaml`   |
 | Scaffold a component            | `greentic-dev component new <name>`                                     |
 | Add a remote component          | `greentic-dev component add component://org/name@^1.0 [--profile dev]`  |
-| Validate a component            | `greentic-dev component validate --path <dir>`                          |
+| Build + doctor a component      | `greentic-dev component build --manifest <component.manifest.json>` + `greentic-dev component doctor <wasm> --manifest <component.manifest.json>` |
 | Pack a component                | `greentic-dev component pack --path <dir>`                              |
 | List component templates        | `greentic-dev component templates --json`                               |
 | Scaffold with org defaults      | `greentic-dev component new --name echo --org ai.greentic`              |
-| Doctor a component workspace    | `greentic-dev component doctor --path ./echo` *(delegated)*             |
+| Doctor a component artifact     | `greentic-dev component doctor <path/to/component.wasm> --manifest <component.manifest.json>` |
 | Set default org/template        | `greentic-dev config set defaults.component.org ai.greentic`            |
 | Serve GUI packs locally         | `greentic-dev gui serve [--config <path>]`                              |
 | Stage a GUI dev pack            | `greentic-dev gui pack-dev --dir <assets> --output <pack-dir>`          |
@@ -209,7 +228,7 @@ default_profile = { name = "inline", base_url = "http://localhost:7070", tenant_
 Select a profile with `--profile <name>` or `GREENTIC_DISTRIBUTOR_PROFILE`.
 Legacy `[distributor.<name>]` tables remain supported; they are merged with `distributor.profiles`.
 
-For a deeper, example-driven walkthrough, see `docs/programmer-guide.md`.
+For a deeper, example-driven walkthrough, see `docs/distributor.md`.
 
 ---
 
@@ -275,19 +294,19 @@ Edit `schemas/v1/config.schema.json` with the fields and defaults your node expo
 
 The template already exports `greentic:component/node` and echoes a `message`, while calling into the guest crates for secrets/state/HTTP/telemetry. Replace the stub with real logic and import any extra guest modules you need (e.g., OAuth broker, lifecycle). Update `provider.toml` whenever capabilities, versions, or artifact paths change.
 
-### 4. Build and validate
+### 4. Build and doctor
 
 ```bash
 cargo component build --release --target wasm32-wasip2
-greentic-dev component validate --path .
+greentic-dev component build --manifest component.manifest.json
+greentic-dev component doctor ./target/wasm32-wasip2/release/<name>.wasm --manifest component.manifest.json
 ```
 
-**Why**: `cargo component` produces a Preview 2 component (`wasm32-wasip2`) using the published guest bindings, keeping builds reproducible without bundling local WIT. `greentic-dev component validate` confirms the artifact and metadata agree (embedded WIT package IDs, world name, version pins) and, when WASI shims exist, inspects the manifest via the current host/runtime hooks. If WASI support is missing locally, validation still passes but prints a warning that manifest inspection was skipped.
+**Why**: `cargo component` produces a Preview 2 component (`wasm32-wasip2`) using the published guest bindings, keeping builds reproducible without bundling local WIT. `greentic-dev component build` refreshes config flows/schemas and hashes; `component doctor` confirms the artifact/manifest agree and inspects exports. When the manifest isn’t next to the artifact, pass `--manifest <path>`.
 
 ### 5. Package for distribution (optional)
 
 ```bash
-greentic-dev component doctor --path .
 greentic-dev component pack --path .
 greentic-dev pack new -- --name hello-pack    # delegated to packc
 ```

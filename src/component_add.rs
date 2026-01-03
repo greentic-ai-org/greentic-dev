@@ -22,6 +22,14 @@ use crate::pack_init::{
     PackInitIntent, WorkspaceComponent, WorkspaceManifest, manifest_path, slugify,
 };
 
+#[derive(Debug, Clone)]
+struct SimpleStub {
+    artifact_path: PathBuf,
+    digest: String,
+    signature: greentic_types::distributor::SignatureSummary,
+    cache: greentic_types::distributor::CacheInfo,
+}
+
 pub fn run_component_add(
     coordinate: &str,
     profile: Option<&str>,
@@ -34,6 +42,17 @@ pub fn run_component_add(
     let environment_id = DistributorEnvironmentId::from(profile.environment_id.as_str());
     let pack_id = detect_pack_id().unwrap_or_else(|| "greentic-dev-local".to_string());
 
+    let offline = std::env::var("GREENTIC_DEV_OFFLINE")
+        .ok()
+        .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+        .unwrap_or(false);
+    let stubbed_response = load_stubbed_response();
+    if offline && stubbed_response.is_none() && !PathBuf::from(coordinate).exists() {
+        bail!(
+            "offline mode enabled (GREENTIC_DEV_OFFLINE=1) and coordinate `{coordinate}` is not a local path; provide a stub via GREENTIC_DEV_RESOLVE_STUB or use a local component path"
+        );
+    }
+
     let req = ResolveComponentRequest {
         tenant: tenant_ctx.clone(),
         environment_id,
@@ -43,9 +62,13 @@ pub fn run_component_add(
         extra: json!({ "intent": format!("{:?}", intent) }),
     };
 
-    let client = http_client(&profile)?;
-    let rt = Runtime::new().context("failed to start tokio runtime for distributor client")?;
-    let response = rt.block_on(client.resolve_component(req))?;
+    let response = if let Some(resp) = stubbed_response {
+        resp?
+    } else {
+        let client = http_client(&profile)?;
+        let rt = Runtime::new().context("failed to start tokio runtime for distributor client")?;
+        rt.block_on(client.resolve_component(req))?
+    };
 
     let artifact_bytes = fetch_artifact(&response.artifact)?;
     let (cache_dir, cache_path) =
@@ -224,4 +247,67 @@ fn detect_pack_id() -> Option<String> {
         }
     }
     None
+}
+
+fn load_stubbed_response() -> Option<Result<greentic_distributor_client::ResolveComponentResponse>>
+{
+    let path = std::env::var("GREENTIC_DEV_RESOLVE_STUB").ok()?;
+    let data = fs::read_to_string(&path)
+        .map_err(|err| anyhow!("failed to read stub response {}: {err}", path))
+        .ok()?;
+
+    // First try to parse the real response shape.
+    if let Ok(resp) =
+        serde_json::from_str::<greentic_distributor_client::ResolveComponentResponse>(&data)
+    {
+        return Some(Ok(resp));
+    }
+
+    // Fallback: accept a minimal stub JSON.
+    let parsed = serde_json::from_str::<serde_json::Value>(&data).ok()?;
+    let Some(artifact_path) = parsed
+        .get("artifact_path")
+        .and_then(|v| v.as_str())
+        .map(PathBuf::from)
+    else {
+        return Some(Err(anyhow!(
+            "stub missing `artifact_path` (expected JSON with artifact_path pointing to the component wasm)"
+        )));
+    };
+    let digest = parsed
+        .get("digest")
+        .and_then(|v| v.as_str())
+        .unwrap_or("sha256:stub")
+        .to_string();
+    let signature = greentic_types::distributor::SignatureSummary {
+        verified: false,
+        signer: "stub".to_string(),
+        extra: serde_json::Value::Object(serde_json::Map::new()),
+    };
+    let cache = greentic_types::distributor::CacheInfo {
+        size_bytes: 0,
+        last_used_utc: "stub".to_string(),
+        last_refreshed_utc: "stub".to_string(),
+    };
+    let stub = SimpleStub {
+        artifact_path,
+        digest,
+        signature,
+        cache,
+    };
+
+    Some(Ok(to_resolve_response(stub)))
+}
+
+fn to_resolve_response(stub: SimpleStub) -> greentic_distributor_client::ResolveComponentResponse {
+    greentic_distributor_client::ResolveComponentResponse {
+        status: greentic_types::distributor::ComponentStatus::Ready,
+        digest: greentic_types::distributor::ComponentDigest(stub.digest),
+        artifact: greentic_distributor_client::ArtifactLocation::FilePath {
+            path: stub.artifact_path.display().to_string(),
+        },
+        signature: stub.signature,
+        cache: stub.cache,
+        secret_requirements: None,
+    }
 }

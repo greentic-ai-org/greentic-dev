@@ -24,7 +24,7 @@ pub enum Command {
     /// Flow tooling (validate, lint, bundle inspection)
     #[command(subcommand)]
     Flow(FlowCommand),
-    /// Pack tooling (delegates to packc for build/lint/sign/verify/new; uses greentic-pack for inspect/plan/events)
+    /// Pack tooling (delegates to packc for build/lint/sign/verify/new; uses greentic-pack for inspect/plan/providers)
     #[command(subcommand)]
     Pack(PackCommand),
     /// Component tooling (delegates to greentic-component built-ins + distributor add)
@@ -162,23 +162,33 @@ pub enum PackCommand {
     Build(PackcArgs),
     /// Delegate to packc lint
     Lint(PackcArgs),
+    /// Delegate to packc components (sync pack.yaml from components/)
+    Components(PackcArgs),
+    /// Delegate to packc update (sync pack.yaml components + flows)
+    Update(PackcArgs),
     /// Delegate to packc new
     New(PackcArgs),
     /// Delegate to packc sign
     Sign(PackcArgs),
     /// Delegate to packc verify
     Verify(PackcArgs),
+    /// Delegate to packc gui helpers
+    Gui(PackcArgs),
     /// Inspect a .gtpack (or directory via temporary build)
     Inspect(PackInspectArgs),
     /// Generate a deployment plan
     Plan(PackPlanArgs),
-    /// Events helpers
+    /// Events helpers (legacy)
     #[command(subcommand)]
     Events(PackEventsCommand),
+    /// Delegate to packc config (resolve config with provenance)
+    Config(PackcArgs),
     /// Execute a pack locally with mocks/telemetry support
     Run(PackRunArgs),
     /// Initialize a pack workspace from a remote coordinate
     Init(PackInitArgs),
+    /// Register or update a provider declaration in the pack manifest extension
+    NewProvider(PackNewProviderArgs),
 }
 
 #[derive(Args, Debug)]
@@ -237,6 +247,37 @@ pub struct PackInitArgs {
     /// Distributor profile to use (overrides GREENTIC_DISTRIBUTOR_PROFILE/env config)
     #[arg(long = "profile")]
     pub profile: Option<String>,
+}
+
+#[derive(Args, Debug)]
+pub struct PackNewProviderArgs {
+    /// Path to a pack source directory, manifest.cbor, or .gtpack archive
+    #[arg(long = "pack")]
+    pub pack: PathBuf,
+    /// Provider identifier (stored as provider_type)
+    #[arg(long = "id")]
+    pub id: String,
+    /// Runtime reference in the form component_ref::export@world
+    #[arg(long = "runtime")]
+    pub runtime: String,
+    /// Optional provider kind (stored in capabilities)
+    #[arg(long = "kind")]
+    pub kind: Option<String>,
+    /// Optional external manifest/config reference (relative path)
+    #[arg(long = "manifest")]
+    pub manifest: Option<PathBuf>,
+    /// When set, do not write changes to disk
+    #[arg(long = "dry-run")]
+    pub dry_run: bool,
+    /// Overwrite an existing provider with the same id
+    #[arg(long = "force")]
+    pub force: bool,
+    /// Emit JSON for the resulting provider declaration
+    #[arg(long = "json")]
+    pub json: bool,
+    /// Scaffold provider manifest files if supported
+    #[arg(long = "scaffold-files")]
+    pub scaffold_files: bool,
 }
 
 #[derive(Args, Debug, Clone, Default)]

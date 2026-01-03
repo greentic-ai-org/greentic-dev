@@ -50,8 +50,8 @@ component-&lt;name&gt;/
 ### Key files
 
 - **`Cargo.toml`** – Minimal manifest that depends on `wit-bindgen` 0.44, `serde`, and `serde_json`, and configures `package.metadata.component` so `cargo component build` targets the vendored `wit/` directory.
-- **`provider.toml`** – Canonical metadata (name, version, ABI pins, capabilities, artifact location). `greentic-dev component validate` and `greentic-dev component pack` both consume this file.
-- **`README.md`** – Quickstart for the component author (build, validate, pack).
+- **`provider.toml`** – Canonical metadata (name, version, ABI pins, capabilities, artifact location). `greentic-dev component doctor` and `greentic-dev component pack` both consume this file.
+- **`README.md`** – Quickstart for the component author (build, doctor, pack).
 - **`schemas/v1/config.schema.json`** – Draft 7 JSON Schema for the node configuration used by the runner and transcripts.
 - **`src/lib.rs`** – Hello-world implementation generated via `wit_bindgen::generate!`. It exports the `greentic:component/node` world and echoes an input `message`.
 - **`wit/world.wit`** – Declares the component’s world and imports the Greentic schema packages.
@@ -66,8 +66,8 @@ Older assets (`src/describe.rs`, `tests/schema_validates_examples.rs`, `examples
 1. **Build:** `cargo component build --release --target wasm32-wasip2`  
    Compiles to `target/wasm32-wasip2/release/&lt;name&gt;.wasm`. The scaffolder sets `CARGO_COMPONENT_CACHE_DIR` to a local folder so the command works offline once the cargo cache is warmed.
 
-2. **Validate:** `greentic-dev component validate --path .`  
-   Checks that the artifact exists, decodes WIT metadata, compares it against `provider.toml`, and (if WASI host shims are present) inspects the manifest via `component-runtime`. Missing WASI support produces a warning but doesn’t fail validation.
+2. **Doctor:** `greentic-dev component doctor target/wasm32-wasip2/release/&lt;name&gt;.wasm`  
+   Confirms the artifact is a valid component, validates `provider.toml`, verifies the hash, and reports lifecycle exports, describe payloads, redaction hints, and capability flags. Passing the component directory instead of the `.wasm` just prints a scaffold checklist and skips artifact checks. If the manifest isn’t next to the artifact (e.g., you moved the wasm), pass `--manifest &lt;path/to/component.manifest.json&gt;`.
 
 3. **Pack (optional):** `greentic-dev component pack --path .`  
    Copies the `.wasm`, writes `meta.json` (provider metadata + sha + timestamp), and generates `SHA256SUMS` under `packs/&lt;name&gt;/&lt;version&gt;/`.
@@ -87,8 +87,8 @@ Older assets (`src/describe.rs`, `tests/schema_validates_examples.rs`, `examples
 
 ## FAQ
 
-**Why does `greentic-dev component validate` sometimes skip manifest exports?**  
-Until the runtime bundles WASI Preview 2 shims, components that import `wasi:*` interfaces cannot be instantiated locally. The validator spots this case, prints a warning, and finishes without the runtime checks.
+**Why does `greentic-dev component doctor .` only show a scaffold checklist?**  
+When pointed at a directory, doctor detects the scaffold and reports missing pieces. To validate the built artifact, pass the `.wasm` path (e.g., `target/wasm32-wasip2/release/&lt;name&gt;.wasm`).
 
 **Can I regenerate WIT deps when Greentic interfaces upgrade?**  
 Yes. Update the Greentic workspace to the new crate versions, rerun `greentic-dev component new ...` for a fresh scaffold, or manually re-vendor the directories and adjust `provider.toml`.

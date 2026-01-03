@@ -1,6 +1,6 @@
 [package]
 name = "greentic-dev"
-version = "0.4.28"
+version = "0.4.29"
 edition = "2024"
 description = "Developer CLI and local tooling for Greentic flows, packs, and components"
 license = "MIT"
@@ -109,3 +109,4 @@ indexmap = "2"
 greentic-secrets = { version = "0.4", default-features = false, features = ["core"] }
 async-trait = "0.1"
 assert_cmd = "2"
+predicates = "3"

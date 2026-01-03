@@ -44,135 +44,53 @@ This guide walks from a clean workstation all the way to a “hello world” Gre
 
 ---
 
-## 2. Scaffold a hello world component
+## 2. Build a component, then a pack (end-to-end)
 
-Use the `greentic-dev` CLI to generate a new component skeleton. This populates a ready-to-build WASM package, provider metadata, schema, and docs.
+The happy path is entirely CLI-driven:
 
+1) **Scaffold the pack workspace.**
 ```bash
-greentic-dev component new hello-world
-cd component-hello-world
+greentic-dev pack new -- --dir ./hello-pack dev.local.hello-pack
+cd hello-pack
 ```
-
-> Running directly from the repo? Use `cargo run -p greentic-dev -- component new hello-world`.
-
-The scaffold contains:
-
-| Path | Purpose |
-|------|---------|
-| `Cargo.toml` | Component manifest (wired for `cargo component`). |
-| `provider.toml` | Canonical metadata that drives packaging + validation. |
-| `schemas/v1/config.schema.json` | JSON Schema for node configuration. |
-| `src/lib.rs` | The component implementation (starts with an echo example wired to guest imports). |
-| `README.md` | Mini playbook that you can expand for this specific component. |
-
-Open `src/lib.rs` and confirm the stub echoes the `message` field back to the caller—that is our “hello world”.
-
----
-
-## 3. Build the component
-
-From inside the component directory:
-
+2) **Scaffold the component inside the pack.**
 ```bash
-cargo component build --release --target wasm32-wasip2
+greentic-dev component new --name hello-world --path ./components/hello-world --non-interactive --no-git --no-check
 ```
-
-This emits `target/wasm32-wasip2/release/hello-world.wasm` using the published `greentic-interfaces-guest` bindings—no vendored WIT required.
-
-If you ever see a network-related error, double-check that `cargo fetch` succeeded earlier. The Greentic scaffolder assumes offline builds, so the `cargo` registry cache needs to be populated once up front.
-
----
-
-## 4. Validate with the greentic-dev CLI
-
-Return to the workspace root (or pass the component path explicitly) and run the validator. It compiles (if you didn’t already), decodes the embedded WIT packages, and checks your metadata.
-
+3) **Build and doctor the component.** (Doctor needs either a colocated manifest or an explicit `--manifest`.)
 ```bash
-greentic-dev component validate --path component-hello-world
+greentic-dev component build --manifest components/hello-world/component.manifest.json
+greentic-dev component doctor components/hello-world/target/wasm32-wasip2/release/component_hello_world.wasm \
+  --manifest components/hello-world/component.manifest.json
 ```
-
-You should see output similar to:
-
-```
-✓ Validated hello-world 0.1.0
-  artifact: .../component-hello-world/target/wasm32-wasip2/release/hello-world.wasm
-  sha256 : <hash>
-  world  : greentic:component/component@0.4.0
-  packages:
-    - greentic:component@0.4.0
-    - greentic:secrets@1.0.0
-    - greentic:state@1.0.0
-    - greentic:http@1.0.0
-    - greentic:telemetry@1.0.0
-    ...
-  exports: <skipped - missing WASI host support>
-```
-
-> The final line is expected today: local WASI Preview 2 host shims may be missing. Validation still succeeds; only the manifest inspection is skipped.
-
-If validation fails, fix the reported issue (wrong version pins, missing artifact, etc.) and re-run the command.
-
----
-
-## 5. (Optional) Package the component
-
-When you are ready to distribute your build artifact, let the `pack` subcommand produce a canonical bundle:
-
+4) **Ensure the component manifest exposes a config flow.** If you skipped flow generation, add or regenerate `dev_flows.default` (e.g., via `greentic-component flow update`). A minimal config flow template that yields a node called `hello` works well.
+5) **Wire the component into the pack flow via config flow.** Target the `hello` flow file so the flow id matches the node you’re adding:
 ```bash
-greentic-dev component pack --path component-hello-world
+# Optional: rename starter flow to hello (pack.yaml + flows/hello.ygtc)
+mv flows/main.ygtc flows/hello.ygtc
+sed -i '' 's/id: main/id: hello/' flows/hello.ygtc
+greentic-dev flow add-step hello \
+  --manifest components/hello-world/component.manifest.json \
+  --coordinate components/hello-world \
+  --after start
 ```
-
-This writes:
-
-```
-component-hello-world/packs/hello-world/0.1.0/
-  ├─ hello-world-0.1.0.wasm
-  ├─ meta.json           # JSON rendering of provider.toml with sha256 + timestamp
-  └─ SHA256SUMS
-```
-
-These files are what CI/CD or downstream integration tooling will consume.
-
----
-
-## 6. Wire the component into a flow (hello world)
-
-Create a simple flow definition that references the new component. From the workspace root:
-
+6) **Sync pack.yaml components from the components/ directory.** This uses the underlying `packc components` to add your built component entry into `pack.yaml`.
 ```bash
-cat <<'YAML' > examples/flows/hello-world.yaml
-version: 1
-nodes:
-  hello:
-    using: hello-world
-    config:
-      message: "Hello from Greentic!"
-YAML
+greentic-dev pack components -- --in .
 ```
-
-Run the flow validator to ensure the flow and schema line up:
-
+7) **Validate the flow.**
 ```bash
-greentic-dev flow validate -f examples/flows/hello-world.yaml --json
+greentic-dev flow validate -f flows/hello.ygtc --json
+```
+8) **Build and run the pack locally (offline).**
+```bash
+greentic-dev pack build -- --in . --gtpack-out dist/hello.gtpack
+greentic-dev pack run --pack dist/hello.gtpack --offline --mocks on --artifacts dist/artifacts
 ```
 
-> Prefer running straight from the workspace? Use `cargo run -p greentic-dev -- flow …` instead.
+That sequence yields a runnable pack that pulls a config-flow-defined node from your component, bundles it, and executes it locally without touching the network.
 
-Successful validation produces canonical JSON you can feed into review tools. When you are ready to execute the full pack, run `greentic-dev pack build …` followed by `greentic-dev pack run …` to generate transcripts under `.greentic/runs/`.
-
----
-
-## 7. Next steps: iterate on the component
-
-With the skeleton in place you can now:
-
-1. **Customize behavior.** Edit `src/lib.rs` to perform real work instead of echoing input. Pull in additional guest modules from `greentic-interfaces-guest` if your component needs other Greentic interfaces.
-2. **Expand the schema.** Update `schemas/v1/config.schema.json` with required fields, defaults, and examples.
-3. **Document configuration and testing.** Extend `README.md` (scaffolded in the component) so other developers know how to run and validate it.
-4. **Add tests.** Bring in `cargo test` suites or golden tests. The Greentic toolchain honors `GOLDEN_ACCEPT=1` for regeneration, the same as other repos.
-5. **Keep linting clean.** In the component folder run `cargo fmt`, `cargo clippy --all-targets -- -D warnings`, and `cargo test` before committing.
-
-Once the component is ready, integrate it into CI using the guidance in `docs/scaffolder.md` and `docs/runner.md`, and publish schemas/docs through the usual GitHub Pages workflow.
+> If doctor/pack build fails, double-check: (a) the WASM is a component (built with `cargo component`), (b) `component.manifest.json` includes `dev_flows.default`, and (c) the pack’s `pack.yaml` references your component artifact.
 
 ---
 
@@ -183,14 +101,26 @@ Once the component is ready, integrate it into CI using the guidance in `docs/sc
 rustup target add wasm32-wasip2
 cargo install cargo-component --locked
 
-# scaffold
-greentic-dev component new hello-world
-cd component-hello-world
+# scaffold + build + doctor
+greentic-dev pack new -- --dir ./hello-pack dev.local.hello-pack
+cd hello-pack
+greentic-dev component new --name hello-world --path ./components/hello-world --non-interactive --no-git --no-check
+greentic-dev component build --manifest components/hello-world/component.manifest.json
+greentic-dev component doctor components/hello-world/target/wasm32-wasip2/release/component_hello_world.wasm \
+  --manifest components/hello-world/component.manifest.json
 
-# develop
-cargo component build --release --target wasm32-wasip2
-greentic-dev component validate --path .
-greentic-dev component pack --path .      # optional
+# pack + flow + run
+mv flows/main.ygtc flows/hello.ygtc && sed -i '' 's/id: main/id: hello/' flows/hello.ygtc
+greentic-dev flow add-step hello --manifest components/hello-world/component.manifest.json --coordinate components/hello-world --after start
+greentic-dev pack components -- --in .
+greentic-dev flow validate -f flows/hello.ygtc --json
+greentic-dev pack build -- --in . --gtpack-out dist/hello.gtpack
+greentic-dev pack run --pack dist/hello.gtpack --offline --mocks on
+
+# optional: register and inspect provider extensions
+# (this lives outside the main flow wiring steps)
+# greentic-dev pack new-provider --pack manifest.cbor --id dev.local.hello.provider --runtime components/hello-world::greentic_provider@greentic:provider/runtime --manifest providers/dev.local.hello.provider/provider.yaml --kind demo
+# greentic-pack providers list dist/hello.gtpack
+# greentic-pack providers info dist/hello.gtpack --id dev.local.hello.provider
+# greentic-pack providers validate dist/hello.gtpack
 ```
-
-You now have a fully reproducible path from a fresh machine to a validated Greentic component. Happy building!
