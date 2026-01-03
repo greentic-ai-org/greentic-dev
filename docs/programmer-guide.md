@@ -92,14 +92,14 @@ Re-running with the same name replaces the entry.
 ## Pack init – annotated walkthrough
 
 ```bash
-greentic-dev pack init --from pack://meeza/ultimate-qatar-visitor-ai@1.0.0
+greentic-dev pack init --from pack://demo/ultimate-visitor-ai@1.0.0
 ```
 
 Flow:
 
 1) Resolve with intent = `dev`, platform = `wasm32-wasip2`.
 2) Download `bundle.gtpack`, cache to `~/.greentic/cache/packs/{digest-or-slug}/bundle.gtpack`.
-3) Create a new directory from the resolved name (slugged), e.g. `./ultimate-qatar-visitor-ai/`.
+3) Create a new directory from the resolved name (slugged), e.g. `./ultimate-visitor-ai/`.
 4) Copy `bundle.gtpack` into that directory and unpack it. Existing directories cause an error (no overwrite).
 
 ## Cache layout (deterministic)

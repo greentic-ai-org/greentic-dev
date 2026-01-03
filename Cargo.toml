@@ -1,9 +1,9 @@
 [package]
 name = "greentic-dev"
-version = "0.4.27"
+version = "0.4.28"
 edition = "2024"
 description = "Developer CLI and local tooling for Greentic flows, packs, and components"
-license = "MIT OR Apache-2.0"
+license = "MIT"
 repository = "https://github.com/greentic-ai/greentic-dev"
 homepage = "https://greentic.ai/"
 documentation = "https://docs.rs/greentic-dev"

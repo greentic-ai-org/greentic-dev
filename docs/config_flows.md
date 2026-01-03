@@ -15,7 +15,7 @@ greentic-dev flow add-step onboarding --coordinate ./component-bundle
 
 # Force guided vs default config flow (manifest.dev_flows.custom/default)
 greentic-dev flow add-step onboarding \
-  --coordinate store://meeza/component-qa-process@^0.3 \
+  --coordinate store://demo/component-qa-process@^0.3 \
   --mode custom
 
 # Patch routing after an existing node
