@@ -110,6 +110,20 @@ nodes:
     path
 }
 
+fn write_fake_config(root: &Path) -> PathBuf {
+    let cfg = root.join("config.toml");
+    fs::write(
+        &cfg,
+        r#"
+[distributor.default]
+url = "http://localhost:0"
+token = ""
+"#,
+    )
+    .unwrap();
+    cfg
+}
+
 #[test]
 fn parse_config_flow_rejects_invalid() {
     let bad = r#"{"node": {"qa":{} } }"#;
@@ -339,9 +353,15 @@ fn flow_add_step_respects_offline_without_stub() {
     let prev_offline = std::env::var("GREENTIC_DEV_OFFLINE").ok();
     let prev_stub = std::env::var("GREENTIC_DEV_RESOLVE_STUB").ok();
     let prev_profile = std::env::var("GREENTIC_DISTRIBUTOR_PROFILE").ok();
+    let prev_config_file = std::env::var("GREENTIC_DEV_CONFIG_FILE").ok();
+    let config_path = write_fake_config(&root);
     set_env("GREENTIC_DEV_OFFLINE", "1");
     remove_env("GREENTIC_DEV_RESOLVE_STUB");
     remove_env("GREENTIC_DISTRIBUTOR_PROFILE");
+    set_env(
+        "GREENTIC_DEV_CONFIG_FILE",
+        config_path.to_string_lossy().as_ref(),
+    );
 
     let err = run_add_step(FlowAddStepArgs {
         flow_id: "demo".into(),
@@ -368,6 +388,11 @@ fn flow_add_step_respects_offline_without_stub() {
         set_env("GREENTIC_DISTRIBUTOR_PROFILE", &val);
     } else {
         remove_env("GREENTIC_DISTRIBUTOR_PROFILE");
+    }
+    if let Some(val) = prev_config_file {
+        set_env("GREENTIC_DEV_CONFIG_FILE", &val);
+    } else {
+        remove_env("GREENTIC_DEV_CONFIG_FILE");
     }
     std::env::set_current_dir(prev_dir).unwrap();
 
@@ -401,10 +426,18 @@ fn flow_add_step_uses_stubbed_resolve() {
 
     let prev_offline = std::env::var("GREENTIC_DEV_OFFLINE").ok();
     let prev_stub = std::env::var("GREENTIC_DEV_RESOLVE_STUB").ok();
+    let prev_profile = std::env::var("GREENTIC_DISTRIBUTOR_PROFILE").ok();
+    let prev_config_file = std::env::var("GREENTIC_DEV_CONFIG_FILE").ok();
+    let config_path = write_fake_config(&root);
     set_env("GREENTIC_DEV_OFFLINE", "1");
     set_env(
         "GREENTIC_DEV_RESOLVE_STUB",
         stub_path.to_string_lossy().as_ref(),
+    );
+    remove_env("GREENTIC_DISTRIBUTOR_PROFILE");
+    set_env(
+        "GREENTIC_DEV_CONFIG_FILE",
+        config_path.to_string_lossy().as_ref(),
     );
 
     run_add_step(FlowAddStepArgs {
@@ -427,6 +460,16 @@ fn flow_add_step_uses_stubbed_resolve() {
         set_env("GREENTIC_DEV_RESOLVE_STUB", &val);
     } else {
         remove_env("GREENTIC_DEV_RESOLVE_STUB");
+    }
+    if let Some(val) = prev_profile {
+        set_env("GREENTIC_DISTRIBUTOR_PROFILE", &val);
+    } else {
+        remove_env("GREENTIC_DISTRIBUTOR_PROFILE");
+    }
+    if let Some(val) = prev_config_file {
+        set_env("GREENTIC_DEV_CONFIG_FILE", &val);
+    } else {
+        remove_env("GREENTIC_DEV_CONFIG_FILE");
     }
     std::env::set_current_dir(prev_dir).unwrap();
 
