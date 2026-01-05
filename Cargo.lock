@@ -3481,9 +3481,9 @@ checksum = "90aa5b3bb26a5fef38dc64fefa012fdda4a009121312e48ceaa551bfd16ce6af"
 
 [[package]]
 name = "packc"
-version = "0.4.31"
+version = "0.4.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2bec943c11ea0f2ac5d9e8f0db5d99240b4f75d665ceaa19b63574df951f0f70"
+checksum = "75ad1d9915a1ddf87011a8648304c6b7602a6bb9244f7c5894e3c8d26a21f979"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -3516,6 +3516,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "walkdir",
+ "wit-component",
  "zip",
 ]
 
