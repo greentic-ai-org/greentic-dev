@@ -1970,9 +1970,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-runner"
-version = "0.4.21"
+version = "0.4.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e5f78d56adb948f361428bf21c804e3682942f6b7bd928df15b852776594127"
+checksum = "f4f7d0ec00277fb7e95fd52242a7e1b9f02e0701697e271d04aec118ef6cab86"
 dependencies = [
  "anyhow",
  "chrono",
