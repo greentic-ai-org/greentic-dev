@@ -219,6 +219,23 @@ impl ComponentTarget {
 fn component_target(name: &str, root: Option<&Path>) -> ComponentTarget {
     if let Some(dir) = root {
         let candidate = dir.join(name);
+        if candidate.exists() {
+            return ComponentTarget::Path(candidate);
+        }
+
+        // Fallback: many manifests use fully-qualified ids (e.g., ai.greentic.hello-world) but are
+        // checked into components/ under the short name (hello-world).
+        if let Some(short) = name
+            .rsplit(['.', ':', '/'])
+            .next()
+            .filter(|s| !s.is_empty())
+        {
+            let alt = dir.join(short);
+            if alt.exists() {
+                return ComponentTarget::Path(alt);
+            }
+        }
+
         return ComponentTarget::Path(candidate);
     }
     ComponentTarget::Direct(name.to_string())

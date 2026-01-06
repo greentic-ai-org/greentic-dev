@@ -203,7 +203,7 @@ nodes:
         serde_yaml_bw::from_str(&fs::read_to_string(&pack_yaml_path)?)?;
     if let Some(components) = pack_yaml
         .as_mapping_mut()
-        .and_then(|m| m.get_mut(&ystr("components")))
+        .and_then(|m| m.get_mut(ystr("components")))
         .and_then(|v| v.as_sequence_mut())
         .and_then(|seq| seq.elements.get_mut(0))
         .and_then(|entry| entry.as_mapping_mut())

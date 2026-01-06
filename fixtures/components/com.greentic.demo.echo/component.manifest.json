@@ -76,5 +76,12 @@
   },
   "hashes": {
     "component_wasm": "blake3:d16030e523b5117990de34af8c3d7981717fc7f603b2f0b15507b6f388ffb1e3"
-  }
+  },
+  "operations": [
+    {
+      "name": "echo",
+      "input_schema": {},
+      "output_schema": {}
+    }
+  ]
 }

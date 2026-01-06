@@ -14,5 +14,12 @@
     "git_commit": "0000000",
     "toolchain": "rustc",
     "built_at_utc": "2024-01-01T00:00:00Z"
-  }
+  },
+  "operations": [
+    {
+      "name": "run",
+      "input_schema": {},
+      "output_schema": {}
+    }
+  ]
 }

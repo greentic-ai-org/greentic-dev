@@ -183,19 +183,19 @@ fn assert_qa_step_inserted(root: &Path) {
     let doc: serde_yaml::Value = serde_yaml::from_str(&updated).unwrap();
     let tagless = |s: &str| serde_yaml::Value::String(s.to_string(), None);
     let nodes = doc
-        .get(&tagless("nodes"))
+        .get(tagless("nodes"))
         .and_then(|n| n.as_mapping())
         .expect("nodes map");
-    assert!(nodes.get(&tagless("qa_step")).is_some());
+    assert!(nodes.get(tagless("qa_step")).is_some());
     let routing = nodes
-        .get(&tagless("start"))
-        .and_then(|node| node.as_mapping().and_then(|m| m.get(&tagless("routing"))))
+        .get(tagless("start"))
+        .and_then(|node| node.as_mapping().and_then(|m| m.get(tagless("routing"))))
         .and_then(|r| r.as_sequence())
         .expect("routing array");
     assert!(
         routing.iter().any(|entry| entry
             .as_mapping()
-            .and_then(|m| m.get(&tagless("to")))
+            .and_then(|m| m.get(tagless("to")))
             .and_then(|v| v.as_str())
             .map(|s| s == "qa_step")
             .unwrap_or(false)),

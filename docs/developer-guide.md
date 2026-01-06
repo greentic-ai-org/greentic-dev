@@ -63,13 +63,10 @@ greentic-dev component build --manifest components/hello-world/component.manifes
 greentic-dev component doctor components/hello-world/target/wasm32-wasip2/release/component_hello_world.wasm \
   --manifest components/hello-world/component.manifest.json
 ```
-4) **Ensure the component manifest exposes a config flow.** If you skipped flow generation, add or regenerate `dev_flows.default` (e.g., via `greentic-component flow update`). A minimal config flow template that yields a node called `hello` works well.
-5) **Wire the component into the pack flow via config flow.** Target the `hello` flow file so the flow id matches the node you’re adding:
+4) **Ensure the component manifest exposes a config flow.** If you skipped flow generation, add or regenerate `dev_flows.default` (e.g., via `greentic-component flow update --manifest components/hello-world/component.manifest.json`). A minimal config flow template that yields a node called `hello` works well.
+5) **Wire the component into the pack’s default flow (keep `main.ygtc`).**
 ```bash
-# Optional: rename starter flow to hello (pack.yaml + flows/hello.ygtc)
-mv flows/main.ygtc flows/hello.ygtc
-sed -i '' 's/id: main/id: hello/' flows/hello.ygtc
-greentic-dev flow add-step hello \
+greentic-dev flow add-step main \
   --manifest components/hello-world/component.manifest.json \
   --coordinate components/hello-world \
   --after start
@@ -80,7 +77,7 @@ greentic-dev pack components -- --in .
 ```
 7) **Validate the flow.**
 ```bash
-greentic-dev flow validate -f flows/hello.ygtc --json
+greentic-dev flow validate -f flows/main.ygtc --json
 ```
 8) **Build and run the pack locally (offline).**
 ```bash
@@ -105,15 +102,15 @@ cargo install cargo-component --locked
 greentic-dev pack new -- --dir ./hello-pack dev.local.hello-pack
 cd hello-pack
 greentic-dev component new --name hello-world --path ./components/hello-world --non-interactive --no-git --no-check
-greentic-dev component build --manifest components/hello-world/component.manifest.json
+GREENTIC_DEV_OFFLINE=1 CARGO_NET_OFFLINE=true greentic-dev component build --manifest components/hello-world/component.manifest.json
 greentic-dev component doctor components/hello-world/target/wasm32-wasip2/release/component_hello_world.wasm \
   --manifest components/hello-world/component.manifest.json
 
-# pack + flow + run
-mv flows/main.ygtc flows/hello.ygtc && sed -i '' 's/id: main/id: hello/' flows/hello.ygtc
-greentic-dev flow add-step hello --manifest components/hello-world/component.manifest.json --coordinate components/hello-world --after start
+# flow + pack + run
+greentic-component flow update --manifest components/hello-world/component.manifest.json # ensure dev_flows.default exists
+greentic-dev flow add-step main --manifest components/hello-world/component.manifest.json --coordinate components/hello-world --after start
 greentic-dev pack components -- --in .
-greentic-dev flow validate -f flows/hello.ygtc --json
+greentic-dev flow validate -f flows/main.ygtc --json
 greentic-dev pack build -- --in . --gtpack-out dist/hello.gtpack
 greentic-dev pack run --pack dist/hello.gtpack --offline --mocks on
 

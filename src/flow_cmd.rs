@@ -73,12 +73,20 @@ pub fn run_add_step(args: FlowAddStepArgs) -> Result<()> {
     }
     let manifest_raw = std::fs::read_to_string(&manifest_path)
         .with_context(|| format!("failed to read {}", manifest_path.display()))?;
-    let manifest: ComponentManifest = serde_json::from_str(&manifest_raw).with_context(|| {
+    let mut manifest_value: JsonValue = serde_json::from_str(&manifest_raw).with_context(|| {
         format!(
             "failed to parse component manifest JSON at {}",
             manifest_path.display()
         )
     })?;
+    normalize_manifest(&mut manifest_value);
+    let manifest: ComponentManifest =
+        serde_json::from_value(manifest_value).with_context(|| {
+            format!(
+                "failed to parse component manifest JSON at {}",
+                manifest_path.display()
+            )
+        })?;
 
     let config_flow_id = match args.mode {
         Some(ConfigFlowModeArg::Custom) => "custom".to_string(),
@@ -130,6 +138,7 @@ pub fn run_add_step(args: FlowAddStepArgs) -> Result<()> {
     let output = crate::pack_run::run_config_flow(temp_flow.path())
         .with_context(|| format!("failed to run config flow {}", config_flow_id))?;
     let (node_id, mut node) = parse_config_flow_output(&output)?;
+    normalize_node(&node_id, &mut node, &manifest)?;
     let after = args
         .after
         .clone()
@@ -167,6 +176,79 @@ pub fn run_add_step(args: FlowAddStepArgs) -> Result<()> {
         pack_flow_path.display()
     );
     Ok(())
+}
+
+fn normalize_node(node_id: &str, node: &mut JsonValue, manifest: &ComponentManifest) -> Result<()> {
+    let Some(obj) = node.as_object_mut() else {
+        return Ok(());
+    };
+
+    // If the config flow forgot to populate component.exec details, inject sensible defaults so the
+    // generated pack flow can execute.
+    if let Some(exec) = obj
+        .get_mut("component.exec")
+        .and_then(|v| v.as_object_mut())
+    {
+        exec.entry("component")
+            .or_insert_with(|| JsonValue::String(manifest.id.to_string()));
+
+        let op_missing = match exec.get("operation") {
+            Some(JsonValue::String(s)) => s.trim().is_empty(),
+            None => true,
+            _ => false,
+        };
+        if op_missing {
+            let op = manifest
+                .operations
+                .first()
+                .map(|o| o.name.clone())
+                .ok_or_else(|| {
+                    anyhow!(
+                        "config flow emitted component.exec without operation and manifest has none"
+                    )
+                })?;
+            exec.insert("operation".to_string(), JsonValue::String(op.clone()));
+            exec.entry("op").or_insert(JsonValue::String(op));
+        } else if let Some(JsonValue::String(op)) = exec.get("operation").cloned() {
+            exec.entry("op").or_insert(JsonValue::String(op));
+        }
+    }
+
+    if let Some(tool) = obj.get("tool").and_then(|v| v.as_object()) {
+        let Some(comp) = tool.get("component").and_then(|v| v.as_str()) else {
+            bail!("config flow output tool is missing `component`");
+        };
+        // Without an operation, we cannot produce a valid component.exec node.
+        // Surface a clear error so users know to regenerate config flows or add an operation.
+        bail!(
+            "config flow emitted invalid step `{}`: component `{}` has no operations; regenerate config flows with a component version that declares operations",
+            node_id,
+            comp
+        );
+    }
+
+    Ok(())
+}
+
+fn normalize_manifest(manifest: &mut JsonValue) {
+    let Some(obj) = manifest.as_object_mut() else {
+        return;
+    };
+    if let Some(ops) = obj.get_mut("operations")
+        && let Some(arr) = ops.as_array_mut()
+    {
+        let mut normalized = Vec::with_capacity(arr.len());
+        for entry in arr.drain(..) {
+            if let Some(s) = entry.as_str() {
+                let mut map = serde_json::Map::new();
+                map.insert("name".to_string(), JsonValue::String(s.to_string()));
+                normalized.push(JsonValue::Object(map));
+            } else {
+                normalized.push(entry);
+            }
+        }
+        *arr = normalized;
+    }
 }
 
 fn prompt_routing_target(flow_doc: &JsonValue) -> Option<String> {

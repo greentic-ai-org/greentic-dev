@@ -40,6 +40,7 @@ fn build_packc_temp(source: &Path, gtpack_out: &Path, verbose: bool) -> Result<(
         dry_run: false,
         secrets_req: None,
         default_secret_scope: None,
+        allow_oci_tags: false,
     };
     let runtime = runtime::resolve_runtime(None, None, true, None)?;
     let opts = BuildOptions::from_args(build_args, &runtime)?;

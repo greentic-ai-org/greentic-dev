@@ -27,6 +27,13 @@
       "dev"
     ]
   },
+  "operations": [
+    {
+      "name": "echo",
+      "input_schema": {},
+      "output_schema": {}
+    }
+  ],
   "provenance": {
     "builder": "fixture-gen",
     "built_at_utc": "2024-01-01T00:00:00Z",

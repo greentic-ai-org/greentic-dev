@@ -89,12 +89,13 @@ fn build_once(
 ) -> Result<()> {
     let flow_source = fs::read_to_string(flow_path)
         .with_context(|| format!("failed to read {}", flow_path.display()))?;
-    let flow_doc_json: JsonValue = serde_yaml_bw::from_str(&flow_source).with_context(|| {
-        format!(
-            "failed to parse {} for node resolution",
-            flow_path.display()
-        )
-    })?;
+    let mut flow_doc_json: JsonValue =
+        serde_yaml_bw::from_str(&flow_source).with_context(|| {
+            format!(
+                "failed to parse {} for node resolution",
+                flow_path.display()
+            )
+        })?;
     let bundle = load_and_validate_bundle(&flow_source, Some(flow_path))
         .with_context(|| format!("flow validation failed for {}", flow_path.display()))?;
 
@@ -121,6 +122,10 @@ fn build_once(
     if !schema_errors.is_empty() {
         report_schema_errors(&schema_errors)?;
     }
+
+    // Newer runner builds expect node.component.operation to be populated; backfill a default using
+    // the first operation declared in the component manifest when the flow omitted it.
+    ensure_node_operations(&mut flow_doc_json, &resolved_nodes)?;
 
     write_resolved_configs(&resolved_nodes)?;
 
@@ -216,6 +221,68 @@ fn to_pack_flow_bundle(
             })
             .collect(),
     }
+}
+
+fn ensure_node_operations(flow_doc_json: &mut JsonValue, nodes: &[ResolvedNode]) -> Result<()> {
+    let Some(nodes_map) = flow_doc_json
+        .get_mut("nodes")
+        .and_then(|v| v.as_object_mut())
+    else {
+        return Ok(());
+    };
+
+    for node in nodes {
+        let Some(entry) = nodes_map
+            .get_mut(&node.node_id)
+            .and_then(|v| v.as_object_mut())
+        else {
+            continue;
+        };
+        let Some(config) = entry.get_mut(&node.component.name) else {
+            continue;
+        };
+        let Some(cfg_map) = config.as_object_mut() else {
+            continue;
+        };
+
+        let has_op = cfg_map
+            .get("operation")
+            .and_then(|v| v.as_str())
+            .map(|s| !s.trim().is_empty())
+            .unwrap_or(false)
+            || cfg_map
+                .get("op")
+                .and_then(|v| v.as_str())
+                .map(|s| !s.trim().is_empty())
+                .unwrap_or(false);
+
+        if has_op {
+            continue;
+        }
+
+        if let Some(op) = default_operation(&node.component)? {
+            cfg_map
+                .entry("operation")
+                .or_insert(JsonValue::String(op.clone()));
+            cfg_map.entry("op").or_insert(JsonValue::String(op));
+        }
+    }
+
+    Ok(())
+}
+
+fn default_operation(component: &ResolvedComponent) -> Result<Option<String>> {
+    let manifest_json = component.manifest_json.as_deref().unwrap_or_default();
+    let manifest: JsonValue =
+        serde_json::from_str(manifest_json).context("invalid manifest JSON")?;
+    let op_name = manifest
+        .get("operations")
+        .and_then(|ops| ops.as_array())
+        .and_then(|ops| ops.first())
+        .and_then(|op| op.get("name"))
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+    Ok(op_name)
 }
 
 fn write_resolved_configs(nodes: &[ResolvedNode]) -> Result<()> {

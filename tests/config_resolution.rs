@@ -39,7 +39,7 @@ environment_id = "legacy-env"
 
     let loaded = config::load_with_meta(None)?;
     assert_eq!(
-        loaded.loaded_from.as_ref().map(|p| p.as_path()),
+        loaded.loaded_from.as_deref(),
         Some(xdg_path.as_path()),
         "should prefer XDG config over legacy ~/.greentic"
     );
@@ -153,7 +153,7 @@ environment_id = "valid-env"
 
     let loaded = config::load_with_meta(None)?;
     assert_eq!(
-        loaded.loaded_from.as_ref().map(|p| p.as_path()),
+        loaded.loaded_from.as_deref(),
         Some(xdg_path.as_path()),
         "loader should ignore lower-precedence invalid configs"
     );
