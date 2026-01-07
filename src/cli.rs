@@ -49,7 +49,7 @@ pub enum FlowCommand {
     /// Validate a flow YAML file and emit the canonical bundle JSON
     Validate(FlowValidateArgs),
     /// Add a configured component step to a flow via config-flow
-    AddStep(FlowAddStepArgs),
+    AddStep(Box<FlowAddStepArgs>),
 }
 
 #[derive(Args, Debug)]

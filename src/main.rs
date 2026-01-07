@@ -19,7 +19,7 @@ fn main() -> Result<()> {
     match cli.command {
         Command::Flow(flow) => match flow {
             FlowCommand::Validate(args) => flow_cmd::validate(args),
-            FlowCommand::AddStep(args) => flow_cmd::run_add_step(args),
+            FlowCommand::AddStep(args) => flow_cmd::run_add_step(*args),
         },
         Command::Pack(_pack) => {
             let idx = raw_args
