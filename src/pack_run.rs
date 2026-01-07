@@ -1,16 +1,13 @@
-use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
-use std::io::{self, IsTerminal, Read, Write};
+use std::io::Read;
 use std::path::{Path, PathBuf};
 
 use anyhow::bail;
 use anyhow::{Context, Result, anyhow};
-use greentic_flow::flow_bundle::load_and_validate_bundle;
 use greentic_runner::desktop::{
     HttpMock, HttpMockMode, MocksConfig, OtlpHook, Runner, SigningPolicy, ToolsMock,
 };
 use serde_json::{Value as JsonValue, json};
-use serde_yaml_bw as serde_yaml;
 use zip::ZipArchive;
 
 #[derive(Debug, Clone)]
@@ -270,130 +267,5 @@ fn signing_policy(policy: RunPolicy) -> SigningPolicy {
     match policy {
         RunPolicy::Strict => SigningPolicy::Strict,
         RunPolicy::DevOk => SigningPolicy::DevOk,
-    }
-}
-
-/// Run a config flow and return the final payload as a JSON string.
-#[allow(dead_code)]
-pub fn run_config_flow(flow_path: &Path) -> Result<String> {
-    let source = std::fs::read_to_string(flow_path)
-        .with_context(|| format!("failed to read config flow {}", flow_path.display()))?;
-    // Validate against embedded schema to catch malformed flows.
-    load_and_validate_bundle(&source, Some(flow_path)).context("config flow validation failed")?;
-
-    let doc: serde_yaml::Value = serde_yaml::from_str(&source)
-        .with_context(|| format!("invalid YAML in {}", flow_path.display()))?;
-    let nodes = doc
-        .get("nodes")
-        .and_then(|v| v.as_mapping())
-        .ok_or_else(|| anyhow!("config flow missing nodes map"))?;
-
-    let mut current = nodes
-        .iter()
-        .next()
-        .map(|(k, _)| k.as_str().unwrap_or_default().to_string())
-        .ok_or_else(|| anyhow!("config flow has no nodes to execute"))?;
-    let mut state: BTreeMap<String, String> = BTreeMap::new();
-    let mut visited: BTreeSet<String> = BTreeSet::new();
-    let is_tty = io::stdin().is_terminal();
-
-    loop {
-        if !visited.insert(current.clone()) {
-            bail!("config flow routing loop detected at {}", current);
-        }
-
-        let node_val = nodes
-            .get(serde_yaml::Value::String(current.clone(), None))
-            .ok_or_else(|| anyhow!("node `{current}` not found in config flow"))?;
-        let mapping = node_val
-            .as_mapping()
-            .ok_or_else(|| anyhow!("node `{current}` is not a mapping"))?;
-
-        // questions node
-        if let Some(fields) = mapping
-            .get(serde_yaml::Value::String("questions".to_string(), None))
-            .and_then(|q| {
-                q.as_mapping()
-                    .and_then(|m| m.get(serde_yaml::Value::String("fields".to_string(), None)))
-            })
-            .and_then(|v| v.as_sequence())
-        {
-            for field in fields {
-                let Some(field_map) = field.as_mapping() else {
-                    continue;
-                };
-                let id = field_map
-                    .get(serde_yaml::Value::String("id".to_string(), None))
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .to_string();
-                if id.is_empty() {
-                    continue;
-                }
-                let prompt = field_map
-                    .get(serde_yaml::Value::String("prompt".to_string(), None))
-                    .and_then(|v| v.as_str())
-                    .unwrap_or(&id);
-                let default = field_map
-                    .get(serde_yaml::Value::String("default".to_string(), None))
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("");
-                let value = if is_tty {
-                    print!("{prompt} [{default}]: ");
-                    let _ = io::stdout().flush();
-                    let mut buf = String::new();
-                    io::stdin().read_line(&mut buf).ok();
-                    let trimmed = buf.trim();
-                    if trimmed.is_empty() {
-                        default.to_string()
-                    } else {
-                        trimmed.to_string()
-                    }
-                } else {
-                    default.to_string()
-                };
-                state.insert(id, value);
-            }
-        }
-
-        // template string path
-        if let Some(template) = mapping
-            .get(serde_yaml::Value::String("template".to_string(), None))
-            .and_then(|v| v.as_str())
-        {
-            let mut rendered = template.to_string();
-            for (k, v) in &state {
-                let needle = format!("{{{{state.{k}}}}}");
-                rendered = rendered.replace(&needle, v);
-            }
-            return Ok(rendered);
-        }
-
-        // payload with node_id/node
-        if let Some(payload) = mapping.get(serde_yaml::Value::String("payload".to_string(), None)) {
-            let json_str = serde_json::to_string(&serde_yaml::from_value::<serde_json::Value>(
-                payload.clone(),
-            )?)
-            .context("failed to render config flow payload")?;
-            return Ok(json_str);
-        }
-
-        // follow routing if present
-        if let Some(next) = mapping
-            .get(serde_yaml::Value::String("routing".to_string(), None))
-            .and_then(|r| r.as_sequence())
-            .and_then(|seq| seq.first())
-            .and_then(|entry| {
-                entry
-                    .as_mapping()
-                    .and_then(|m| m.get(serde_yaml::Value::String("to".to_string(), None)))
-                    .and_then(|v| v.as_str())
-            })
-        {
-            current = next.to_string();
-            continue;
-        }
-
-        bail!("config flow ended without producing template or payload");
     }
 }

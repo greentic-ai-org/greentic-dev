@@ -56,3 +56,5 @@
 ## 5. Notes for Future Work
 - Verify the GitHub Actions release workflow after recent changes to ensure matrix builds and asset uploads run for both tag and master pushes without YAML errors.
 - Keep an eye on upstream runner/flow releases; currently using `greentic-flow` 0.4.4 with `greentic-runner-host`/`desktop` 0.4.10. Upgrade together as new versions land.
+- Flow semantics audit added: see `docs/audits/flow_semantics_in_dev.md` and `docs/audits/flow_move_plan.md` for non-pass-through behaviors in `flow_cmd.rs` (config-flow rendering, manifest normalization, add-step orchestration) and a migration plan to move semantics into greentic-flow.
+- Component resolution audit updated: see `docs/audits/components_semantics_in_dev.md` for current behavior; transport move plan in `docs/audits/distributor_client_move_plan.md`; component semantics move plan in `docs/audits/component_move_plan.md`.

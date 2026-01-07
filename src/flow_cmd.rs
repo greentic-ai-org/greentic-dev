@@ -6,7 +6,11 @@ use crate::component_add::run_component_add;
 use crate::pack_init::PackInitIntent;
 use crate::path_safety::normalize_under_root;
 use anyhow::{Context, Result, anyhow, bail};
+use greentic_flow::add_step::{add_step_from_config_flow, anchor_candidates};
+use greentic_flow::component_catalog::normalize_manifest_value;
 use greentic_flow::flow_bundle::load_and_validate_bundle;
+use greentic_flow::flow_ir::FlowIr;
+use greentic_flow::loader::load_ygtc_from_str;
 use serde_json::Value as JsonValue;
 use serde_yaml_bw as serde_yaml;
 use std::io::Write;
@@ -17,7 +21,7 @@ use tempfile::NamedTempFile;
 use greentic_types::FlowId;
 use greentic_types::component::ComponentManifest;
 
-const DEFAULT_CONFIG_FLOW_TYPE: &str = "component-config";
+const FLOW_SCHEMA: &str = include_str!("../schemas/ygtc.flow.schema.json");
 
 pub fn validate(path: &Path, compact_json: bool) -> Result<()> {
     let root = std::env::current_dir()
@@ -45,21 +49,6 @@ pub fn validate(path: &Path, compact_json: bool) -> Result<()> {
     Ok(())
 }
 
-pub fn render_config_flow_yaml(config_flow_id: &str, graph: &JsonValue) -> Result<String> {
-    let mut graph_obj = graph
-        .as_object()
-        .cloned()
-        .ok_or_else(|| anyhow!("config flow `{config_flow_id}` graph is not an object"))?;
-    let ty = graph_obj
-        .entry("type".to_string())
-        .or_insert(JsonValue::String(DEFAULT_CONFIG_FLOW_TYPE.to_string()));
-    if !ty.is_string() {
-        *ty = JsonValue::String(DEFAULT_CONFIG_FLOW_TYPE.to_string());
-    }
-    let normalized = JsonValue::Object(graph_obj);
-    serde_yaml::to_string(&normalized).context("failed to render config flow graph to YAML")
-}
-
 pub fn run_add_step(args: FlowAddStepArgs) -> Result<()> {
     let manifest_path = args
         .manifest
@@ -79,7 +68,7 @@ pub fn run_add_step(args: FlowAddStepArgs) -> Result<()> {
             manifest_path.display()
         )
     })?;
-    normalize_manifest(&mut manifest_value);
+    normalize_manifest_value(&mut manifest_value);
     let manifest: ComponentManifest =
         serde_json::from_value(manifest_value).with_context(|| {
             format!(
@@ -113,8 +102,9 @@ pub fn run_add_step(args: FlowAddStepArgs) -> Result<()> {
     // Ensure the component is available locally (fetch if needed).
     let _bundle_dir = resolve_component_bundle(&coord, args.profile.as_deref())?;
 
-    // Render the dev flow graph to YAML so the existing runner can consume it.
-    let config_flow_yaml = render_config_flow_yaml(&config_flow_id, &config_flow.graph)?;
+    // Render the dev flow graph to YAML so greentic-flow helpers can consume it (type defaulting is handled upstream).
+    let config_flow_yaml =
+        serde_yaml::to_string(&config_flow.graph).context("failed to render config flow graph")?;
     let mut temp_flow =
         NamedTempFile::new().context("failed to create temporary config flow file")?;
     temp_flow
@@ -132,135 +122,50 @@ pub fn run_add_step(args: FlowAddStepArgs) -> Result<()> {
     }
     let pack_flow_raw = std::fs::read_to_string(&pack_flow_path)
         .with_context(|| format!("failed to read pack flow {}", pack_flow_path.display()))?;
-    let mut pack_flow_json: JsonValue = serde_yaml::from_str(&pack_flow_raw)
-        .with_context(|| format!("invalid YAML in {}", pack_flow_path.display()))?;
+    let flow_doc = load_ygtc_from_str(&pack_flow_raw)
+        .with_context(|| format!("failed to parse flow at {}", pack_flow_path.display()))?;
+    let flow_ir = FlowIr::from_doc(flow_doc).context("failed to convert flow document to IR")?;
+    let schema_path = PathBuf::from(".greentic").join("config-flow.schema.json");
+    if let Some(parent) = schema_path.parent() {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("failed to create {}", parent.display()))?;
+    }
+    fs::write(&schema_path, FLOW_SCHEMA)
+        .with_context(|| format!("failed to write {}", schema_path.display()))?;
 
-    let output = crate::pack_run::run_config_flow(temp_flow.path())
-        .with_context(|| format!("failed to run config flow {}", config_flow_id))?;
-    let (node_id, mut node) = parse_config_flow_output(&output)?;
-    normalize_node(&node_id, &mut node, &manifest)?;
     let after = args
         .after
         .clone()
-        .or_else(|| prompt_routing_target(&pack_flow_json));
-    if let Some(after) = after.as_deref() {
-        patch_placeholder_routing(&mut node, after);
-    }
-
-    let graph_obj = pack_flow_json
-        .as_object_mut()
-        .ok_or_else(|| anyhow!("pack flow {} is not a mapping", pack_flow_path.display()))?;
-
-    // Update target pack flow JSON
-    let nodes = graph_obj
-        .get_mut("nodes")
-        .and_then(|n| n.as_object_mut())
-        .ok_or_else(|| anyhow!("flow `{}` missing nodes map", args.flow_id))?;
-    nodes.insert(node_id.clone(), node);
-
-    if let Some(after) = args.after {
-        append_routing(graph_obj, &after, &node_id)?;
-    } else if let Some(after) = after.as_deref() {
-        append_routing(graph_obj, after, &node_id)?;
-    }
+        .or_else(|| prompt_routing_target(&flow_ir));
+    let answers = serde_json::Map::new();
+    let updated_doc = add_step_from_config_flow(
+        &pack_flow_raw,
+        temp_flow.path(),
+        &schema_path,
+        &[manifest_path.as_path()],
+        after,
+        &answers,
+        false,
+    )
+    .map_err(|e| anyhow!(e))?;
 
     let rendered =
-        serde_yaml::to_string(&pack_flow_json).context("failed to render updated pack flow")?;
+        serde_yaml::to_string(&updated_doc).context("failed to render updated pack flow")?;
     std::fs::write(&pack_flow_path, rendered)
         .with_context(|| format!("failed to write {}", pack_flow_path.display()))?;
 
     println!(
-        "Added node `{}` from config flow {} to {}",
-        node_id,
-        config_flow_id,
+        "Added node from config flow {config_flow_id} to {}",
         pack_flow_path.display()
     );
     Ok(())
 }
 
-fn normalize_node(node_id: &str, node: &mut JsonValue, manifest: &ComponentManifest) -> Result<()> {
-    let Some(obj) = node.as_object_mut() else {
-        return Ok(());
-    };
-
-    // If the config flow forgot to populate component.exec details, inject sensible defaults so the
-    // generated pack flow can execute.
-    if let Some(exec) = obj
-        .get_mut("component.exec")
-        .and_then(|v| v.as_object_mut())
-    {
-        exec.entry("component")
-            .or_insert_with(|| JsonValue::String(manifest.id.to_string()));
-
-        let op_missing = match exec.get("operation") {
-            Some(JsonValue::String(s)) => s.trim().is_empty(),
-            None => true,
-            _ => false,
-        };
-        if op_missing {
-            let op = manifest
-                .operations
-                .first()
-                .map(|o| o.name.clone())
-                .ok_or_else(|| {
-                    anyhow!(
-                        "config flow emitted component.exec without operation and manifest has none"
-                    )
-                })?;
-            exec.insert("operation".to_string(), JsonValue::String(op.clone()));
-            exec.entry("op").or_insert(JsonValue::String(op));
-        } else if let Some(JsonValue::String(op)) = exec.get("operation").cloned() {
-            exec.entry("op").or_insert(JsonValue::String(op));
-        }
-    }
-
-    if let Some(tool) = obj.get("tool").and_then(|v| v.as_object()) {
-        let Some(comp) = tool.get("component").and_then(|v| v.as_str()) else {
-            bail!("config flow output tool is missing `component`");
-        };
-        // Without an operation, we cannot produce a valid component.exec node.
-        // Surface a clear error so users know to regenerate config flows or add an operation.
-        bail!(
-            "config flow emitted invalid step `{}`: component `{}` has no operations; regenerate config flows with a component version that declares operations",
-            node_id,
-            comp
-        );
-    }
-
-    Ok(())
-}
-
-fn normalize_manifest(manifest: &mut JsonValue) {
-    let Some(obj) = manifest.as_object_mut() else {
-        return;
-    };
-    if let Some(ops) = obj.get_mut("operations")
-        && let Some(arr) = ops.as_array_mut()
-    {
-        let mut normalized = Vec::with_capacity(arr.len());
-        for entry in arr.drain(..) {
-            if let Some(s) = entry.as_str() {
-                let mut map = serde_json::Map::new();
-                map.insert("name".to_string(), JsonValue::String(s.to_string()));
-                normalized.push(JsonValue::Object(map));
-            } else {
-                normalized.push(entry);
-            }
-        }
-        *arr = normalized;
-    }
-}
-
-fn prompt_routing_target(flow_doc: &JsonValue) -> Option<String> {
+fn prompt_routing_target(flow_ir: &FlowIr) -> Option<String> {
     if !io::stdout().is_terminal() {
         return None;
     }
-    let nodes = flow_doc
-        .as_object()
-        .and_then(|m| m.get("nodes"))
-        .and_then(|n| n.as_object())?;
-    let mut keys: Vec<String> = nodes.keys().cloned().collect();
-    keys.sort();
+    let keys = anchor_candidates(flow_ir);
     if keys.is_empty() {
         return None;
     }
@@ -288,26 +193,6 @@ fn prompt_routing_target(flow_doc: &JsonValue) -> Option<String> {
     None
 }
 
-fn patch_placeholder_routing(node: &mut JsonValue, next: &str) {
-    let Some(map) = node.as_object_mut() else {
-        return;
-    };
-    let Some(routing) = map.get_mut("routing") else {
-        return;
-    };
-    let Some(routes) = routing.as_array_mut() else {
-        return;
-    };
-    for entry in routes.iter_mut() {
-        if let Some(JsonValue::String(to)) =
-            entry.as_object_mut().and_then(|route| route.get_mut("to"))
-            && to == "NEXT_NODE_PLACEHOLDER"
-        {
-            *to = next.to_string();
-        }
-    }
-}
-
 fn resolve_component_bundle(coordinate: &str, profile: Option<&str>) -> Result<PathBuf> {
     let path = PathBuf::from_str(coordinate).unwrap_or_default();
     if path.exists() {
@@ -315,52 +200,4 @@ fn resolve_component_bundle(coordinate: &str, profile: Option<&str>) -> Result<P
     }
     let dir = run_component_add(coordinate, profile, PackInitIntent::Dev)?;
     Ok(dir)
-}
-
-pub fn parse_config_flow_output(output: &str) -> Result<(String, JsonValue)> {
-    let value: JsonValue =
-        serde_json::from_str(output).context("config flow output is not valid JSON")?;
-    let obj = value
-        .as_object()
-        .ok_or_else(|| anyhow!("config flow output must be a JSON object"))?;
-    let node_id = obj
-        .get("node_id")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| anyhow!("config flow output missing node_id"))?
-        .to_string();
-    let node = obj
-        .get("node")
-        .ok_or_else(|| anyhow!("config flow output missing node"))?
-        .clone();
-    if !node.is_object() {
-        bail!("config flow output node must be an object");
-    }
-    Ok((node_id, node))
-}
-
-fn append_routing(
-    flow_doc: &mut serde_json::Map<String, JsonValue>,
-    from_node: &str,
-    to_node: &str,
-) -> Result<()> {
-    let nodes = flow_doc
-        .get_mut("nodes")
-        .and_then(|n| n.as_object_mut())
-        .ok_or_else(|| anyhow!("flow missing nodes map"))?;
-    let Some(node) = nodes.get_mut(from_node) else {
-        bail!("node `{from_node}` not found for routing update");
-    };
-    let mapping = node
-        .as_object_mut()
-        .ok_or_else(|| anyhow!("node `{from_node}` is not an object"))?;
-    let routing = mapping
-        .entry("routing")
-        .or_insert(JsonValue::Array(Vec::new()));
-    let seq = routing
-        .as_array_mut()
-        .ok_or_else(|| anyhow!("routing for `{from_node}` is not a list"))?;
-    let mut entry = serde_json::Map::new();
-    entry.insert("to".to_string(), JsonValue::String(to_node.to_string()));
-    seq.push(JsonValue::Object(entry));
-    Ok(())
 }

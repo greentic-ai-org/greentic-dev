@@ -44,12 +44,17 @@ fn write_manifest_without_ops(root: &Path) {
 fn write_pack_flow(root: &Path) {
     let flow = "schema_version: 1
 id: main
-type: pack
+type: messaging
+start: start
 nodes:
   start:
+    dev.greentic.qa:
+      question: \"hello?\"
     routing:
       - to: end
-  end: {}
+  end:
+    dev.greentic.qa:
+      question: \"done\"
 ";
     fs::create_dir_all(root.join("flows")).unwrap();
     fs::write(root.join("flows/main.ygtc"), flow).unwrap();
@@ -79,11 +84,11 @@ fn add_step_errors_when_config_flow_has_tool_without_ops() {
     std::env::set_current_dir(prev).unwrap();
     let msg = err.to_string();
     assert!(
-        msg.contains("config flow emitted invalid step"),
+        msg.contains("ADD_STEP_NODE_INVALID") || msg.contains("Legacy tool emission"),
         "missing config flow hint: {msg}"
     );
     assert!(
-        msg.contains("has no operations"),
-        "missing operations hint: {msg}"
+        msg.contains("Legacy tool emission is not supported"),
+        "missing tool emission hint: {msg}"
     );
 }

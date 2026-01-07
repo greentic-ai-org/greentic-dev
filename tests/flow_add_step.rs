@@ -2,8 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use greentic_dev::cli::{ConfigFlowModeArg, FlowAddStepArgs};
-use greentic_dev::flow_cmd::{parse_config_flow_output, render_config_flow_yaml, run_add_step};
-use greentic_flow::flow_bundle::load_and_validate_bundle;
+use greentic_dev::flow_cmd::run_add_step;
 use serde_json::{Value as JsonValue, json};
 use serde_yaml_bw as serde_yaml;
 use std::sync::Mutex;
@@ -20,7 +19,7 @@ fn remove_env(key: &str) {
 
 fn write_test_manifest(root: &Path) {
     let manifest = json!({
-        "id": "dev.test",
+        "id": "dev.greentic.qa",
         "name": "Dev Test",
         "version": "0.1.0",
         "world": "greentic:component/component@0.4.0",
@@ -40,7 +39,7 @@ fn write_test_manifest(root: &Path) {
                     "type": "component-config",
                     "nodes": {
                         "emit_config": {
-                            "template": "{ \"node_id\": \"qa_step\", \"node\": { \"qa\": { \"component\": \"component-qa-process\", \"question\": \"hi\" }, \"routing\": [{ \"to\": \"NEXT_NODE_PLACEHOLDER\" }] } }"
+                            "template": "{ \"node_id\": \"qa_step\", \"node\": { \"dev.greentic.qa\": { \"component\": \"component-qa-process\", \"question\": \"hi\" }, \"routing\": [{ \"to\": \"NEXT_NODE_PLACEHOLDER\" }] } }"
                         }
                     },
                     "edges": []
@@ -61,13 +60,13 @@ fn write_manifest_missing_type(root: &Path) -> JsonValue {
         "id": "component.default",
         "nodes": {
             "emit_config": {
-                "template": "{ \"node_id\": \"qa_step\", \"node\": { \"qa\": { \"component\": \"component-qa-process\", \"question\": \"hi\" }, \"routing\": [{ \"to\": \"NEXT_NODE_PLACEHOLDER\" }] } }"
+                "template": "{ \"node_id\": \"qa_step\", \"node\": { \"dev.greentic.qa\": { \"component\": \"component-qa-process\", \"question\": \"hi\" }, \"routing\": [{ \"to\": \"NEXT_NODE_PLACEHOLDER\" }] } }"
             }
         },
         "edges": []
     });
     let manifest = json!({
-        "id": "dev.test",
+        "id": "dev.greentic.qa",
         "name": "Dev Test",
         "version": "0.1.0",
         "world": "greentic:component/component@0.4.0",
@@ -98,12 +97,17 @@ fn write_pack_flow(root: &Path) -> PathBuf {
     fs::create_dir_all(&flows).unwrap();
     let flow = "schema_version: 1
 id: pack.demo
-type: pack
+type: messaging
+start: start
 nodes:
   start:
+    dev.greentic.qa:
+      question: \"hello?\"
     routing:
       - to: end
-  end: {}
+  end:
+    dev.greentic.qa:
+      question: \"done\"
 ";
     let path = flows.join("demo.ygtc");
     fs::write(&path, flow).unwrap();
@@ -122,33 +126,6 @@ token = ""
     )
     .unwrap();
     cfg
-}
-
-#[test]
-fn parse_config_flow_rejects_invalid() {
-    let bad = r#"{"node": {"qa":{} } }"#;
-    let err = parse_config_flow_output(bad).expect_err("missing node_id should error");
-    assert!(
-        err.to_string().contains("node_id"),
-        "expected node_id error"
-    );
-}
-
-#[test]
-fn render_config_flow_adds_missing_type() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path().to_path_buf();
-    let graph = write_manifest_missing_type(&root);
-
-    let yaml = render_config_flow_yaml("default", &graph).expect("render config flow yaml");
-    let parsed: JsonValue = serde_yaml::from_str(&yaml).expect("parse rendered yaml");
-    assert_eq!(
-        parsed.get("type").and_then(|v| v.as_str()),
-        Some("component-config"),
-        "rendered config flow should include default type"
-    );
-    load_and_validate_bundle(&yaml, None)
-        .expect("rendered config flow should satisfy schema validation");
 }
 
 fn write_component_bundle(tmp: &Path) -> PathBuf {
@@ -234,14 +211,9 @@ fn flow_add_step_inserts_node() {
 fn flow_add_step_recovers_missing_type() {
     let tmp = tempfile::tempdir().unwrap();
     let root = tmp.path().to_path_buf();
-    let graph = write_manifest_missing_type(&root);
+    write_manifest_missing_type(&root);
     let bundle = write_component_bundle(&root);
     write_pack_flow(&root);
-
-    // Sanity-check the rendered YAML validates when `type` is missing in manifest.
-    let rendered =
-        render_config_flow_yaml("default", &graph).expect("render config flow from manifest");
-    load_and_validate_bundle(&rendered, None).expect("rendered flow should validate");
 
     let _guard = WORKDIR_LOCK.lock().unwrap();
     let prev_dir = std::env::current_dir().unwrap();
