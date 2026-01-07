@@ -63,23 +63,15 @@ greentic-dev component build --manifest components/hello-world/component.manifes
 greentic-dev component doctor components/hello-world/target/wasm32-wasip2/release/component_hello_world.wasm \
   --manifest components/hello-world/component.manifest.json
 ```
-4) **Ensure the component manifest exposes a config flow.** If you skipped flow generation, add or regenerate `dev_flows.default` (e.g., via `greentic-component flow update --manifest components/hello-world/component.manifest.json`). A minimal config flow template that yields a node called `hello` works well.
-5) **Wire the component into the pack’s default flow (keep `main.ygtc`).**
-```bash
-greentic-dev flow add-step main \
-  --manifest components/hello-world/component.manifest.json \
-  --coordinate components/hello-world \
-  --after start
-```
-6) **Sync pack.yaml components from the components/ directory.** This uses the underlying `packc components` to add your built component entry into `pack.yaml`.
+4) **Sync pack.yaml components from the components/ directory.** This uses the underlying `packc components` to add your built component entry into `pack.yaml`.
 ```bash
 greentic-dev pack components -- --in .
 ```
-7) **Validate the flow.**
+5) **Validate the flow.**
 ```bash
 greentic-dev flow validate -f flows/main.ygtc --json
 ```
-8) **Build and run the pack locally (offline).**
+6) **Build and run the pack locally (offline).**
 ```bash
 greentic-dev pack build -- --in . --gtpack-out dist/hello.gtpack
 greentic-dev pack run --pack dist/hello.gtpack --offline --mocks on --artifacts dist/artifacts
@@ -106,9 +98,7 @@ GREENTIC_DEV_OFFLINE=1 CARGO_NET_OFFLINE=true greentic-dev component build --man
 greentic-dev component doctor components/hello-world/target/wasm32-wasip2/release/component_hello_world.wasm \
   --manifest components/hello-world/component.manifest.json
 
-# flow + pack + run
-greentic-component flow update --manifest components/hello-world/component.manifest.json # ensure dev_flows.default exists
-greentic-dev flow add-step main --manifest components/hello-world/component.manifest.json --coordinate components/hello-world --after start
+# pack + run
 greentic-dev pack components -- --in .
 greentic-dev flow validate -f flows/main.ygtc --json
 greentic-dev pack build -- --in . --gtpack-out dist/hello.gtpack

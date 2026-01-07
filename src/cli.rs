@@ -57,33 +57,73 @@ pub struct FlowValidateArgs {
     /// Path to the flow definition (YAML)
     #[arg(short = 'f', long = "file")]
     pub file: PathBuf,
-    /// Emit compact JSON instead of pretty-printing
+    /// Emit JSON output (ygtc-lint --json)
     #[arg(long = "json")]
     pub json: bool,
+    /// Optional schema path to pass through
+    #[arg(long = "schema")]
+    pub schema: Option<PathBuf>,
 }
 
 #[derive(Args, Debug)]
 pub struct FlowAddStepArgs {
-    /// Path to component.manifest.json (defaults to ./component.manifest.json)
-    #[arg(long = "manifest")]
-    pub manifest: Option<PathBuf>,
-    /// Flow identifier inside manifest.dev_flows (default: default)
-    #[arg(long = "flow", default_value = "default")]
-    pub flow: String,
-    /// Flow identifier (maps to flows/<id>.ygtc)
-    pub flow_id: String,
-    /// Component coordinate (store://... or repo://...). If omitted, greentic-dev will prompt.
-    #[arg(long = "coordinate")]
-    pub coordinate: Option<String>,
-    /// Distributor profile to use (overrides GREENTIC_DISTRIBUTOR_PROFILE/env config)
-    #[arg(long = "profile")]
-    pub profile: Option<String>,
-    /// Config flow selection
-    #[arg(long = "mode", value_enum)]
-    pub mode: Option<ConfigFlowModeArg>,
-    /// Automatically append routing from an existing node (if provided)
+    /// Flow file to modify (e.g., flows/main.ygtc)
+    #[arg(long = "flow")]
+    pub flow_path: PathBuf,
+    /// Optional anchor node id; defaults to entrypoint or first node.
     #[arg(long = "after")]
     pub after: Option<String>,
+    /// Mode for add-step (default or config)
+    #[arg(long = "mode", value_enum, default_value = "default")]
+    pub mode: FlowAddStepMode,
+    /// Component id (default mode).
+    #[arg(long = "component")]
+    pub component_id: Option<String>,
+    /// Optional pack alias for the new node.
+    #[arg(long = "pack-alias")]
+    pub pack_alias: Option<String>,
+    /// Optional operation for the new node.
+    #[arg(long = "operation")]
+    pub operation: Option<String>,
+    /// Payload JSON for the new node (default mode).
+    #[arg(long = "payload", default_value = "{}")]
+    pub payload: String,
+    /// Optional routing JSON for the new node (default mode).
+    #[arg(long = "routing")]
+    pub routing: Option<String>,
+    /// Config flow file to execute (config mode).
+    #[arg(long = "config-flow")]
+    pub config_flow: Option<PathBuf>,
+    /// Answers JSON for config mode.
+    #[arg(long = "answers")]
+    pub answers: Option<String>,
+    /// Answers file (JSON) for config mode.
+    #[arg(long = "answers-file")]
+    pub answers_file: Option<PathBuf>,
+    /// Allow cycles/back-edges during insertion.
+    #[arg(long = "allow-cycles")]
+    pub allow_cycles: bool,
+    /// Write back to the flow file instead of stdout.
+    #[arg(long = "write")]
+    pub write: bool,
+    /// Validate only without writing output.
+    #[arg(long = "validate-only")]
+    pub validate_only: bool,
+    /// Optional component manifest paths for catalog validation.
+    #[arg(long = "manifest")]
+    pub manifests: Vec<PathBuf>,
+    /// Optional explicit node id hint.
+    #[arg(long = "node-id")]
+    pub node_id: Option<String>,
+    /// Verbose passthrough logging.
+    #[arg(long = "verbose")]
+    pub verbose: bool,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, ValueEnum)]
+pub enum FlowAddStepMode {
+    Default,
+    Config,
 }
 
 #[derive(Subcommand, Debug)]

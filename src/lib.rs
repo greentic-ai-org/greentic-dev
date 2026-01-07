@@ -16,6 +16,7 @@ pub mod pack_init;
 pub mod pack_run;
 pub mod pack_temp;
 pub mod pack_verify;
+pub mod passthrough;
 pub mod path_safety;
 pub mod secrets_cli;
 pub mod secrets_seed;
