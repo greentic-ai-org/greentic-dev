@@ -1,6 +1,6 @@
 [package]
 name = "greentic-dev"
-version = "0.4.33"
+version = "0.4.34"
 edition = "2024"
 description = "Developer CLI and local tooling for Greentic flows, packs, and components"
 license = "MIT"
@@ -61,8 +61,8 @@ toml_edit = "0.23"
 semver = "1.0"
 sha2 = "0.10"
 time = { version = "0.3", features = ["macros", "formatting"] }
-wit-component = "0.243"
-wit-parser = "0.243"
+wit-component = "0.244"
+wit-parser = "0.244"
 base64 = "0.22"
 greentic-interfaces = { version = "0.4", default-features = false, features = ["describe-v1"] }
 greentic-types = { version = "0.4", features = ["serde"] }
