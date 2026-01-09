@@ -22,10 +22,6 @@ pkg-fmt = "tgz"
 bin-dir = "{ bin }{ binary-ext }"
 
 [[bin]]
-name = "packc"
-path = "src/bin/packc.rs"
-
-[[bin]]
 name = "greentic-component"
 path = "src/bin/greentic-component.rs"
 
@@ -38,6 +34,10 @@ required-features = ["bundled-tools"]
 name = "greentic-gui"
 path = "src/bin/greentic-gui.rs"
 required-features = ["bundled-tools"]
+
+[[bin]]
+name = "greentic-pack"
+path = "src/bin/greentic-pack.rs"
 
 [workspace]
 members = ["crates/dev-viewer", "xtask"]
