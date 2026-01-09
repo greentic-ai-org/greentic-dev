@@ -68,7 +68,7 @@ jobs:
       - name: Install required tool binaries
         run: |
           cargo install cargo-binstall --locked || true
-          cargo binstall -y --locked greentic-flow greentic-component packc greentic-pack greentic-runner ygtc-lint
+          cargo binstall -y --locked greentic-flow greentic-component greentic-pack greentic-runner
 
       - name: Lint (clippy + fmt)
         run: |

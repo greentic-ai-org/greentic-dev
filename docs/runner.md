@@ -7,7 +7,7 @@ The `greentic-dev` runner is built around schema awareness. Every node in a flow
 The runner exposes a dedicated validation mode via:
 
 ```bash
-greentic-dev flow validate -f examples/flows/min.ygtc --json
+greentic-dev flow doctor -f examples/flows/min.ygtc --json
 ```
 
 In validation mode the CLI:

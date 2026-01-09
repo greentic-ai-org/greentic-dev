@@ -12,19 +12,19 @@ pub fn validate(args: FlowValidateArgs) -> Result<()> {
         .canonicalize()
         .context("failed to canonicalize workspace root")?;
     let safe = normalize_under_root(&root, &args.file)?;
-    let bin = resolve_binary("ygtc-lint")?;
-    let mut passthrough_args: Vec<OsString> = Vec::new();
+    let bin = resolve_binary("greentic-flow")?;
+    let mut passthrough_args: Vec<OsString> =
+        vec!["doctor".into(), "--flow".into(), safe.into_os_string()];
     if args.json {
         passthrough_args.push("--json".into());
     }
-    if let Some(schema) = args.schema {
-        passthrough_args.push("--schema".into());
-        passthrough_args.push(schema.into_os_string());
-    }
-    passthrough_args.push(safe.into_os_string());
 
     let status = run_passthrough(&bin, &passthrough_args, false)?;
     process::exit(status.code().unwrap_or(1));
+}
+
+pub fn doctor(args: FlowValidateArgs) -> Result<()> {
+    validate(args)
 }
 
 pub fn run_add_step(args: FlowAddStepArgs) -> Result<()> {

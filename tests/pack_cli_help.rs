@@ -1,15 +1,5 @@
 use assert_cmd::cargo::cargo_bin_cmd;
-use greentic_dev::passthrough::resolve_binary;
 use predicates::str::contains;
-
-fn skip_if_packc_missing() -> bool {
-    if resolve_binary("packc").is_err() {
-        eprintln!("skipping pack help tests: packc not found");
-        true
-    } else {
-        false
-    }
-}
 
 #[test]
 fn pack_help_lists_new_subcommands() {
@@ -25,9 +15,6 @@ fn pack_help_lists_new_subcommands() {
 
 #[test]
 fn pack_components_help_succeeds() {
-    if skip_if_packc_missing() {
-        return;
-    }
     let mut cmd = cargo_bin_cmd!("greentic-dev");
     cmd.args(["pack", "components", "--help"])
         .assert()
@@ -36,27 +23,18 @@ fn pack_components_help_succeeds() {
 
 #[test]
 fn pack_update_help_succeeds() {
-    if skip_if_packc_missing() {
-        return;
-    }
     let mut cmd = cargo_bin_cmd!("greentic-dev");
     cmd.args(["pack", "update", "--help"]).assert().success();
 }
 
 #[test]
 fn pack_config_help_succeeds() {
-    if skip_if_packc_missing() {
-        return;
-    }
     let mut cmd = cargo_bin_cmd!("greentic-dev");
     cmd.args(["pack", "config", "--help"]).assert().success();
 }
 
 #[test]
 fn pack_gui_help_succeeds() {
-    if skip_if_packc_missing() {
-        return;
-    }
     let mut cmd = cargo_bin_cmd!("greentic-dev");
     cmd.args(["pack", "gui", "--help"]).assert().success();
 }

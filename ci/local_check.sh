@@ -33,13 +33,11 @@ ensure_bin() {
   cargo binstall ${LOCKED_FLAG} ${OFFLINE_FLAG} -y "$bin"
 }
 
-echo "[check_local] ensuring required binaries (greentic-flow, greentic-component, packc, greentic-pack, greentic-runner, ygtc-lint)"
+echo "[check_local] ensuring required binaries (greentic-flow, greentic-component, greentic-pack, greentic-runner)"
 ensure_bin greentic-flow
 ensure_bin greentic-component
-ensure_bin packc
 ensure_bin greentic-pack
 ensure_bin greentic-runner
-ensure_bin ygtc-lint
 
 if [[ -z "${OFFLINE_FLAG}" ]]; then
   echo "[check_local] fetch (locked)"

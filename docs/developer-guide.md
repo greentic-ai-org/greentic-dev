@@ -50,7 +50,7 @@ The happy path is entirely CLI-driven:
 
 1) **Scaffold the pack workspace.**
 ```bash
-greentic-dev pack new -- --dir ./hello-pack dev.local.hello-pack
+greentic-dev pack new --dir ./hello-pack dev.local.hello-pack
 cd hello-pack
 ```
 2) **Scaffold the component inside the pack.**
@@ -63,15 +63,32 @@ greentic-dev component build --manifest components/hello-world/component.manifes
 greentic-dev component doctor components/hello-world/target/wasm32-wasip2/release/component_hello_world.wasm \
   --manifest components/hello-world/component.manifest.json
 ```
-4) **Sync pack.yaml components from the components/ directory.** This uses the underlying `packc components` to add your built component entry into `pack.yaml`.
+4) **Add the component to the flow.** This wires your built component into the default flow (after `start`) using greentic-flow via greentic-dev.
+```bash
+greentic-dev flow add-step \
+  --flow flows/main.ygtc \
+  --after start \
+  --component dev.local.hello-pack.hello-world \
+  --operation handle_message \
+  --payload '{}' \
+  --routing '[{"out":true}]'
+```
+> Tip: if your manifest defines the operation, you can omit `--operation`; `--payload`/`--routing` can also be omitted for the default shape.
+
+5) **Sync pack.yaml components from the components/ directory.** This uses the underlying `greentic-pack components` to add your built component entry into `pack.yaml`.
 ```bash
 greentic-dev pack components -- --in .
 ```
-5) **Validate the flow.**
+6) **Validate the flow.**
 ```bash
-greentic-dev flow validate -f flows/main.ygtc --json
+greentic-dev flow doctor -f flows/main.ygtc --json
 ```
-6) **Build and run the pack locally (offline).**
+7) **Check the pack manifest and flows.**
+```bash
+greentic-dev pack doctor --pack pack.yaml
+```
+
+8) **Build and run the pack locally (offline).**
 ```bash
 greentic-dev pack build -- --in . --gtpack-out dist/hello.gtpack
 greentic-dev pack run --pack dist/hello.gtpack --offline --mocks on --artifacts dist/artifacts
@@ -100,7 +117,8 @@ greentic-dev component doctor components/hello-world/target/wasm32-wasip2/releas
 
 # pack + run
 greentic-dev pack components -- --in .
-greentic-dev flow validate -f flows/main.ygtc --json
+greentic-dev flow doctor -f flows/main.ygtc --json
+greentic-dev pack doctor --pack pack.yaml
 greentic-dev pack build -- --in . --gtpack-out dist/hello.gtpack
 greentic-dev pack run --pack dist/hello.gtpack --offline --mocks on
 

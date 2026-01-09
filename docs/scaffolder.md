@@ -40,7 +40,7 @@ Older assets (`src/describe.rs`, `tests/schema_validates_examples.rs`, `examples
 3. **Pack (optional):** `greentic-dev component pack --path .`  
    Copies the `.wasm`, writes `meta.json` (provider metadata + sha + timestamp), and generates `SHA256SUMS` under `packs/<name>/<version>/`.
 
-4. **Wire into flows:** Back in the main workspace, point a flow node at the component (`using: <name>`) and run `greentic-dev flow validate -f <flow>.ygtc --json` (or `cargo run -p greentic-dev -- flow …` during local development). When you are ready to exercise the pack end-to-end, follow up with `greentic-dev pack build …` and `greentic-dev pack run …`.
+4. **Wire into flows:** Back in the main workspace, point a flow node at the component (`using: <name>`) and run `greentic-dev flow doctor -f <flow>.ygtc --json` (or `cargo run -p greentic-dev -- flow …` during local development). When you are ready to exercise the pack end-to-end, follow up with `greentic-dev pack build …` and `greentic-dev pack run …`.
 
 ---
 

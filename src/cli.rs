@@ -24,7 +24,7 @@ pub enum Command {
     /// Flow tooling (validate, lint, bundle inspection)
     #[command(subcommand)]
     Flow(FlowCommand),
-    /// Pack tooling (delegates to packc for build/lint/sign/verify/new; uses greentic-pack for inspect/plan/providers)
+    /// Pack tooling (delegates to greentic-pack; greentic-runner for pack run)
     #[command(subcommand)]
     Pack(PackCommand),
     /// Component tooling (delegates to greentic-component built-ins + distributor add)
@@ -46,8 +46,10 @@ pub enum Command {
 
 #[derive(Subcommand, Debug)]
 pub enum FlowCommand {
-    /// Validate a flow YAML file and emit the canonical bundle JSON
+    /// Validate a flow YAML file via greentic-flow doctor
     Validate(FlowValidateArgs),
+    /// Doctor (preferred) validates a flow YAML file via greentic-flow doctor
+    Doctor(FlowValidateArgs),
     /// Add a configured component step to a flow via config-flow
     AddStep(Box<FlowAddStepArgs>),
 }
@@ -57,12 +59,9 @@ pub struct FlowValidateArgs {
     /// Path to the flow definition (YAML)
     #[arg(short = 'f', long = "file")]
     pub file: PathBuf,
-    /// Emit JSON output (ygtc-lint --json)
+    /// Emit JSON output (greentic-flow doctor --json)
     #[arg(long = "json")]
     pub json: bool,
-    /// Optional schema path to pass through
-    #[arg(long = "schema")]
-    pub schema: Option<PathBuf>,
 }
 
 #[derive(Args, Debug)]
@@ -198,21 +197,21 @@ pub enum GuiPackKind {
 
 #[derive(Subcommand, Debug)]
 pub enum PackCommand {
-    /// Delegate to packc build
+    /// Delegate to greentic-pack build
     Build(PackcArgs),
-    /// Delegate to packc lint
+    /// Delegate to greentic-pack lint
     Lint(PackcArgs),
-    /// Delegate to packc components (sync pack.yaml from components/)
+    /// Delegate to greentic-pack components (sync pack.yaml from components/)
     Components(PackcArgs),
-    /// Delegate to packc update (sync pack.yaml components + flows)
+    /// Delegate to greentic-pack update (sync pack.yaml components + flows)
     Update(PackcArgs),
-    /// Delegate to packc new
+    /// Delegate to greentic-pack new
     New(PackcArgs),
-    /// Delegate to packc sign
+    /// Delegate to greentic-pack sign
     Sign(PackcArgs),
-    /// Delegate to packc verify
+    /// Delegate to greentic-pack verify
     Verify(PackcArgs),
-    /// Delegate to packc gui helpers
+    /// Delegate to greentic-pack gui helpers
     Gui(PackcArgs),
     /// Inspect a .gtpack (or directory via temporary build)
     Inspect(PackInspectArgs),
@@ -221,7 +220,7 @@ pub enum PackCommand {
     /// Events helpers (legacy)
     #[command(subcommand)]
     Events(PackEventsCommand),
-    /// Delegate to packc config (resolve config with provenance)
+    /// Delegate to greentic-pack config (resolve config with provenance)
     Config(PackcArgs),
     /// Execute a pack locally with mocks/telemetry support
     Run(PackRunArgs),
@@ -323,7 +322,7 @@ pub struct PackNewProviderArgs {
 #[derive(Args, Debug, Clone, Default)]
 #[command(disable_help_flag = true)]
 pub struct PackcArgs {
-    /// Arguments passed directly to the `packc` command
+    /// Arguments passed directly to the `greentic-pack` command
     #[arg(
         value_name = "ARGS",
         trailing_var_arg = true,

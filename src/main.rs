@@ -19,6 +19,7 @@ fn main() -> Result<()> {
     match cli.command {
         Command::Flow(flow) => match flow {
             FlowCommand::Validate(args) => flow_cmd::validate(args),
+            FlowCommand::Doctor(args) => flow_cmd::doctor(args),
             FlowCommand::AddStep(args) => flow_cmd::run_add_step(*args),
         },
         Command::Pack(_pack) => {
@@ -32,10 +33,6 @@ fn main() -> Result<()> {
                 .map(|s| s.to_string_lossy().to_string());
             let bin_name = match subcommand.as_deref() {
                 Some("run") => "greentic-runner",
-                Some(
-                    "build" | "lint" | "components" | "update" | "new" | "sign" | "verify" | "gui"
-                    | "config",
-                ) => "packc",
                 _ => "greentic-pack",
             };
             let bin = resolve_binary(bin_name)?;
