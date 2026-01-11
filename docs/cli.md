@@ -9,7 +9,7 @@ Below is a quick map of what’s available and how to use it from this repo. For
 
 ## Flow (delegates to greentic-flow)
 - `flow doctor <flow.ygtc> [--json]`: Validate flows against component schemas. Equivalent to `greentic-flow doctor`.
-- `flow add-step --flow <path> --after <node> [--component <id>] [--operation <op>] [--payload <json>] [--routing <json>] [--mode config --config-flow <path> …]`: Add a node via config-flow or direct payload. Passthrough to `greentic-flow add-step`.
+- `flow add-step --flow <path> --after <node> --mode <default|config> [...]`: Passthrough to `greentic-flow add-step`; supports routing shorthands (`--routing-out`, `--routing-reply`, `--routing-next`, `--routing-multi-to`, `--routing-json`, `--routing-to-anchor`), component refs (`--component`, `--component-ref`, `--local-wasm`, `--pin`), and config-flow inputs (`--config-flow`, `--answers`, `--answers-file`).
 
 Reference: [`greentic-flow/docs/cli.md`](../greentic-flow/docs/cli.md)
 

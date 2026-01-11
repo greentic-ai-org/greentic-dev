@@ -79,6 +79,15 @@ pub struct FlowAddStepArgs {
     /// Component id (default mode).
     #[arg(long = "component")]
     pub component_id: Option<String>,
+    /// Remote component reference (oci://, repo://, store://) for sidecar binding.
+    #[arg(long = "component-ref")]
+    pub component_ref: Option<String>,
+    /// Local wasm path for sidecar binding (relative to the flow file).
+    #[arg(long = "local-wasm")]
+    pub local_wasm: Option<PathBuf>,
+    /// Pin the component (resolve tag to digest or hash local wasm).
+    #[arg(long = "pin")]
+    pub pin: bool,
     /// Optional pack alias for the new node.
     #[arg(long = "pack-alias")]
     pub pack_alias: Option<String>,
@@ -88,9 +97,24 @@ pub struct FlowAddStepArgs {
     /// Payload JSON for the new node (default mode).
     #[arg(long = "payload", default_value = "{}")]
     pub payload: String,
-    /// Optional routing JSON for the new node (default mode).
-    #[arg(long = "routing")]
-    pub routing: Option<String>,
+    /// Routing shorthand: make the new node terminal (out).
+    #[arg(long = "routing-out")]
+    pub routing_out: bool,
+    /// Routing shorthand: reply to origin.
+    #[arg(long = "routing-reply")]
+    pub routing_reply: bool,
+    /// Route to a specific node id.
+    #[arg(long = "routing-next")]
+    pub routing_next: Option<String>,
+    /// Route to multiple node ids (comma-separated).
+    #[arg(long = "routing-multi-to")]
+    pub routing_multi_to: Option<String>,
+    /// Explicit routing JSON file (escape hatch).
+    #[arg(long = "routing-json")]
+    pub routing_json: Option<PathBuf>,
+    /// Explicitly thread to the anchor’s existing targets (default if no routing flag is given).
+    #[arg(long = "routing-to-anchor")]
+    pub routing_to_anchor: bool,
     /// Config flow file to execute (config mode).
     #[arg(long = "config-flow")]
     pub config_flow: Option<PathBuf>,

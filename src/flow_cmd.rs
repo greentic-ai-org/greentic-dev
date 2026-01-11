@@ -41,6 +41,17 @@ pub fn run_add_step(args: FlowAddStepArgs) -> Result<()> {
                 passthrough_args.push("--component".into());
                 passthrough_args.push(component.into());
             }
+            if let Some(component_ref) = args.component_ref {
+                passthrough_args.push("--component-ref".into());
+                passthrough_args.push(component_ref.into());
+            }
+            if let Some(local_wasm) = args.local_wasm {
+                passthrough_args.push("--local-wasm".into());
+                passthrough_args.push(local_wasm.into_os_string());
+            }
+            if args.pin {
+                passthrough_args.push("--pin".into());
+            }
             if let Some(alias) = args.pack_alias {
                 passthrough_args.push("--pack-alias".into());
                 passthrough_args.push(alias.into());
@@ -51,9 +62,26 @@ pub fn run_add_step(args: FlowAddStepArgs) -> Result<()> {
             }
             passthrough_args.push("--payload".into());
             passthrough_args.push(args.payload.into());
-            if let Some(routing) = args.routing {
-                passthrough_args.push("--routing".into());
-                passthrough_args.push(routing.into());
+            if args.routing_out {
+                passthrough_args.push("--routing-out".into());
+            }
+            if args.routing_reply {
+                passthrough_args.push("--routing-reply".into());
+            }
+            if let Some(next) = args.routing_next {
+                passthrough_args.push("--routing-next".into());
+                passthrough_args.push(next.into());
+            }
+            if let Some(multi) = args.routing_multi_to {
+                passthrough_args.push("--routing-multi-to".into());
+                passthrough_args.push(multi.into());
+            }
+            if let Some(json) = args.routing_json {
+                passthrough_args.push("--routing-json".into());
+                passthrough_args.push(json.into_os_string());
+            }
+            if args.routing_to_anchor {
+                passthrough_args.push("--routing-to-anchor".into());
             }
         }
         FlowAddStepMode::Config => {

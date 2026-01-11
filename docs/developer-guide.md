@@ -71,7 +71,7 @@ greentic-dev flow add-step \
   --component dev.local.hello-pack.hello-world \
   --operation handle_message \
   --payload '{}' \
-  --routing '[{"out":true}]'
+  --routing-out
 ```
 > Tip: if your manifest defines the operation, you can omit `--operation`; `--payload`/`--routing` can also be omitted for the default shape.
 
