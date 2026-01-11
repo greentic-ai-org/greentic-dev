@@ -32,10 +32,6 @@ impl GreenticConfig {
 pub struct ToolsSection {
     #[serde(rename = "greentic-component", default)]
     pub greentic_component: ToolEntry,
-    #[serde(rename = "packc", default)]
-    pub packc: ToolEntry,
-    #[serde(rename = "packc-path", default)]
-    pub packc_path: ToolEntry,
 }
 
 #[derive(Debug, Default, Deserialize, Clone)]
