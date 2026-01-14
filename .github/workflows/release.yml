@@ -173,8 +173,8 @@ jobs:
           install_crate_tool "greentic-gui" "greentic-gui" "^0.4"
           install_crate_tool "greentic-flow" "greentic-flow" "^0.4"
           install_crate_tool "greentic-pack" "greentic-pack" "^0.4"
-          install_crate_tool "greentic-runner" "greentic-runner" "^0.4"
-          install_crate_tool "greentic-secrets-cli" "greentic-secrets-cli" "^0.4" "greentic-secrets"
+          install_crate_tool "greentic-runner" "greentic-runner-cli" "^0.4"
+          install_crate_tool "greentic-secrets" "greentic-secrets" "^0.4"
 
           cp README.md LICENSE-MIT LICENSE-APACHE "$STAGING/"
 

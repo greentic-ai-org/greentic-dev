@@ -91,7 +91,7 @@ greentic-dev pack doctor dist/hello.gtpack
 
 8) **Run the pack locally (offline).**
 ```bash
-greentic-dev pack run --pack dist/hello.gtpack --offline --mocks on --artifacts dist/artifacts
+greentic-dev pack run --pack dist/hello.gtpack --offline --artifacts dist/artifacts
 ```
 
 That sequence yields a runnable pack that pulls a config-flow-defined node from your component, bundles it, and executes it locally without touching the network.
@@ -120,7 +120,7 @@ greentic-dev pack components -- --in .
 greentic-dev flow doctor flows/main.ygtc --json
 greentic-dev pack doctor --pack pack.yaml
 greentic-dev pack build -- --in . --gtpack-out dist/hello.gtpack
-greentic-dev pack run --pack dist/hello.gtpack --offline --mocks on
+greentic-dev pack run --pack dist/hello.gtpack --offline
 
 # optional: register and inspect provider extensions
 # (this lives outside the main flow wiring steps)

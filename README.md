@@ -1,13 +1,13 @@
 # Greentic Dev Toolkit
 
-Build and run Greentic automation locally with the same components, flows, and packs you ship to production. `greentic-dev` is a thin, opinionated wrapper around the canonical CLIs (`greentic-component`, `greentic-flow`, `greentic-pack`, `greentic-runner`) so you can scaffold, wire, doctor, and execute with one entrypoint.
+Build and run Greentic automation locally with the same components, flows, and packs you ship to production. `greentic-dev` is a thin, opinionated wrapper around the canonical CLIs (`greentic-component`, `greentic-flow`, `greentic-pack`, `greentic-runner-cli`) so you can scaffold, wire, doctor, and execute with one entrypoint.
 
 Think of it as a developer cockpit:
 - **Components**: reusable Wasm units that declare operations and schemas. Everything is a component—business logic, providers, infra hooks.
 - **Flows**: YAML graphs that call local or remote components, mix control flow, and compose complex behavior without code sprawl.
 - **Packs**: distributable bundles that combine flows + component artifacts for applications, infrastructure, or providers. Packs can depend on remote components, and flows can mix local and remote refs.
 
-The power: you can stitch together local components, pull remote ones, validate against component-provided schemas, and run the whole pack with mocks or real execution—all from this CLI.
+The power: you can stitch together local components, pull remote ones, validate against component-provided schemas, and run the whole pack via the runner CLI—all from this CLI.
 
 ---
 
@@ -38,14 +38,14 @@ greentic-dev flow add-step \
   --routing '[{"out":true}]'
 greentic-dev flow doctor flows/main.ygtc --json
 
-# 4) Sync pack manifest, doctor, build, run (offline with mocks)
+# 4) Sync pack manifest, doctor, build, run
 greentic-dev pack components -- --in .
 greentic-dev pack doctor --pack pack.yaml
 greentic-dev pack build -- --in . --gtpack-out dist/hello.gtpack
-greentic-dev pack run --pack dist/hello.gtpack --offline --mocks on --artifacts dist/artifacts
+greentic-dev pack run --pack dist/hello.gtpack --offline --artifacts dist/artifacts
 ```
 
-That sequence produces a runnable pack that uses your local component, validates the flow against the component’s schema, and executes it locally with mocks.
+That sequence produces a runnable pack that uses your local component, validates the flow against the component’s schema, and executes it locally via the runner CLI.
 
 > Prefer cargo-run? Use `cargo run -p greentic-dev -- <subcommand> …` — semantics are identical.
 
@@ -57,7 +57,7 @@ This CLI passes through directly to the upstream tools. See the detailed options
 
 - `greentic-dev flow …` → `greentic-flow` (doctor, add-step, etc.)
 - `greentic-dev component …` → `greentic-component` (new, build, doctor, describe, pack, templates)
-- `greentic-dev pack …` → `greentic-pack` (components, update, build, doctor/inspect, run via greentic-runner)
+- `greentic-dev pack …` → `greentic-pack` (components, update, build, doctor/inspect, run via greentic-runner-cli)
 - `greentic-dev gui …` → `greentic-gui` helpers
 - `greentic-dev secrets …` → `greentic-secrets` helpers
 - `greentic-dev mcp …` → MCP doctor (optional feature)

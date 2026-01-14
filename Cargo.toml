@@ -1,6 +1,6 @@
 [package]
 name = "greentic-dev"
-version = "0.4.43"
+version = "0.4.44"
 edition = "2024"
 description = "Developer CLI and local tooling for Greentic flows, packs, and components"
 license = "MIT"
@@ -86,7 +86,6 @@ greentic-types = { version = "0.4", features = ["serde"] }
 greentic-flow = "0.4"
 greentic-pack-lib = "0.4"
 greentic-mcp = "0.4"
-greentic-runner = "0.4"
 greentic-component = { version = "0.4", features = ["prepare", "describe", "cli"] }
 greentic-secrets = { version = "0.4", default-features = false, features = ["core", "spec"] }
 jsonschema = "0.38"
@@ -97,11 +96,9 @@ reqwest = { version = "0.12", default-features = false, features = ["blocking", 
 zip = { version = "7", default-features = false, features = ["deflate"] }
 bytes = "1.7"
 async-compression = "0.4"
-tracing-subscriber = { version = "0.3", features = ["fmt"] }
 greentic-distributor-client = { version = "0.4", features = ["http-runtime"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 async-trait = "0.1"
-tracing = "0.1"
 
 [workspace.metadata.dist]
 cargo-dist-version = "0.24.1"

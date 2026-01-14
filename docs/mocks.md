@@ -1,14 +1,17 @@
 # Local Mocks
 
-The runner modules inside `greentic-dev` ship with lightweight mocks so flows can be exercised without talking to real infrastructure.
+`greentic-dev` forwards `pack run` to `greentic-runner-cli`. Any mock behavior comes from the
+runner CLI itself, so consult its documentation for supported flags and behavior.
 
 ## Ports and endpoints
 
-* **HTTP mocks** – Default to `127.0.0.1:3100`. Override via the `MOCK_HTTP_PORT` environment variable.
-* **NATS mock** – Starts on `127.0.0.1:4223`. Override via `MOCK_NATS_PORT`.
-* **Secret vault mock** – Binds to `127.0.0.1:8201` with an in-memory backend.
+If your `greentic-runner-cli` build supports mocks, the default ports are:
 
-Mocks only listen on loopback and are started on demand by the runner.
+* **HTTP mocks** – `127.0.0.1:3100` (override with `MOCK_HTTP_PORT`).
+* **NATS mock** – `127.0.0.1:4223` (override with `MOCK_NATS_PORT`).
+* **Secret vault mock** – `127.0.0.1:8201` (in-memory backend).
+
+Mocks only listen on loopback and are started on demand by the runner CLI.
 
 ## Fault injection
 

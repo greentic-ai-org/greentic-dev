@@ -22,7 +22,7 @@ component-<name>/
 - **`Cargo.toml`** – Minimal manifest that depends on `greentic-interfaces-guest`, `serde`, and `serde_json`, and declares the component metadata used by tooling.
 - **`provider.toml`** – Canonical metadata (name, version, ABI pins, capabilities, artifact location). `greentic-dev component doctor` and `greentic-dev component pack` both consume this file.
 - **`README.md`** – Quickstart for the component author (build, validate, pack).
-- **`schemas/v1/config.schema.json`** – Draft 7 JSON Schema for the node configuration used by the runner and transcripts.
+- **`schemas/v1/config.schema.json`** – Draft 7 JSON Schema for the node configuration used by the runner CLI and transcripts.
 - **`src/lib.rs`** – Hello-world implementation using the guest bindings. It exports the `greentic:component/node` world and touches secrets/state/HTTP/telemetry to illustrate imports.
 
 Older assets (`src/describe.rs`, `tests/schema_validates_examples.rs`, `examples/flows/min.ygtc`, `.github/workflows/ci.yml`) are intentionally no longer generated; they live in the main repository instead.
@@ -62,7 +62,7 @@ When pointed at a directory, doctor detects the scaffold and reports missing pie
 Update the Greentic workspace to the new crate versions, bump the `greentic-interfaces-guest` version in the scaffolder, and regenerate components as needed so the bindings and metadata stay aligned.
 
 **Where did the old `describe.rs` go?**  
-The WASM component now exposes `describe` capabilities directly through the generated guest bindings. The CLI runner prefers the schema that comes from the component artifact, so no extra stub is needed in the scaffold.
+The WASM component now exposes `describe` capabilities directly through the generated guest bindings. The runner CLI prefers the schema that comes from the component artifact, so no extra stub is needed in the scaffold.
 
 ---
 

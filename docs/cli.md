@@ -17,9 +17,9 @@ Reference: [`greentic-flow/docs/cli.md`](../greentic-flow/docs/cli.md)
 
 Reference: [`greentic-component/docs/cli.md`](../greentic-component/docs/cli.md)
 
-## Pack (passthrough to greentic-pack; `pack run` uses greentic-dev runner)
+## Pack (passthrough to greentic-pack; `pack run` uses greentic-runner-cli)
 - `pack ...` delegates to `greentic-pack`.
-- `pack run ...` executes via the greentic-dev runner (mocks supported); `pack run --help` is forwarded to `greentic-runner-cli`.
+- `pack run ...` delegates to `greentic-runner-cli` (including `--help`).
 
 Reference: [`greentic-pack/docs/cli.md`](../greentic-pack/docs/cli.md)
 

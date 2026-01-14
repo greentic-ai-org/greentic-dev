@@ -1,8 +1,7 @@
+use assert_cmd::cargo::cargo_bin_cmd;
 use greentic_dev::pack_build::{self, PackSigning};
-use greentic_dev::pack_run::{self, MockSetting, PackRunConfig, RunPolicy};
-use serde_json::json;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[test]
 fn developer_guide_happy_path() {
@@ -55,22 +54,42 @@ nodes:
     .expect("pack build");
 
     // Execute the pack offline with mocks to verify the runtime path.
-    pack_run::run(PackRunConfig {
-        pack_path: &gtpack,
-        entry: None,
-        input: Some(json!({}).to_string()),
-        policy: RunPolicy::DevOk,
-        otlp: None,
-        allow_hosts: None,
-        mocks: MockSetting::On,
-        artifacts_dir: Some(pack_dir.join("dist/artifacts").as_path()),
-        json: false,
-        offline: true,
-        mock_exec: false,
-        allow_external: false,
-        mock_external: false,
-        mock_external_payload: None,
-        secrets_seed: None,
-    })
-    .expect("pack run");
+    let runner_cli = write_runner_cli_stub(pack_dir);
+    let mut cmd = cargo_bin_cmd!("greentic-dev");
+    cmd.env("GREENTIC_DEV_BIN_GREENTIC_RUNNER_CLI", &runner_cli)
+        .args([
+            "pack",
+            "run",
+            "--pack",
+            gtpack.to_string_lossy().as_ref(),
+            "--offline",
+            "--artifacts",
+            pack_dir.join("dist/artifacts").to_string_lossy().as_ref(),
+        ])
+        .assert()
+        .success();
+}
+
+fn write_runner_cli_stub(dir: &Path) -> PathBuf {
+    #[cfg(windows)]
+    let path = dir.join("greentic-runner-cli.cmd");
+    #[cfg(not(windows))]
+    let path = dir.join("greentic-runner-cli");
+
+    #[cfg(windows)]
+    let script = "@echo stub runner\r\n";
+    #[cfg(not(windows))]
+    let script = "#!/bin/sh\necho \"stub runner\"\n";
+
+    fs::write(&path, script).expect("write stub");
+
+    #[cfg(not(windows))]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = fs::metadata(&path).expect("stub metadata").permissions();
+        perms.set_mode(0o755);
+        fs::set_permissions(&path, perms).expect("set stub permissions");
+    }
+
+    path
 }
