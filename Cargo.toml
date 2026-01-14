@@ -1,6 +1,6 @@
 [package]
 name = "greentic-dev"
-version = "0.4.42"
+version = "0.4.43"
 edition = "2024"
 description = "Developer CLI and local tooling for Greentic flows, packs, and components"
 license = "MIT"
@@ -101,6 +101,7 @@ tracing-subscriber = { version = "0.3", features = ["fmt"] }
 greentic-distributor-client = { version = "0.4", features = ["http-runtime"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 async-trait = "0.1"
+tracing = "0.1"
 
 [workspace.metadata.dist]
 cargo-dist-version = "0.24.1"

@@ -8,6 +8,10 @@ use greentic_runner::desktop::{
     HttpMock, HttpMockMode, MocksConfig, OtlpHook, Runner, SigningPolicy, ToolsMock,
 };
 use serde_json::{Value as JsonValue, json};
+use time::OffsetDateTime;
+use time::format_description::parse as parse_time_format;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
 use zip::ZipArchive;
 
 #[derive(Debug, Clone)]
@@ -79,7 +83,8 @@ pub fn run(config: PackRunConfig<'_>) -> Result<()> {
         return Ok(());
     }
     // Print runner diagnostics even if the caller did not configure tracing.
-    let _ = tracing_subscriber::fmt::try_init();
+    let log_path = init_run_logging()?;
+    println!("Run logs: {}", log_path.display());
 
     // Ensure Wasmtime cache/config paths live inside the workspace so sandboxed runs can create them.
     if std::env::var_os("HOME").is_none() || std::env::var_os("WASMTIME_CACHE_DIR").is_none() {
@@ -164,6 +169,7 @@ pub fn run(config: PackRunConfig<'_>) -> Result<()> {
     } else {
         let rendered =
             serde_json::to_string_pretty(&value).context("failed to render run result JSON")?;
+        tracing::info!("pack run result:\n{rendered}");
         println!("{rendered}");
     }
 
@@ -176,6 +182,45 @@ pub fn run(config: PackRunConfig<'_>) -> Result<()> {
     }
 
     Ok(())
+}
+
+fn init_run_logging() -> Result<PathBuf> {
+    let workspace = std::env::current_dir().context("failed to resolve workspace root")?;
+    let logs_dir = workspace.join(".greentic").join("logs");
+    fs::create_dir_all(&logs_dir)
+        .with_context(|| format!("failed to create logs directory {}", logs_dir.display()))?;
+    let ts_format = parse_time_format("[year][month][day]_[hour][minute][second]")
+        .map_err(|e| anyhow!("failed to build log timestamp format: {e}"))?;
+    let timestamp = OffsetDateTime::now_utc()
+        .format(&ts_format)
+        .context("failed to format log timestamp")?;
+    let log_path = logs_dir.join(format!("pack-run-{timestamp}.log"));
+    let make_writer = {
+        let log_path = log_path.clone();
+        move || {
+            std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(&log_path)
+                .unwrap()
+        }
+    };
+
+    let file_layer = tracing_subscriber::fmt::layer()
+        .with_writer(make_writer)
+        .with_ansi(false)
+        .with_target(true);
+
+    let filter = tracing_subscriber::filter::EnvFilter::new(
+        "debug,cranelift_codegen=off,wasmtime=off,wasmtime_cranelift=off,cranelift=off",
+    );
+
+    let _ = tracing_subscriber::registry()
+        .with(filter)
+        .with(file_layer)
+        .try_init();
+
+    Ok(log_path)
 }
 
 #[allow(clippy::too_many_arguments)]

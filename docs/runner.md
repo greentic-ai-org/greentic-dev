@@ -23,6 +23,8 @@ Because validation skips tool execution it is fast and safe to run in CI.
 
 Need to execute flows end-to-end? Build a pack via `greentic-dev pack build …` and run it with `greentic-dev pack run …` which uses the desktop runner plus mocks/telemetry hooks.
 
+When running packs, greentic-dev writes runner logs under `.greentic/logs/pack-run-<timestamp>.log` in the current workspace.
+
 ## Discovering schemas
 
 Schemas enter the system in two ways:
