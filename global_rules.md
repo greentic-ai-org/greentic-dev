@@ -4,3 +4,4 @@
 - When upstream provides functionality, remove local duplicates and call upstream APIs instead of re-implementing.
 - If tests fail, first determine whether the failure points to an upstream bug or a faulty test. Treat exposing upstream bugs as the primary objective.
 - UX-only behavior (logging, prompts) and explicit safety policies (path safety, offline guards) may remain, but must not change underlying semantics.
+- Keep `docs/developer-guide.md` examples synchronized with automated tests; when the guide changes, update or add tests that cover the documented steps.

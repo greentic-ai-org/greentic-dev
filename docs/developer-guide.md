@@ -100,6 +100,41 @@ That sequence yields a runnable pack that pulls a config-flow-defined node from 
 
 ---
 
+## 3. Hello2-pack with a remote templates component (OCI)
+
+If you want to wire a remote component into your pack and flow, you can reference it via OCI and keep it in `pack.yaml` under the components extension.
+
+1) **Scaffold a second pack workspace.**
+```bash
+greentic-dev pack new --dir ./hello2-pack dev.local.hello2-pack
+cd hello2-pack
+```
+2) **Add a flow step that points at the remote templates component.**
+```bash
+greentic-dev flow add-step \
+  --flow flows/main.ygtc \
+  --node-id templates \
+  --operation handle_message \
+  --payload '{"input":"Hello from templates!"}' \
+  --component oci://ghcr.io/greentic-ai/components/templates:latest \
+  --routing-out
+```
+> If you want a digest-pinned ref, add `--pin` and copy the resulting digest into `pack.yaml` instead of `:latest`.
+
+
+3) **Optionally: Validate the flow and pack.** (`:latest` requires `--allow-oci-tags`.)
+```bash
+greentic-dev flow doctor flows/main.ygtc
+```
+4) **Build and run the pack.** (Requires network access to pull the remote component.)
+```bash
+greentic-dev pack build --in . --gtpack-out dist/hello2.gtpack --allow-oci-tags
+greentic-dev pack doctor --pack dist/hello2.gtpack
+greentic-dev pack run --pack dist/hello2.gtpack --artifacts dist/artifacts
+```
+
+---
+
 ## Quick reference
 
 ```
