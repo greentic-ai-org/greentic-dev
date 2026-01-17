@@ -550,9 +550,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.52"
+version = "1.2.53"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cd4932aefd12402b36c60956a4fe0035421f544799057659ff86f923657aada3"
+checksum = "755d2fce177175ffca841e9a06afdb2c4ab0f593d53b4dee48147dfaade85932"
 dependencies = [
  "find-msvc-tools",
  "jobserver",
@@ -1415,9 +1415,9 @@ checksum = "28dea519a9695b9977216879a3ebfddf92f1c08c05d984f8996aecd6ecdc811d"
 
 [[package]]
 name = "find-msvc-tools"
-version = "0.1.7"
+version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f449e6c6c08c865631d4890cfacf252b3d396c9bcc83adb6623cdb02a8336c41"
+checksum = "8591b0bcc8a98a64310a2fae1bb3e9b8564dd10e381e6e28010fde8e8e8568db"
 
 [[package]]
 name = "flate2"
@@ -1764,7 +1764,7 @@ dependencies = [
 
 [[package]]
 name = "greentic-dev"
-version = "0.4.46"
+version = "0.4.47"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -1810,9 +1810,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-distributor-client"
-version = "0.4.20"
+version = "0.4.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08e5831be3ed07c9e0c0d99999cd0f6fc5b4b20312770f29baf9b7a2222559fe"
+checksum = "86e9e7bcb2689b0bf29d4d5d347343fccbf9dcbca7bef5f6cc77f75000b79b6e"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1860,9 +1860,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-interfaces"
-version = "0.4.73"
+version = "0.4.74"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "80d591d7b79b104aa3d0097b36f112e08e909fb8be2152a5ea4f1de16bd66a0b"
+checksum = "6350480899d3d6b53bd48c439112825844d92a2c9982cc251b9b546cb45e897d"
 dependencies = [
  "anyhow",
  "greentic-types",
@@ -1877,9 +1877,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-interfaces-guest"
-version = "0.4.73"
+version = "0.4.74"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3250c68f0298e8e7460b3f188f6f1bcbd27e7ffc0f43815692aa318f05bac3cc"
+checksum = "c7bebedb26b54ce4f95792d77751239068dfe95b9a2403d7475a000458a3c184"
 dependencies = [
  "greentic-interfaces",
  "greentic-types",
@@ -1890,9 +1890,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-interfaces-host"
-version = "0.4.73"
+version = "0.4.74"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "17a78d847e250fbf0ec27742abb543e7c20cb397bab2fca828907c8001516606"
+checksum = "196db10753e4059e076185555b1bbf45db3d88e85c52212964c4a4d176c67e95"
 dependencies = [
  "greentic-interfaces",
  "greentic-types",
@@ -1902,9 +1902,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-interfaces-wasmtime"
-version = "0.4.73"
+version = "0.4.74"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6e4af3b0d54e05c91989100723d4a81ffea49053221f99a7d002c6bb3f8c4d5"
+checksum = "43f41daa6c23d6c56922ae7a49b375b4dd9d092f75e24e88e365439431ee4d73"
 dependencies = [
  "anyhow",
  "camino",
@@ -1965,9 +1965,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-pack-lib"
-version = "0.4.56"
+version = "0.4.58"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f167b5707bbabfeb7c496f360c113b9d155be1a1e811f56f3e8c33d98d078d96"
+checksum = "6ee9ac3496848a66d2f3cab3d231220676d5de146a392f11af16caa486f1c714"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -2099,9 +2099,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-types"
-version = "0.4.33"
+version = "0.4.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2012e90e0ed198dc232ef354844dfb3c2276001fd3e87d48894a5b59c6b9c8f"
+checksum = "bbc14873ed29c9211a82f90137ca9e1ad2ae2d3e0ec47bbaf786dd6ceab14b2b"
 dependencies = [
  "anyhow",
  "chrono",
@@ -2125,9 +2125,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-types-macros"
-version = "0.4.33"
+version = "0.4.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2f6b4986cc26fdd25eaadb0504ba13065f4b2235bd7d26e4da485d18d5a60d4"
+checksum = "20c3a3c9fe142222c90959247a7c4c74943c9409fbcb55032fb243fcb2aaed20"
 dependencies = [
  "proc-macro2",
  "quote",
