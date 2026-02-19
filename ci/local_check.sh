@@ -6,8 +6,19 @@ export CARGO_NET_RETRY=10
 export CARGO_HTTP_CHECK_REVOKE=false
 
 TOOLCHAIN_FILE="rust-toolchain.toml"
+TOOLCHAIN_CHANNEL_DEFAULT="1.91.0"
+TOOLCHAIN_CHANNEL="$TOOLCHAIN_CHANNEL_DEFAULT"
+TOOLCHAIN_COMPONENTS=""
+PYTHON_BIN="${PYTHON_BIN:-}"
+if [[ -z "$PYTHON_BIN" ]]; then
+  if command -v python3 >/dev/null 2>&1; then
+    PYTHON_BIN="python3"
+  elif command -v python >/dev/null 2>&1; then
+    PYTHON_BIN="python"
+  fi
+fi
 if [[ -r "${TOOLCHAIN_FILE}" ]]; then
-  if TOOLCHAIN_INFO=$(python - <<'PY'
+  if [[ -n "$PYTHON_BIN" ]] && TOOLCHAIN_INFO=$("$PYTHON_BIN" - <<'PY'
 import pathlib, re
 
 path = pathlib.Path("rust-toolchain.toml")
@@ -26,20 +37,24 @@ PY
   ); then
     TOOLCHAIN_CHANNEL=$(printf '%s' "$TOOLCHAIN_INFO" | sed -n '1p' | tr -d '\r')
     TOOLCHAIN_COMPONENTS=$(printf '%s' "$TOOLCHAIN_INFO" | sed -n '2p' | tr -d '\r')
-    if [[ -n "$TOOLCHAIN_CHANNEL" ]]; then
-      if [[ "${CARGO_NET_OFFLINE:-false}" != "true" ]]; then
-        echo "[check_local] ensuring rust toolchain ${TOOLCHAIN_CHANNEL} is installed"
-        rustup toolchain install "$TOOLCHAIN_CHANNEL"
-        if [[ -n "$TOOLCHAIN_COMPONENTS" ]]; then
-          rustup component add --toolchain "$TOOLCHAIN_CHANNEL" $TOOLCHAIN_COMPONENTS
-        fi
-      else
-        echo "[check_local] offline; skipping rust toolchain install for ${TOOLCHAIN_CHANNEL}"
-      fi
-      export RUSTUP_TOOLCHAIN="$TOOLCHAIN_CHANNEL"
+    if [[ -z "$TOOLCHAIN_CHANNEL" ]]; then
+      TOOLCHAIN_CHANNEL="$TOOLCHAIN_CHANNEL_DEFAULT"
     fi
+  elif [[ -z "$PYTHON_BIN" ]]; then
+    echo "[check_local] python not found; using default rust toolchain ${TOOLCHAIN_CHANNEL}"
   fi
 fi
+
+if [[ "${CARGO_NET_OFFLINE:-false}" != "true" ]]; then
+  echo "[check_local] ensuring rust toolchain ${TOOLCHAIN_CHANNEL} is installed"
+  rustup toolchain install "$TOOLCHAIN_CHANNEL"
+  if [[ -n "$TOOLCHAIN_COMPONENTS" ]]; then
+    rustup component add --toolchain "$TOOLCHAIN_CHANNEL" $TOOLCHAIN_COMPONENTS
+  fi
+else
+  echo "[check_local] offline; skipping rust toolchain install for ${TOOLCHAIN_CHANNEL}"
+fi
+export RUSTUP_TOOLCHAIN="$TOOLCHAIN_CHANNEL"
 
 if [[ -z "${CARGO_TARGET_DIR:-}" ]]; then
   export CARGO_TARGET_DIR="$(pwd)/.target-local"

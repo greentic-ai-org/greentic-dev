@@ -19,8 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Use repo rust-toolchain
+      - name: Use Rust 1.91.0
         uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.91.0
       - uses: Swatinem/rust-cache@v2
       - name: Install tomlq
         run: cargo install tomlq --locked

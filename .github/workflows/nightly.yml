@@ -16,8 +16,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use repo rust-toolchain
+      - name: Use Rust 1.91.0
         uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.91.0
 
       - uses: Swatinem/rust-cache@v2
 

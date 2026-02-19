@@ -1,6 +1,6 @@
 [package]
 name = "greentic-dev"
-version = "0.4.48"
+version = "0.4.49"
 edition = "2024"
 description = "Developer CLI and local tooling for Greentic flows, packs, and components"
 license = "MIT"
@@ -56,7 +56,7 @@ path = "src/bin/greentic-runner-cli.rs"
 required-features = ["bundled-tools"]
 
 [workspace]
-members = ["crates/dev-viewer", "xtask"]
+members = ["xtask"]
 resolver = "2"
 
 [features]
@@ -67,9 +67,9 @@ bundled-tools = []
 [dependencies]
 anyhow = "1.0"
 clap = { version = "4.5", features = ["derive"] }
-serde_yaml_bw = "2"
+serde_yaml_bw = {package="serde_yaml_gtc", version="2.5.2"}
 once_cell = "1.19"
-convert_case = "0.10"
+convert_case = "0.11"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_cbor = "0.11"
@@ -78,8 +78,8 @@ toml_edit = "0.23"
 semver = "1.0"
 sha2 = "0.10"
 time = { version = "0.3", features = ["macros", "formatting"] }
-wit-component = "0.244"
-wit-parser = "0.244"
+wit-component = "0.245"
+wit-parser = "0.245"
 base64 = "0.22"
 greentic-interfaces = { version = "0.4", default-features = false, features = ["describe-v1"] }
 greentic-types = { version = "0.4", features = ["serde"] }
@@ -87,13 +87,12 @@ greentic-flow = "0.4"
 greentic-pack-lib = "0.4"
 greentic-mcp = "0.4"
 greentic-component = { version = "0.4", features = ["prepare", "describe", "cli"] }
-greentic-secrets = { version = "0.4", default-features = false, features = ["core", "spec"] }
-jsonschema = "0.38"
+jsonschema = "0.42"
 tempfile = "3"
 dirs = "6"
 which = "8"
-reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
-zip = { version = "7", default-features = false, features = ["deflate"] }
+reqwest = { version = "0.13", default-features = false, features = ["blocking", "json", "rustls"] }
+zip = { version = "8", default-features = false, features = ["deflate"] }
 bytes = "1.7"
 async-compression = "0.4"
 greentic-distributor-client = { version = "0.4", features = ["http-runtime"] }
@@ -101,7 +100,7 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 async-trait = "0.1"
 
 [workspace.metadata.dist]
-cargo-dist-version = "0.24.1"
+cargo-dist-version = "0.24"
 ci = ["github"]
 installers = ["shell"]
 targets = [
@@ -119,7 +118,7 @@ httpmock = "0.8"
 walkdir = "2"
 blake3 = "1"
 indexmap = "2"
-greentic-secrets = { version = "0.4", default-features = false, features = ["core"] }
+greentic-secrets-api = "0.4"
 async-trait = "0.1"
 assert_cmd = "2"
 predicates = "3"

@@ -17,13 +17,14 @@ fn fixture_component() -> (PathBuf, PathBuf) {
 }
 
 #[test]
-fn doctor_succeeds_with_collocated_manifest() {
+fn doctor_reports_export_failures_for_legacy_fixture() {
     let (wasm, _) = fixture_component();
     cargo_bin_cmd!("greentic-component")
         .args(["doctor", wasm.to_str().expect("utf-8 path")])
         .assert()
-        .success()
-        .stdout(contains("manifest schema: ok"));
+        .failure()
+        .stderr(contains("doctor checks failed"))
+        .stdout(contains("missing export interface component-descriptor"));
 }
 
 #[test]
@@ -37,7 +38,8 @@ fn doctor_fails_without_manifest_when_separated() {
         .args(["doctor", relocated_wasm.to_str().expect("utf-8 path")])
         .assert()
         .failure()
-        .stderr(contains("component not found"));
+        .stderr(contains("doctor checks failed"))
+        .stdout(contains("missing export interface component-descriptor"));
 
     cargo_bin_cmd!("greentic-component")
         .args([
@@ -47,6 +49,7 @@ fn doctor_fails_without_manifest_when_separated() {
             manifest.to_str().expect("utf-8 path"),
         ])
         .assert()
-        .success()
-        .stdout(contains("manifest schema: ok"));
+        .failure()
+        .stderr(contains("doctor checks failed"))
+        .stdout(contains("missing export interface component-descriptor"));
 }

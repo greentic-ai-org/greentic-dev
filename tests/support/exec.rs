@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 
 use anyhow::{Context, Result, anyhow, bail};
 use async_trait::async_trait;
-use greentic_secrets::{Result as SecretResult, SecretError, SecretsManager};
+use greentic_secrets_api::{Result as SecretResult, SecretError, SecretsManager};
 use greentic_types::FlowId;
 use greentic_types::flow::{Flow, Node, Routing};
 use serde_json::Value as JsonValue;
