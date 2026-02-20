@@ -42,23 +42,34 @@ fn developer_guide_happy_path() {
         .assert()
         .success();
 
-    // Insert the hello-world node via greentic-dev flow add-step.
-    let source_component_dir = workspace.join("../tests/hello-pack/components/hello-world");
-    let dest_component_dir = pack_dir.join("components/handle_message");
-    let dest_wasm_dir = dest_component_dir.join("target/wasm32-wasip2/release");
-    fs::create_dir_all(&dest_wasm_dir).expect("create component dest dir");
+    // Insert a local fixture component via greentic-dev flow add-step.
+    let source_component_dir = workspace.join("fixtures/components/dev.greentic.echo");
+    if !source_component_dir
+        .join("component.manifest.json")
+        .exists()
+        || !source_component_dir.join("component.wasm").exists()
+    {
+        eprintln!(
+            "Skipping developer_guide_happy_path because local fixture component is unavailable at {}",
+            source_component_dir.display()
+        );
+        return;
+    }
+
+    let dest_component_dir = pack_dir.join("components/echo");
+    fs::create_dir_all(&dest_component_dir).expect("create component dest dir");
     fs::copy(
         source_component_dir.join("component.manifest.json"),
         dest_component_dir.join("component.manifest.json"),
     )
     .expect("copy component manifest");
     fs::copy(
-        source_component_dir.join("target/wasm32-wasip2/release/hello_world.wasm"),
-        dest_wasm_dir.join("hello_world.wasm"),
+        source_component_dir.join("component.wasm"),
+        dest_component_dir.join("component.wasm"),
     )
     .expect("copy component wasm");
-    let component_wasm_arg = dest_wasm_dir
-        .join("hello_world.wasm")
+    let component_wasm_arg = dest_component_dir
+        .join("component.wasm")
         .to_string_lossy()
         .to_string();
 
@@ -71,11 +82,11 @@ fn developer_guide_happy_path() {
             "--flow",
             "flows/main.ygtc",
             "--node-id",
-            "hello-world",
+            "echo",
             "--operation",
-            "handle_message",
+            "echo",
             "--payload",
-            r#"{"input":"Hello from hello-world!"}"#,
+            r#"{"message":"Hello from echo!"}"#,
             "--local-wasm",
             component_wasm_arg.as_str(),
             "--routing-out",
@@ -85,7 +96,7 @@ fn developer_guide_happy_path() {
 
     let flow_contents = fs::read_to_string(&flow_path).expect("read flow after add-step");
     assert!(
-        flow_contents.contains("hello-world"),
+        flow_contents.contains("echo"),
         "flow should include the component node"
     );
     assert!(
@@ -126,11 +137,24 @@ fn developer_guide_happy_path() {
 fn developer_guide_hello2_remote_templates_pack_run() {
     // Mirrors the developer-guide "hello2-pack" example using an OCI component reference.
     // TODO: This currently fails because the runner cannot resolve the OCI component from the pack.
+    let ghcr_owner = std::env::var("GREENTIC_TEST_GHCR_OWNER")
+        .ok()
+        .filter(|s| !s.trim().is_empty())
+        .or_else(|| {
+            std::env::var("GITHUB_REPOSITORY_OWNER")
+                .ok()
+                .filter(|s| !s.trim().is_empty())
+        })
+        .unwrap_or_else(|| "greentic-ai".to_string());
+    let templates_ref = format!("ghcr.io/{ghcr_owner}/components/templates:latest");
+    let templates_oci_ref = format!("oci://{templates_ref}");
+
     let temp = tempfile::tempdir().expect("tempdir");
     let pack_dir = temp.path().join("hello2-pack");
     fs::create_dir_all(pack_dir.join("flows")).expect("flows dir");
 
-    let pack_yaml = r#"pack_id: dev.local.hello2-pack
+    let pack_yaml = format!(
+        r#"pack_id: dev.local.hello2-pack
 version: 0.1.0
 kind: application
 publisher: Greentic
@@ -153,8 +177,9 @@ extensions:
     version: v1
     inline:
       refs:
-        - ghcr.io/greentic-ai/components/templates:latest
-"#;
+        - {templates_ref}
+"#
+    );
     fs::write(pack_dir.join("pack.yaml"), pack_yaml).expect("write pack.yaml");
 
     let flow_yaml = r#"id: main
@@ -192,19 +217,21 @@ nodes:
 "#;
     fs::write(pack_dir.join("flows/main.ygtc"), flow_yaml).expect("write flow");
 
-    let resolve_json = r#"{
+    let resolve_json = format!(
+        r#"{{
   "schema_version": 1,
   "flow": "main.ygtc",
-  "nodes": {
-    "templates": {
-      "source": {
+  "nodes": {{
+    "templates": {{
+      "source": {{
         "kind": "oci",
-        "ref": "oci://ghcr.io/greentic-ai/components/templates:latest"
-      }
-    }
-  }
-}
-"#;
+        "ref": "{templates_oci_ref}"
+      }}
+    }}
+  }}
+}}
+"#
+    );
     fs::write(pack_dir.join("flows/main.ygtc.resolve.json"), resolve_json)
         .expect("write resolve sidecar");
 
@@ -219,7 +246,7 @@ nodes:
       "component_id": "ai.greentic.component-templates",
       "source": {{
         "kind": "oci",
-        "ref": "oci://ghcr.io/greentic-ai/components/templates:latest"
+        "ref": "{templates_oci_ref}"
       }},
       "digest": "{digest}"
     }}
