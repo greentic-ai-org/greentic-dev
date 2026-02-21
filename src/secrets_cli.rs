@@ -1,8 +1,10 @@
+use std::ffi::OsString;
 use std::path::PathBuf;
-use std::process::{Command, Stdio};
 
 use anyhow::{Context, Result, bail};
 use clap::{Args, Subcommand};
+
+use crate::passthrough::{resolve_binary, run_passthrough};
 
 #[derive(Subcommand, Debug)]
 pub enum SecretsCommand {
@@ -27,19 +29,15 @@ pub fn run_secrets_command(cmd: SecretsCommand) -> Result<()> {
 }
 
 fn run_init(args: &SecretsInitArgs) -> Result<()> {
-    let mut command = Command::new("greentic-secrets");
-    command
-        .arg("init")
-        .arg("--pack")
-        .arg(&args.pack)
-        .args(&args.passthrough)
-        .stdin(Stdio::inherit())
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit());
-
-    let status = command
-        .status()
-        .with_context(|| "failed to execute greentic-secrets (is it on PATH?)")?;
+    let bin = resolve_binary("greentic-secrets")?;
+    let mut argv = vec![
+        OsString::from("init"),
+        OsString::from("--pack"),
+        args.pack.clone().into_os_string(),
+    ];
+    argv.extend(args.passthrough.iter().map(OsString::from));
+    let status = run_passthrough(&bin, &argv, false)
+        .with_context(|| "failed to execute greentic-secrets")?;
     if !status.success() {
         bail!("greentic-secrets exited with status {}", status);
     }

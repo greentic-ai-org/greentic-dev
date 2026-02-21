@@ -1,5 +1,5 @@
 fn main() -> anyhow::Result<()> {
     anyhow::bail!(
-        "`greentic-runner-cli` is distributed as part of the greentic-dev release bundle; install via `cargo binstall greentic-dev`."
+        "install `greentic-runner-cli` via `cargo binstall greentic-runner --bin greentic-runner-cli`"
     )
 }

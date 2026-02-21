@@ -14,7 +14,7 @@ The power: you can stitch together local components, pull remote ones, validate 
 ## Quick Start (happy path)
 
 ```bash
-# 0) Install the toolkit (bundles companion CLIs)
+# 0) Install the toolkit
 cargo install cargo-binstall
 cargo binstall -y greentic-dev
 
@@ -55,6 +55,7 @@ That sequence produces a runnable pack that uses your local component, validates
 ## CLI Overview
 
 This CLI passes through directly to the upstream tools. See the detailed options and examples in [`docs/cli.md`](docs/cli.md).
+When a delegated binary is missing, `greentic-dev` auto-installs it via `cargo binstall` by default.
 
 - `greentic-dev flow …` → `greentic-flow` (doctor, add-step, etc.)
 - `greentic-dev component …` → `greentic-component` (new, build, doctor, describe, pack, templates)

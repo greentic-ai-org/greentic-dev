@@ -32,5 +32,6 @@ Reference: [`greentic-pack/docs/cli.md`](../greentic-pack/docs/cli.md)
 - `cbor <file>.cbor` decodes a CBOR payload and prints pretty JSON.
 
 ## Tips
-- Environment overrides: `GREENTIC_DEV_BIN_GREENTIC_FLOW`, `GREENTIC_DEV_BIN_GREENTIC_COMPONENT`, `GREENTIC_DEV_BIN_GREENTIC_PACK`, `GREENTIC_DEV_BIN_GREENTIC_RUNNER_CLI`, `GREENTIC_DEV_BIN_GREENTIC_GUI` to point at local builds.
+- Missing delegated tools are auto-installed via `cargo binstall` on first use. Disable with `GREENTIC_DEV_AUTO_INSTALL=0`.
+- Environment overrides: `GREENTIC_DEV_BIN_GREENTIC_FLOW`, `GREENTIC_DEV_BIN_GREENTIC_COMPONENT`, `GREENTIC_DEV_BIN_GREENTIC_PACK`, `GREENTIC_DEV_BIN_GREENTIC_RUNNER_CLI`, `GREENTIC_DEV_BIN_GREENTIC_GUI`, `GREENTIC_DEV_BIN_GREENTIC_SECRETS` to point at local builds.
 - Prefer positional args where upstream uses them (e.g., `flow doctor <flow>`); the wrapper does not add extra semantics.

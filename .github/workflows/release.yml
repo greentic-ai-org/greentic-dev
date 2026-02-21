@@ -145,7 +145,6 @@ jobs:
           TARGET="${{ matrix.target }}"
           ARTIFACT_DIR="dist"
           STAGING="$ARTIFACT_DIR/greentic-dev-v${VERSION}-${TARGET}"
-          TOOL_VERSION_REQ=">=0.4.104, <0.5.0"
 
           cargo fetch --locked --target "$TARGET"
           cargo build --workspace --locked --all-features --release --target "$TARGET"
@@ -157,31 +156,6 @@ jobs:
 
           mkdir -p "$STAGING"
           cp "$CARGO_TARGET_DIR/$TARGET/release/greentic-dev$BIN_EXT" "$STAGING/"
-          cp "$CARGO_TARGET_DIR/$TARGET/release/greentic-component$BIN_EXT" "$STAGING/"
-
-          # Optional companion tools included only in release bundles (installed from crates.io).
-          install_crate_tool() {
-            local crate="$1"
-            local bin="$2"
-            local version_req="${3:-$TOOL_VERSION_REQ}"
-            local dest="${4:-$bin}"
-            echo "[bundle] installing ${crate} ${version_req} for ${TARGET} from crates.io"
-            tmpdir="$(mktemp -d)"
-            cargo install "${crate}" --locked --version "${version_req}" --target "${TARGET}" --root "${tmpdir}" --bin "${bin}"
-            local bin_path="${tmpdir}/bin/${bin}${BIN_EXT}"
-            if [[ ! -f "${bin_path}" ]]; then
-              echo "[bundle] expected ${bin_path} after cargo install; contents:"
-              ls -la "${tmpdir}/bin"
-              exit 1
-            fi
-            cp "${bin_path}" "${STAGING}/${dest}${BIN_EXT}"
-          }
-
-          install_crate_tool "greentic-gui" "greentic-gui"
-          install_crate_tool "greentic-flow" "greentic-flow"
-          install_crate_tool "greentic-pack" "greentic-pack"
-          install_crate_tool "greentic-runner" "greentic-runner-cli"
-          install_crate_tool "greentic-secrets" "greentic-secrets"
 
           cp README.md LICENSE-MIT LICENSE-APACHE "$STAGING/"
 

@@ -1,5 +1,3 @@
 fn main() -> anyhow::Result<()> {
-    anyhow::bail!(
-        "`greentic-pack` is distributed as part of the greentic-dev release bundle; install via `cargo binstall greentic-dev`."
-    )
+    anyhow::bail!("install `greentic-pack` separately (e.g. `cargo binstall greentic-pack`)")
 }
