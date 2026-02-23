@@ -1,12 +1,13 @@
 use anyhow::Result;
 use clap::Parser;
 
-use greentic_dev::cli::McpCommand;
 use greentic_dev::cli::{Cli, Command};
+use greentic_dev::cli::{McpCommand, ToolsCommand};
 use greentic_dev::passthrough::{resolve_binary, run_passthrough};
 
 use greentic_dev::cbor_cmd;
 use greentic_dev::cmd::config;
+use greentic_dev::cmd::tools;
 use greentic_dev::mcp_cmd;
 use greentic_dev::secrets_cli::run_secrets_command;
 
@@ -41,6 +42,9 @@ fn main() -> Result<()> {
         Command::Cbor(args) => cbor_cmd::run(args),
         Command::Mcp(mcp) => match mcp {
             McpCommand::Doctor(args) => mcp_cmd::doctor(&args.provider, args.json),
+        },
+        Command::Tools(command) => match command {
+            ToolsCommand::Install(args) => tools::install(args.latest),
         },
         Command::Gui(args) => {
             let bin = resolve_binary("greentic-gui")?;

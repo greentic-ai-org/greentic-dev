@@ -33,13 +33,20 @@ pub fn resolve_binary(name: &str) -> Result<PathBuf> {
     if auto_install_enabled()
         && let Some(spec) = install_spec(name)
     {
-        install_with_binstall(spec)?;
+        ensure_cargo_binstall()?;
+        install_with_binstall(spec, false).with_context(|| {
+            format!(
+                "failed to auto-install `{name}`.\nTry `greentic-dev tools install` to install all delegated tools, or `greentic-dev tools install --latest` to refresh them."
+            )
+        })?;
         if let Ok(path) = which::which(name) {
             return Ok(path);
         }
     }
 
-    bail!("failed to find `{name}` in PATH; set {env_key} or install {name}")
+    bail!(
+        "failed to find `{name}` in PATH; set {env_key}, install {name}, or run `greentic-dev tools install` (use `--latest` to force-refresh all delegated tools)"
+    )
 }
 
 pub fn run_passthrough(bin: &Path, args: &[OsString], verbose: bool) -> Result<ExitStatus> {
@@ -66,6 +73,37 @@ struct InstallSpec {
     crate_name: &'static str,
     bin_name: &'static str,
 }
+
+const DELEGATED_INSTALL_SPECS: [InstallSpec; 7] = [
+    InstallSpec {
+        crate_name: "greentic-component",
+        bin_name: "greentic-component",
+    },
+    InstallSpec {
+        crate_name: "greentic-flow",
+        bin_name: "greentic-flow",
+    },
+    InstallSpec {
+        crate_name: "greentic-pack",
+        bin_name: "greentic-pack",
+    },
+    InstallSpec {
+        crate_name: "greentic-runner",
+        bin_name: "greentic-runner",
+    },
+    InstallSpec {
+        crate_name: "greentic-runner",
+        bin_name: "greentic-runner-cli",
+    },
+    InstallSpec {
+        crate_name: "greentic-gui",
+        bin_name: "greentic-gui",
+    },
+    InstallSpec {
+        crate_name: "greentic-secrets",
+        bin_name: "greentic-secrets",
+    },
+];
 
 fn install_spec(name: &str) -> Option<InstallSpec> {
     let spec = match name {
@@ -98,6 +136,14 @@ fn install_spec(name: &str) -> Option<InstallSpec> {
     Some(spec)
 }
 
+pub fn install_all_delegated_tools(latest: bool) -> Result<()> {
+    ensure_cargo_binstall()?;
+    for spec in DELEGATED_INSTALL_SPECS {
+        install_with_binstall(spec, latest)?;
+    }
+    Ok(())
+}
+
 fn auto_install_enabled() -> bool {
     auto_install_enabled_from_env(env::var("GREENTIC_DEV_AUTO_INSTALL").ok().as_deref())
 }
@@ -113,20 +159,24 @@ fn auto_install_enabled_from_env(value: Option<&str>) -> bool {
         .unwrap_or(true)
 }
 
-fn install_with_binstall(spec: InstallSpec) -> Result<()> {
-    ensure_cargo_binstall()?;
+fn install_with_binstall(spec: InstallSpec, force_latest: bool) -> Result<()> {
     eprintln!(
-        "greentic-dev: `{}` not found; installing `{}` via cargo binstall...",
+        "greentic-dev: installing `{}` from crate `{}` via cargo binstall...",
         spec.bin_name, spec.crate_name
     );
 
-    let status = Command::new("cargo")
-        .arg("binstall")
+    let mut cmd = Command::new("cargo");
+    cmd.arg("binstall")
         .arg("-y")
         .arg("--locked")
         .arg(spec.crate_name)
         .arg("--bin")
-        .arg(spec.bin_name)
+        .arg(spec.bin_name);
+    if force_latest {
+        cmd.arg("--force");
+    }
+
+    let status = cmd
         .stdin(Stdio::inherit())
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())

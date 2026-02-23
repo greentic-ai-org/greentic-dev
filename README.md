@@ -56,6 +56,7 @@ That sequence produces a runnable pack that uses your local component, validates
 
 This CLI passes through directly to the upstream tools. See the detailed options and examples in [`docs/cli.md`](docs/cli.md).
 When a delegated binary is missing, `greentic-dev` auto-installs it via `cargo binstall` by default.
+To preinstall all delegated tools at once: `greentic-dev tools install` (or `greentic-dev tools install --latest` to force-refresh to newest available versions).
 
 - `greentic-dev flow …` → `greentic-flow` (doctor, add-step, etc.)
 - `greentic-dev component …` → `greentic-component` (new, build, doctor, describe, pack, templates)

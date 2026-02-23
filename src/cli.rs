@@ -31,6 +31,9 @@ pub enum Command {
     /// Secrets convenience wrappers
     #[command(subcommand)]
     Secrets(SecretsCommand),
+    /// Install/update delegated Greentic tool binaries
+    #[command(subcommand)]
+    Tools(ToolsCommand),
     /// Decode a CBOR file to text
     Cbor(CborArgs),
 }
@@ -66,6 +69,19 @@ pub struct McpDoctorArgs {
 pub enum ConfigCommand {
     /// Set a key in greentic-dev config (e.g. defaults.component.org)
     Set(ConfigSetArgs),
+}
+
+#[derive(Subcommand, Debug)]
+pub enum ToolsCommand {
+    /// Install delegated tools (component/flow/pack/gui/runner/secrets)
+    Install(ToolsInstallArgs),
+}
+
+#[derive(Args, Debug)]
+pub struct ToolsInstallArgs {
+    /// Reinstall tools to pull latest available versions
+    #[arg(long = "latest")]
+    pub latest: bool,
 }
 
 #[derive(Args, Debug)]
