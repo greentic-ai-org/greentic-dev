@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::Parser;
 
 use greentic_dev::cli::{Cli, Command};
-use greentic_dev::cli::{McpCommand, ToolsCommand};
+use greentic_dev::cli::{InstallCommand, McpCommand, ToolsCommand, WizardCommand};
 use greentic_dev::passthrough::{resolve_binary, run_passthrough};
 
 use greentic_dev::cbor_cmd;
@@ -10,6 +10,7 @@ use greentic_dev::cmd::config;
 use greentic_dev::cmd::tools;
 use greentic_dev::mcp_cmd;
 use greentic_dev::secrets_cli::run_secrets_command;
+use greentic_dev::wizard;
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
@@ -45,6 +46,13 @@ fn main() -> Result<()> {
         },
         Command::Tools(command) => match command {
             ToolsCommand::Install(args) => tools::install(args.latest),
+        },
+        Command::Install(command) => match command {
+            InstallCommand::Tools(args) => tools::install(args.latest),
+        },
+        Command::Wizard(command) => match command {
+            WizardCommand::Run(args) => wizard::run(args),
+            WizardCommand::Replay(args) => wizard::replay(args),
         },
         Command::Gui(args) => {
             let bin = resolve_binary("greentic-gui")?;

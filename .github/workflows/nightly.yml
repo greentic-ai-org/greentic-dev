@@ -29,6 +29,7 @@ jobs:
       - name: Build + Test (full, conformance on)
         run: |
           cargo build --workspace --locked --all-features
+          cargo run -p greentic-dev --locked -- install tools --latest
           GOLDEN_ACCEPT=0 cargo test --workspace --locked --all-features
 
       - name: Validate all example flows (dry run)

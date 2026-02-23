@@ -31,7 +31,14 @@ Reference: [`greentic-pack/docs/cli.md`](../greentic-pack/docs/cli.md)
 ## CBOR
 - `cbor <file>.cbor` decodes a CBOR payload and prints pretty JSON.
 
+## Wizard
+- `wizard run --target <...> --mode <...>` builds a deterministic plan (`plan_version: 1`) and prints JSON.
+- Default behavior is dry-run when neither `--dry-run` nor `--execute` is passed.
+- `--dry-run` and `--execute` are mutually exclusive.
+- `wizard replay --answers <path>` reuses persisted `answers.json` + sibling `plan.json`.
+- See `docs/wizard/README.md` for details.
+
 ## Tips
-- Missing delegated tools are auto-installed via `cargo binstall` on first use. Disable with `GREENTIC_DEV_AUTO_INSTALL=0`.
+- Missing delegated tools are not auto-installed. Install them with `greentic-dev install tools` (or `greentic-dev install tools --latest`).
 - Environment overrides: `GREENTIC_DEV_BIN_GREENTIC_FLOW`, `GREENTIC_DEV_BIN_GREENTIC_COMPONENT`, `GREENTIC_DEV_BIN_GREENTIC_PACK`, `GREENTIC_DEV_BIN_GREENTIC_RUNNER_CLI`, `GREENTIC_DEV_BIN_GREENTIC_GUI`, `GREENTIC_DEV_BIN_GREENTIC_SECRETS` to point at local builds.
 - Prefer positional args where upstream uses them (e.g., `flow doctor <flow>`); the wrapper does not add extra semantics.

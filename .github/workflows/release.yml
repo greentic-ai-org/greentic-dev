@@ -58,10 +58,9 @@ jobs:
 
       - name: Verify build (locked)
         run: |
-          cargo install cargo-binstall --locked || true
-          cargo binstall -y --locked greentic-flow greentic-component greentic-pack greentic-runner
           cargo fetch --locked
           cargo build --workspace --locked --all-features
+          cargo run -p greentic-dev --locked -- install tools --latest
           cargo test --workspace --locked --all-features -- --quiet
 
       - name: Cargo package (dry-run)
@@ -147,7 +146,7 @@ jobs:
           STAGING="$ARTIFACT_DIR/greentic-dev-v${VERSION}-${TARGET}"
 
           cargo fetch --locked --target "$TARGET"
-          cargo build --workspace --locked --all-features --release --target "$TARGET"
+          cargo build --locked --release --target "$TARGET" --bin greentic-dev
 
           BIN_EXT=""
           if [[ "$TARGET" == *windows* ]]; then

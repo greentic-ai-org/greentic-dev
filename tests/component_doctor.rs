@@ -19,8 +19,8 @@ fn fixture_component() -> (PathBuf, PathBuf) {
 #[test]
 fn doctor_reports_export_failures_for_legacy_fixture() {
     let (wasm, _) = fixture_component();
-    cargo_bin_cmd!("greentic-component")
-        .args(["doctor", wasm.to_str().expect("utf-8 path")])
+    cargo_bin_cmd!("greentic-dev")
+        .args(["component", "doctor", wasm.to_str().expect("utf-8 path")])
         .assert()
         .failure()
         .stderr(contains("doctor checks failed"))
@@ -34,15 +34,20 @@ fn doctor_fails_without_manifest_when_separated() {
     let relocated_wasm = temp.path().join("component.wasm");
     fs::copy(&wasm, &relocated_wasm).expect("copy wasm");
 
-    cargo_bin_cmd!("greentic-component")
-        .args(["doctor", relocated_wasm.to_str().expect("utf-8 path")])
+    cargo_bin_cmd!("greentic-dev")
+        .args([
+            "component",
+            "doctor",
+            relocated_wasm.to_str().expect("utf-8 path"),
+        ])
         .assert()
         .failure()
         .stderr(contains("doctor checks failed"))
         .stdout(contains("missing export interface component-descriptor"));
 
-    cargo_bin_cmd!("greentic-component")
+    cargo_bin_cmd!("greentic-dev")
         .args([
+            "component",
             "doctor",
             relocated_wasm.to_str().expect("utf-8 path"),
             "--manifest",

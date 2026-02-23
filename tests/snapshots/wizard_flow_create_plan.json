@@ -1,0 +1,29 @@
+{
+  "plan_version": 1,
+  "metadata": {
+    "target": "flow",
+    "mode": "create",
+    "locale": "en-US",
+    "frontend": "json"
+  },
+  "inputs": {
+    "answers_ref": "answers.json",
+    "provider_refs.flow": "flow://demo/main@1.0.0"
+  },
+  "steps": [
+    {
+      "type": "CreateFlow"
+    },
+    {
+      "type": "RunCommand",
+      "program": "greentic-flow",
+      "args": [
+        "new",
+        "--id",
+        "main",
+        "--out",
+        "flows/main.ygtc"
+      ]
+    }
+  ]
+}

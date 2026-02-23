@@ -55,8 +55,8 @@ That sequence produces a runnable pack that uses your local component, validates
 ## CLI Overview
 
 This CLI passes through directly to the upstream tools. See the detailed options and examples in [`docs/cli.md`](docs/cli.md).
-When a delegated binary is missing, `greentic-dev` auto-installs it via `cargo binstall` by default.
-To preinstall all delegated tools at once: `greentic-dev tools install` (or `greentic-dev tools install --latest` to force-refresh to newest available versions).
+`greentic-dev` does not auto-install delegated binaries.
+Install delegated tools explicitly with `greentic-dev install tools` (or `greentic-dev install tools --latest` to force-refresh to newest available versions).
 
 - `greentic-dev flow …` → `greentic-flow` (doctor, add-step, etc.)
 - `greentic-dev component …` → `greentic-component` (new, build, doctor, describe, pack, templates)
@@ -64,6 +64,7 @@ To preinstall all delegated tools at once: `greentic-dev tools install` (or `gre
 - `greentic-dev gui …` → `greentic-gui` helpers
 - `greentic-dev secrets …` → `greentic-secrets` helpers
 - `greentic-dev mcp …` → MCP doctor (optional feature)
+- `greentic-dev wizard …` → deterministic plan-first orchestration (see `docs/wizard/README.md`)
 
 Links to upstream CLI docs for the full flag sets:
 - [`greentic-component/docs/cli.md`](../greentic-component/docs/cli.md)
@@ -87,6 +88,7 @@ Everything is validated before execution: flows are checked against component de
 
 - **Full walkthrough**: [`docs/developer-guide.md`](docs/developer-guide.md) (component → flow → pack → run, offline friendly).
 - **CLI deep dive**: [`docs/cli.md`](docs/cli.md) (command by command, with links to upstream manuals).
+- **Wizard orchestration**: [`docs/wizard/README.md`](docs/wizard/README.md).
 - **Runner & transcripts**: [`docs/runner.md`](docs/runner.md).
 - **Scaffolding tips**: [`docs/scaffolder.md`](docs/scaffolder.md).
 

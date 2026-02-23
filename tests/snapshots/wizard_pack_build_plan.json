@@ -1,0 +1,21 @@
+{
+  "plan_version": 1,
+  "metadata": {
+    "target": "pack",
+    "mode": "build",
+    "locale": "en-US",
+    "frontend": "json"
+  },
+  "steps": [
+    {
+      "type": "ResolvePacks"
+    },
+    {
+      "type": "RunCommand",
+      "program": "greentic-pack",
+      "args": [
+        "build"
+      ]
+    }
+  ]
+}

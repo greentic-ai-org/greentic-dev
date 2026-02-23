@@ -34,8 +34,14 @@ pub enum Command {
     /// Install/update delegated Greentic tool binaries
     #[command(subcommand)]
     Tools(ToolsCommand),
+    /// Install delegated assets
+    #[command(subcommand)]
+    Install(InstallCommand),
     /// Decode a CBOR file to text
     Cbor(CborArgs),
+    /// Deterministic orchestration for dev workbench workflows
+    #[command(subcommand)]
+    Wizard(WizardCommand),
 }
 
 #[derive(Args, Debug, Clone)]
@@ -77,6 +83,12 @@ pub enum ToolsCommand {
     Install(ToolsInstallArgs),
 }
 
+#[derive(Subcommand, Debug)]
+pub enum InstallCommand {
+    /// Install delegated tools (component/flow/pack/gui/runner/secrets)
+    Tools(ToolsInstallArgs),
+}
+
 #[derive(Args, Debug)]
 pub struct ToolsInstallArgs {
     /// Reinstall tools to pull latest available versions
@@ -100,4 +112,80 @@ pub struct CborArgs {
     /// Path to the CBOR file to decode
     #[arg(value_name = "PATH")]
     pub path: PathBuf,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum WizardCommand {
+    /// Build a deterministic wizard plan and optionally execute it
+    Run(WizardRunArgs),
+    /// Replay a previously persisted wizard plan + answers
+    Replay(WizardReplayArgs),
+}
+
+#[derive(Args, Debug, Clone)]
+pub struct WizardRunArgs {
+    /// Target domain
+    #[arg(long = "target")]
+    pub target: String,
+    /// Operation mode for the target
+    #[arg(long = "mode")]
+    pub mode: String,
+    /// Frontend mode (text/json/adaptive-card)
+    #[arg(long = "frontend", default_value = "json")]
+    pub frontend: String,
+    /// Locale (BCP47), passed to providers and recorded in plan metadata
+    #[arg(long = "locale")]
+    pub locale: Option<String>,
+    /// Answers file (JSON object)
+    #[arg(long = "answers")]
+    pub answers: Option<PathBuf>,
+    /// Override output directory (default: .greentic/wizard/<run-id>/)
+    #[arg(long = "out")]
+    pub out: Option<PathBuf>,
+    /// Preview only (default when neither --dry-run nor --execute is set)
+    #[arg(long = "dry-run")]
+    pub dry_run: bool,
+    /// Execute plan steps
+    #[arg(long = "execute")]
+    pub execute: bool,
+    /// Skip interactive confirmation prompt
+    #[arg(long = "yes")]
+    pub yes: bool,
+    /// Allow execution in non-interactive contexts
+    #[arg(long = "non-interactive")]
+    pub non_interactive: bool,
+    /// Allow commands outside the default run-command allowlist
+    #[arg(long = "unsafe-commands")]
+    pub unsafe_commands: bool,
+    /// Allow destructive operations (delete/overwrite/move) when requested by a plan step
+    #[arg(long = "allow-destructive")]
+    pub allow_destructive: bool,
+}
+
+#[derive(Args, Debug, Clone)]
+pub struct WizardReplayArgs {
+    /// Path to a persisted answers file from a prior run
+    #[arg(long = "answers")]
+    pub answers: PathBuf,
+    /// Execute plan steps
+    #[arg(long = "execute")]
+    pub execute: bool,
+    /// Preview only (default when neither --dry-run nor --execute is set)
+    #[arg(long = "dry-run")]
+    pub dry_run: bool,
+    /// Skip interactive confirmation prompt
+    #[arg(long = "yes")]
+    pub yes: bool,
+    /// Allow execution in non-interactive contexts
+    #[arg(long = "non-interactive")]
+    pub non_interactive: bool,
+    /// Allow commands outside the default run-command allowlist
+    #[arg(long = "unsafe-commands")]
+    pub unsafe_commands: bool,
+    /// Allow destructive operations (delete/overwrite/move) when requested by a plan step
+    #[arg(long = "allow-destructive")]
+    pub allow_destructive: bool,
+    /// Override output directory (default: reuse answers parent)
+    #[arg(long = "out")]
+    pub out: Option<PathBuf>,
 }

@@ -16,6 +16,7 @@ pub mod passthrough;
 pub mod path_safety;
 pub mod secrets_cli;
 pub mod util;
+pub mod wizard;
 
 pub mod registry {
     pub use crate::dev_runner::DescribeRegistry;
