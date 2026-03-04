@@ -1,81 +1,89 @@
 # greentic-dev wizard
 
-`greentic-dev wizard` is a deterministic orchestration entrypoint for developer workbench workflows.
+`greentic-dev wizard` is a launcher-only deterministic orchestration entrypoint.
 
 ## Commands
 
-- `greentic-dev wizard run --target <...> --mode <...> [--dry-run|--execute]`
-- `greentic-dev wizard replay --answers <path> [--dry-run|--execute]`
+- `greentic-dev wizard`
+- `greentic-dev wizard --dry-run`
+- `greentic-dev wizard validate --answers <path>`
+- `greentic-dev wizard apply --answers <path>`
 
-Frontend behavior:
+Removed:
 
-- `--frontend text`: human-readable plan summary
-- `--frontend json`: canonical deterministic plan JSON
-- `--frontend adaptive-card`: Adaptive Card JSON payload containing the plan
+- `wizard run`
+- `wizard replay`
 
-## Supported PR-01 Target Modes
+## Launcher Contract
 
-- `operator.create`
-- `pack.create`
-- `pack.build`
-- `component.scaffold`
-- `component.build`
-- `flow.create`
-- `flow.wire`
-- `bundle.create`
-- `dev.doctor`
-- `dev.run`
+Plan identity is fixed to:
 
-## PR-01 Status
+- `target`: `launcher`
+- `mode`: `main`
 
-Implemented in this PR:
+Selection mapping:
 
-- Deterministic plan-first orchestration (`plan_version: 1`)
-- `wizard run` / `wizard replay`
-- Dry-run default and `--dry-run` / `--execute` mutual exclusion
-- Interactive confirmation + non-interactive gating
-- Shell-provider registry for PR-01 target/mode set
-- High-level step modeling with `RunCommand` fallback
-- Persistence of `answers.json`, `plan.json`, `exec.log`
-- Replay support
-- Command allowlist, unsafe arg blocking, destructive-step gating
-- Execute-time program version capture + replay pin validation
-- Frontends: `text`, `json`, `adaptive-card` (JSON payload)
-- Audit doc and snapshot-based deterministic tests
+- `selected_action = "pack"` -> delegated command `greentic-pack wizard`
+- `selected_action = "bundle"` -> delegated command `greentic-operator wizard`
 
-Follow-up (outside PR-01):
+For dry-run plans, delegated args include `--dry-run`.
 
-- Deeper multi-step orchestration per target (beyond phase-1 shell mapping)
-- Rich provider-native QaSpec UI flows across repos
-- Transport integration for adaptive cards (Teams/WebChat/etc.)
-- Broader digest pinning from remote resolvers
+## AnswerDocument
+
+`validate` and `apply` accept only launcher documents.
+
+Required identity fields:
+
+- `wizard_id = "greentic-dev.wizard.launcher.main"`
+- `schema_id = "greentic-dev.launcher.main"`
+
+Example:
+
+```json
+{
+  "wizard_id": "greentic-dev.wizard.launcher.main",
+  "schema_id": "greentic-dev.launcher.main",
+  "schema_version": "1.0.0",
+  "locale": "en-US",
+  "answers": {
+    "selected_action": "pack"
+  },
+  "locks": {}
+}
+```
+
+## Frontends
+
+- `text`
+- `json`
+- `adaptive-card`
 
 ## Execution Rules
 
-- Default mode is dry-run when neither `--dry-run` nor `--execute` is set.
-- `--dry-run` and `--execute` are mutually exclusive.
-- If both are provided, the CLI errors with: `Choose one of --dry-run or --execute.`
-- Execute requires explicit consent:
-  - Interactive TTY: prompt `Execute plan? [y/N]` unless `--yes`.
-  - Non-interactive: require `--yes` or `--non-interactive`.
+- `wizard` defaults to apply mode (unless `--dry-run`).
+- `validate` always dry-run.
+- `apply` executes delegation.
+- Execute confirmation rules:
+  - Interactive TTY prompts unless `--yes`.
+  - Non-interactive requires `--yes` or `--non-interactive`.
 
 ## Persistence
 
 - Default output: `.greentic/wizard/<run-id>/`
-- `--out` overrides the full output directory.
+- `--out` overrides output directory.
 - Persisted files:
   - `answers.json`
   - `plan.json`
-  - `exec.log` (when executed)
+  - `exec.log` (only when executed)
 
 ## Safety
 
-- `RunCommand` steps execute as `{program,args}` (no shell string).
-- Default allowlist covers:
+- Only `RunCommand` steps are executed.
+- Default allowlist:
   - `greentic-pack`
   - `greentic-component`
   - `greentic-flow`
   - `greentic-operator`
   - `greentic-runner-cli`
-- Commands outside allowlist require `--unsafe-commands`.
-- Destructive operations require `--allow-destructive` when present in plan steps.
+- Non-allowlist programs require `--unsafe-commands`.
+- Destructive steps require `--allow-destructive`.

@@ -40,8 +40,7 @@ pub enum Command {
     /// Decode a CBOR file to text
     Cbor(CborArgs),
     /// Deterministic orchestration for dev workbench workflows
-    #[command(subcommand)]
-    Wizard(WizardCommand),
+    Wizard(Box<WizardCommand>),
 }
 
 #[derive(Args, Debug, Clone)]
@@ -114,35 +113,30 @@ pub struct CborArgs {
     pub path: PathBuf,
 }
 
-#[derive(Subcommand, Debug)]
-pub enum WizardCommand {
-    /// Build a deterministic wizard plan and optionally execute it
-    Run(WizardRunArgs),
-    /// Validate a wizard plan non-interactively from answers input
+#[derive(Args, Debug, Clone)]
+pub struct WizardCommand {
+    #[command(subcommand)]
+    pub command: Option<WizardSubcommand>,
+    #[command(flatten)]
+    pub launch: WizardLaunchArgs,
+}
+
+#[derive(Subcommand, Debug, Clone)]
+pub enum WizardSubcommand {
+    /// Validate a launcher AnswerDocument non-interactively
     Validate(WizardValidateArgs),
-    /// Apply a wizard plan non-interactively from answers input
+    /// Apply a launcher AnswerDocument non-interactively
     Apply(WizardApplyArgs),
-    /// Replay a previously persisted wizard plan + answers
-    Replay(WizardReplayArgs),
 }
 
 #[derive(Args, Debug, Clone)]
-pub struct WizardRunArgs {
-    /// Target domain
-    #[arg(long = "target")]
-    pub target: String,
-    /// Operation mode for the target
-    #[arg(long = "mode")]
-    pub mode: String,
+pub struct WizardLaunchArgs {
     /// Frontend mode (text/json/adaptive-card)
     #[arg(long = "frontend", default_value = "json")]
     pub frontend: String,
     /// Locale (BCP47), passed to providers and recorded in plan metadata
     #[arg(long = "locale")]
     pub locale: Option<String>,
-    /// Answers file (JSON object)
-    #[arg(long = "answers")]
-    pub answers: Option<PathBuf>,
     /// Emit a portable AnswerDocument envelope JSON file
     #[arg(long = "emit-answers")]
     pub emit_answers: Option<PathBuf>,
@@ -155,12 +149,9 @@ pub struct WizardRunArgs {
     /// Override output directory (default: `.greentic/wizard/<run-id>/`)
     #[arg(long = "out")]
     pub out: Option<PathBuf>,
-    /// Preview only (default when neither --dry-run nor --execute is set)
+    /// Preview only (default mode is apply when --dry-run is not set)
     #[arg(long = "dry-run")]
     pub dry_run: bool,
-    /// Execute plan steps
-    #[arg(long = "execute")]
-    pub execute: bool,
     /// Skip interactive confirmation prompt
     #[arg(long = "yes")]
     pub yes: bool,
@@ -177,15 +168,9 @@ pub struct WizardRunArgs {
 
 #[derive(Args, Debug, Clone)]
 pub struct WizardValidateArgs {
-    /// Answers file (AnswerDocument envelope or legacy answers JSON object)
+    /// Answers file (AnswerDocument envelope)
     #[arg(long = "answers")]
     pub answers: PathBuf,
-    /// Target domain (optional when inferrable from AnswerDocument wizard_id)
-    #[arg(long = "target")]
-    pub target: Option<String>,
-    /// Operation mode (optional when inferrable from AnswerDocument wizard_id)
-    #[arg(long = "mode")]
-    pub mode: Option<String>,
     /// Frontend mode (text/json/adaptive-card)
     #[arg(long = "frontend", default_value = "json")]
     pub frontend: String,
@@ -208,15 +193,9 @@ pub struct WizardValidateArgs {
 
 #[derive(Args, Debug, Clone)]
 pub struct WizardApplyArgs {
-    /// Answers file (AnswerDocument envelope or legacy answers JSON object)
+    /// Answers file (AnswerDocument envelope)
     #[arg(long = "answers")]
     pub answers: PathBuf,
-    /// Target domain (optional when inferrable from AnswerDocument wizard_id)
-    #[arg(long = "target")]
-    pub target: Option<String>,
-    /// Operation mode (optional when inferrable from AnswerDocument wizard_id)
-    #[arg(long = "mode")]
-    pub mode: Option<String>,
     /// Frontend mode (text/json/adaptive-card)
     #[arg(long = "frontend", default_value = "json")]
     pub frontend: String,
@@ -247,32 +226,4 @@ pub struct WizardApplyArgs {
     /// Allow destructive operations (delete/overwrite/move) when requested by a plan step
     #[arg(long = "allow-destructive")]
     pub allow_destructive: bool,
-}
-
-#[derive(Args, Debug, Clone)]
-pub struct WizardReplayArgs {
-    /// Path to a persisted answers file from a prior run
-    #[arg(long = "answers")]
-    pub answers: PathBuf,
-    /// Execute plan steps
-    #[arg(long = "execute")]
-    pub execute: bool,
-    /// Preview only (default when neither --dry-run nor --execute is set)
-    #[arg(long = "dry-run")]
-    pub dry_run: bool,
-    /// Skip interactive confirmation prompt
-    #[arg(long = "yes")]
-    pub yes: bool,
-    /// Allow execution in non-interactive contexts
-    #[arg(long = "non-interactive")]
-    pub non_interactive: bool,
-    /// Allow commands outside the default run-command allowlist
-    #[arg(long = "unsafe-commands")]
-    pub unsafe_commands: bool,
-    /// Allow destructive operations (delete/overwrite/move) when requested by a plan step
-    #[arg(long = "allow-destructive")]
-    pub allow_destructive: bool,
-    /// Override output directory (default: reuse answers parent)
-    #[arg(long = "out")]
-    pub out: Option<PathBuf>,
 }

@@ -1,21 +1,26 @@
-# Wizard Audit (PR-DEV-01)
+# Wizard Audit Notes
 
-- Existing CLI pattern:
-  - `src/cli.rs` uses `clap` enums with top-level `Command` and nested subcommands.
-  - `src/main.rs` dispatches subcommands directly and exits with passthrough command status.
-  - New wizard command should follow this style as a top-level subcommand to avoid collisions.
+Status: updated for launcher-only implementation.
 
-- Existing QA integration points:
-  - No dedicated wizard orchestration module currently exists in `greentic-dev`.
-  - Repo contains flow/component fixtures and runtime helpers, but no shared QaSpec orchestration layer yet.
-  - `greentic-dev` already delegates to canonical CLIs (`greentic-flow`, `greentic-component`, `greentic-pack`, etc.).
+## Current Architecture
 
-- Existing shell-out precedent:
-  - `src/passthrough.rs` resolves binaries and executes with `std::process::Command`.
-  - `src/secrets_cli.rs` and top-level command handlers use passthrough execution heavily.
-  - Command delegation is an established pattern and is compatible with a provider trait + shell bridge.
+- `greentic-dev wizard` is a launcher flow, not a per-target orchestrator.
+- `greentic-dev` delegates implementation work to downstream wizards.
+- Deterministic plan-first behavior and persistence remain in `greentic-dev`.
 
-- Recommended phase-1 integration mode:
-  - Use shell-out providers behind a trait as the default implementation for PR-01.
-  - Keep high-level plan steps in `greentic-dev` and avoid implementing pack/component/flow semantics locally.
-  - Preserve deterministic, plan-first behavior with persisted plan/answers and replay.
+## Current Delegation
+
+- Pack path -> `greentic-pack wizard`
+- Bundle path -> `greentic-operator wizard`
+
+## Current Answer Contract
+
+- Only launcher AnswerDocument IDs are accepted:
+  - `wizard_id = greentic-dev.wizard.launcher.main`
+  - `schema_id = greentic-dev.launcher.main`
+
+## Safety Model
+
+- Execute path uses command allowlist enforcement.
+- Unsafe shell-like args are blocked.
+- Destructive command steps require explicit `--allow-destructive`.

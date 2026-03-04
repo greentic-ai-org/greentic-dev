@@ -43,20 +43,8 @@ pub struct WizardPlanMetadata {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(tag = "type")]
 pub enum WizardStep {
-    ResolvePacks,
-    CreateBundle,
-    AddPacksToBundle,
-    ApplyPackSetup,
-    CreateGtpack,
-    ScaffoldComponent,
-    BuildComponent,
-    CreateFlow,
-    WireFlow,
-    ApplyGmapRules,
-    RunResolver,
-    ValidateBundle,
-    RunDoctor,
-    DevRun,
+    LaunchPackWizard,
+    LaunchBundleWizard,
     RunCommand(RunCommandStep),
 }
 

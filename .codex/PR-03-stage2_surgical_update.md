@@ -1,109 +1,160 @@
-# greentic-dev: Stage 2 — Surgical Update (apply audit inputs)
+# PR: Launcher-Only `greentic-dev wizard` (Stage 2)
 
-Date: 2026-03-02
+Date: 2026-03-04
 
-## Audit Inputs
+## Summary
 
-- Wizard command path(s): `src/cli.rs:117-123`, `src/main.rs:59-62`, runtime `src/wizard/mod.rs`
-- Current flags (locale/answers): `wizard run` had `--locale` + `--answers` (object); replay had `--answers`; no emit/schema/migrate (`src/cli.rs` pre-change)
-- Schema location/model: no AnswerDocument identity/versioning; plan model in `src/wizard/plan.rs` with `plan_version: 1`
-- Execution model (plan/apply): dry-run by default, `--execute` to run `RunCommand` steps with confirmation/safety gates (`src/wizard/mod.rs`, `src/wizard/executor.rs`, `src/wizard/confirm.rs`)
-- Tests to update/add: `tests/wizard_cli.rs` + unit tests in `src/wizard/mod.rs`
+This PR reduces `greentic-dev` wizard behavior to a single launcher flow and removes legacy wizard command paths.
 
-## Implemented Changes
+- Primary entrypoint: `greentic-dev wizard`
+- Non-interactive subcommands:
+  - `greentic-dev wizard validate --answers <FILE>`
+  - `greentic-dev wizard apply --answers <FILE>`
+- Removed: `wizard run` and `wizard replay`
+- Answer input is now strict: only launcher `AnswerDocument` IDs are accepted.
 
-### 1) AnswerDocument envelope
+## Goals
 
-Implemented local envelope support in wizard runtime:
+- Make wizard behavior launcher-only (`launcher.main`)
+- Remove legacy target/mode command surface from `greentic-dev` wizard
+- Remove replay path
+- Keep deterministic validation/apply flows through AnswerDocument
+- Delegate actual work to downstream wizards (`greentic-pack`, `greentic-operator`)
 
-- `wizard_id`, `schema_id`, `schema_version`, `locale`, `answers`, `locks`
-- accepts both:
-  - AnswerDocument envelope
-  - legacy plain JSON object (backward compatibility)
-- emits stable envelope JSON via `--emit-answers`
+## CLI Behavior
 
-Files:
+### 1) Interactive Launcher
 
-- `src/wizard/mod.rs`
+Command:
 
-### 2) CLI flags + semantics
+```bash
+greentic-dev wizard
+```
 
-Added and wired:
+Behavior:
 
-- `--emit-answers <FILE>`
-- `--schema-version <VER>`
-- `--migrate`
+- Prompts:
+  - `1) Build / Update a Pack (flows + components)`
+  - `2) Build / Update a Production Bundle`
+- Builds a launcher plan (`target=launcher`, `mode=main`)
+- Executes delegation by default (apply mode)
 
-Added subcommands while preserving existing `run/replay`:
+Notes:
 
-- `wizard validate --answers ...`
-- `wizard apply --answers ...`
+- Requires an interactive terminal.
+- In non-interactive contexts, users should use `validate/apply --answers`.
 
-Files:
+### 2) Interactive Dry-Run
+
+Command:
+
+```bash
+greentic-dev wizard --dry-run
+```
+
+Behavior:
+
+- Same menu prompt as apply mode
+- No delegated command execution
+- Renders/persists deterministic plan and answers
+
+Optional emit:
+
+```bash
+greentic-dev wizard --dry-run --emit-answers answers.json
+```
+
+### 3) Validate From AnswerDocument
+
+Command:
+
+```bash
+greentic-dev wizard validate --answers answers.json
+```
+
+Behavior:
+
+- Loads launcher AnswerDocument
+- Validates schema identity and builds plan
+- Does not execute delegated command
+
+### 4) Apply From AnswerDocument
+
+Command:
+
+```bash
+greentic-dev wizard apply --answers answers.json
+```
+
+Behavior:
+
+- Loads launcher AnswerDocument
+- Builds plan and executes delegated command
+
+## Delegation
+
+Launcher selections map to:
+
+- `selected_action = "pack"` -> `greentic-pack wizard`
+- `selected_action = "bundle"` -> `greentic-operator wizard`
+
+Dry-run plan generation appends `--dry-run` to delegated args in the generated run command.
+
+## AnswerDocument Contract
+
+Accepted envelope (strict identity):
+
+```json
+{
+  "wizard_id": "greentic-dev.wizard.launcher.main",
+  "schema_id": "greentic-dev.launcher.main",
+  "schema_version": "1.0.0",
+  "locale": "en-US",
+  "answers": {
+    "selected_action": "pack"
+  },
+  "locks": {}
+}
+```
+
+Identity rules:
+
+- `wizard_id` must equal `greentic-dev.wizard.launcher.main`
+- `schema_id` must equal `greentic-dev.launcher.main`
+- Non-launcher IDs are rejected
+
+## Removed Legacy Wizard Paths
+
+- `wizard run`
+- `wizard replay`
+- Legacy `target/mode` mappings for pack/flow/component/bundle/dev wizard orchestration inside `greentic-dev`
+
+## Files Updated
 
 - `src/cli.rs`
 - `src/main.rs`
 - `src/wizard/mod.rs`
+- `src/wizard/provider.rs`
+- `src/wizard/registry.rs`
+- `src/wizard/plan.rs`
+- `src/wizard/persistence.rs`
+- `tests/wizard_cli.rs`
 
-### 3) Schema identity + versioning
+## Tests Updated
 
-Current identity conventions:
+`tests/wizard_cli.rs` now verifies:
 
-- `wizard_id = greentic-dev.wizard.<target>.<mode>`
-- `schema_id = greentic-dev.<target>.<mode>`
-- default `schema_version = 1.0.0` (overridable by `--schema-version`)
+- launcher command requires interactive terminal
+- replay command is removed
+- validate builds launcher dry-run plan
+- apply executes delegated wizard command
+- non-launcher AnswerDocument IDs are rejected
+- emitted answers use launcher IDs
 
-### 4) Validate vs apply split
+## Validation
 
-Implemented as explicit subcommands:
+```bash
+cargo test --test wizard_cli
+```
 
-- `validate`: dry-run only (no side effects)
-- `apply`: execute flow with existing confirmation and safety controls
-
-### 5) Migration
-
-Added wired migration path:
-
-- if AnswerDocument schema differs from requested `--schema-version`:
-  - requires `--migrate`
-  - migrates via local migration function (currently version-bump identity migration)
-
-### 6) i18n/locale behavior
-
-- `--locale` still controls metadata/rendering locale.
-- when using AnswerDocument and no `--locale`, locale is inferred from document.
-- answers remain stable JSON values in `answers` payload.
-
-## Acceptance Criteria Status
-
-- [x] `wizard run` interactive still works (surface preserved; run path retained)
-- [x] `wizard validate --answers answers.json` works (no side effects)
-- [x] `wizard apply --answers answers.json` works (side effects)
-- [x] `wizard run --emit-answers out.json` produces AnswerDocument ids/versions
-- [x] `wizard validate --answers old.json --migrate` wired for version migration path
-- [x] Tests updated/added per audit notes
-
-## Implementation Notes
-
-- Files touched:
-  - `src/cli.rs`
-  - `src/main.rs`
-  - `src/wizard/mod.rs`
-  - `tests/wizard_cli.rs`
-  - `src/mcp_cmd.rs`
-  - `Cargo.toml`
-  - `Cargo.lock`
-- Tests added:
-  - `wizard_run_emit_answers_writes_answer_document_envelope`
-  - `wizard_validate_answers_document_runs_dry_run_plan`
-  - `wizard_apply_answers_document_executes_plan`
-
-## Validation Notes
-
-- `cargo check --bin greentic-dev` ✅
-- `cargo test --test wizard_cli` ✅ (15 passed)
-
-Additional dependency resolution applied during Stage 2:
-
-- Removed direct `greentic-mcp` dependency and replaced `mcp doctor` config loading/map validation with local equivalent logic in `src/mcp_cmd.rs`.
-- This eliminated the `greentic-mcp-exec`/`wasmtime 41` branch that conflicted with `wasmtime 42` in the rest of the graph.
+Result: 6 passed, 0 failed.

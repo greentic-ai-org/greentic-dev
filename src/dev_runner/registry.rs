@@ -55,4 +55,3 @@ impl Default for DescribeRegistry {
         Self::new()
     }
 }
-

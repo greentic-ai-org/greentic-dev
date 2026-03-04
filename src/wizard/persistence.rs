@@ -2,7 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use anyhow::{Context, Result, bail};
+use anyhow::{Context, Result};
 
 use crate::wizard::plan::{WizardAnswers, WizardPlan};
 
@@ -46,33 +46,4 @@ pub fn persist_plan_and_answers(
     fs::write(&paths.plan_path, plan_json)
         .with_context(|| format!("failed to write {}", paths.plan_path.display()))?;
     Ok(())
-}
-
-pub fn load_replay(answers_path: &Path) -> Result<(WizardAnswers, WizardPlan, PathBuf)> {
-    let parent = answers_path.parent().ok_or_else(|| {
-        anyhow::anyhow!(
-            "answers path must have a parent directory: {}",
-            answers_path.display()
-        )
-    })?;
-    let plan_path = parent.join("plan.json");
-    if !plan_path.exists() {
-        bail!(
-            "replay requires {} next to {}",
-            plan_path.display(),
-            answers_path.display()
-        );
-    }
-
-    let answers_raw = fs::read_to_string(answers_path)
-        .with_context(|| format!("failed to read {}", answers_path.display()))?;
-    let answers_val: serde_json::Value = serde_json::from_str(&answers_raw)
-        .with_context(|| format!("failed to parse {}", answers_path.display()))?;
-    let answers = WizardAnswers { data: answers_val };
-
-    let plan_raw = fs::read_to_string(&plan_path)
-        .with_context(|| format!("failed to read {}", plan_path.display()))?;
-    let plan: WizardPlan = serde_json::from_str(&plan_raw)
-        .with_context(|| format!("failed to parse {}", plan_path.display()))?;
-    Ok((answers, plan, parent.to_path_buf()))
 }

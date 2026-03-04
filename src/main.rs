@@ -5,7 +5,7 @@ use std::ffi::OsString;
 use std::process::{Command as ProcessCommand, Stdio};
 
 use greentic_dev::cli::{Cli, Command};
-use greentic_dev::cli::{InstallCommand, McpCommand, ToolsCommand, WizardCommand};
+use greentic_dev::cli::{InstallCommand, McpCommand, ToolsCommand, WizardSubcommand};
 use greentic_dev::passthrough::{resolve_binary, run_passthrough};
 
 use greentic_dev::cbor_cmd;
@@ -56,11 +56,10 @@ fn main() -> Result<()> {
         Command::Install(command) => match command {
             InstallCommand::Tools(args) => tools::install(args.latest),
         },
-        Command::Wizard(command) => match command {
-            WizardCommand::Run(args) => wizard::run(args),
-            WizardCommand::Validate(args) => wizard::validate(args),
-            WizardCommand::Apply(args) => wizard::apply(args),
-            WizardCommand::Replay(args) => wizard::replay(args),
+        Command::Wizard(args) => match args.command {
+            Some(WizardSubcommand::Validate(sub)) => wizard::validate(sub),
+            Some(WizardSubcommand::Apply(sub)) => wizard::apply(sub),
+            None => wizard::launch(args.launch),
         },
         Command::Gui(args) => {
             let bin = resolve_binary("greentic-gui")?;

@@ -1,6 +1,6 @@
 id: hello-flow
 type: messaging
-description: "Minimal hello-world smoke flow"
+description: "i18n:flow.hello.description"
 start: start
 nodes:
   start:
