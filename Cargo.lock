@@ -1640,9 +1640,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-component"
-version = "0.4.65"
+version = "0.4.67"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82e865f0857ca73444f8993380c19f580bf5995a006749407eecd4fc6663f4e9"
+checksum = "c5bfba5efc2307d8591591ec33f5fdaebdab3a5e4464d95bfb033466c85960b7"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -1664,7 +1664,7 @@ dependencies = [
  "hex",
  "ignore",
  "include_dir",
- "jsonschema",
+ "jsonschema 0.44.1",
  "miette",
  "oci-distribution",
  "once_cell",
@@ -1701,7 +1701,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "648d58f605ad521d6d45af4092f9660010b8744cc3c5242393f2ced69482f5d4"
 dependencies = [
  "greentic-types",
- "jsonschema",
+ "jsonschema 0.42.2",
  "regex",
  "schemars 1.2.1",
  "semver",
@@ -1748,7 +1748,7 @@ dependencies = [
  "greentic-types",
  "httpmock",
  "indexmap 2.13.0",
- "jsonschema",
+ "jsonschema 0.42.2",
  "once_cell",
  "predicates",
  "reqwest 0.13.2",
@@ -1812,7 +1812,7 @@ dependencies = [
  "handlebars",
  "include_dir",
  "indexmap 2.13.0",
- "jsonschema",
+ "jsonschema 0.42.2",
  "lazy_static",
  "pathdiff",
  "qa-spec",
@@ -2671,7 +2671,36 @@ dependencies = [
  "num-cmp",
  "num-traits",
  "percent-encoding",
- "referencing",
+ "referencing 0.42.2",
+ "regex",
+ "regex-syntax",
+ "reqwest 0.13.2",
+ "rustls",
+ "serde",
+ "serde_json",
+ "unicode-general-category",
+ "uuid-simd",
+]
+
+[[package]]
+name = "jsonschema"
+version = "0.44.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f98b64a413c93a1b413dfbaf973b78d271648b9cae50b10302ad88af78991672"
+dependencies = [
+ "ahash",
+ "bytecount",
+ "data-encoding",
+ "email_address",
+ "fancy-regex",
+ "fraction",
+ "getrandom 0.3.4",
+ "idna",
+ "itoa",
+ "num-cmp",
+ "num-traits",
+ "percent-encoding",
+ "referencing 0.44.1",
  "regex",
  "regex-syntax",
  "reqwest 0.13.2",
@@ -3703,6 +3732,21 @@ name = "referencing"
 version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97d4124f489451bb67c59d67fa16f3ae9b5690b290406a7538e38458632666df"
+dependencies = [
+ "ahash",
+ "fluent-uri",
+ "getrandom 0.3.4",
+ "hashbrown 0.16.1",
+ "parking_lot",
+ "percent-encoding",
+ "serde_json",
+]
+
+[[package]]
+name = "referencing"
+version = "0.44.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "22952642836711d7a730d23a4dfb0d732e75a85e4c4f5704266d9c8fac278ff1"
 dependencies = [
  "ahash",
  "fluent-uri",
