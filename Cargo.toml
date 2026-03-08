@@ -9,6 +9,8 @@ homepage = "https://greentic.ai/"
 documentation = "https://docs.rs/greentic-dev"
 # Ensure runtime assets ship with the crate.
 include = [
+    "build.rs",
+    "i18n/**",
     "src/**",
     "templates/**",
     "README.md",
