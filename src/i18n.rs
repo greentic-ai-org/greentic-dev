@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 use std::env;
+use std::ffi::OsString;
 use std::sync::OnceLock;
 
 use serde_json::Value;
@@ -42,6 +43,20 @@ pub fn t(locale: &str, key: &str) -> String {
         return value.to_string();
     }
     key.to_string()
+}
+
+pub fn cli_locale_from_argv(argv: &[OsString]) -> Option<String> {
+    let mut args = argv.iter().skip(1);
+    while let Some(arg) = args.next() {
+        let text = arg.to_string_lossy();
+        if let Some(value) = text.strip_prefix("--locale=") {
+            return Some(value.to_string());
+        }
+        if text == "--locale" {
+            return args.next().map(|next| next.to_string_lossy().to_string());
+        }
+    }
+    None
 }
 
 pub fn tf(locale: &str, key: &str, args: &[(&str, String)]) -> String {

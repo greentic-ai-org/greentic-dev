@@ -3,6 +3,7 @@ import json
 import os
 import re
 import sys
+from collections import Counter
 from pathlib import Path
 
 
@@ -24,8 +25,22 @@ def placeholders(text: str):
     return PLACEHOLDER_RE.findall(text)
 
 
+def same_placeholders(lhs: str, rhs: str):
+    return Counter(placeholders(lhs)) == Counter(placeholders(rhs))
+
+
 def backticks(text: str):
     return BACKTICK_RE.findall(text)
+
+
+def literal_backticks(text: str):
+    spans = []
+    for span in backticks(text):
+        inner = span[1:-1]
+        if PLACEHOLDER_RE.fullmatch(inner):
+            continue
+        spans.append(span)
+    return spans
 
 
 def validate():
@@ -54,13 +69,13 @@ def validate():
                 print(f"{locale}: key {key} must map to a string")
                 ok = False
                 continue
-            if placeholders(source) != placeholders(target):
+            if not same_placeholders(source, target):
                 print(f"{locale}: placeholder mismatch for {key}")
                 ok = False
             if source.count("\n") != target.count("\n"):
                 print(f"{locale}: newline mismatch for {key}")
                 ok = False
-            if backticks(source) != backticks(target):
+            if literal_backticks(source) != literal_backticks(target):
                 print(f"{locale}: backtick span mismatch for {key}")
                 ok = False
 

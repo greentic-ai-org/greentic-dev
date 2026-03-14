@@ -10,6 +10,7 @@ use crate::wizard::plan::{WizardPlan, WizardStep};
 pub struct ExecuteOptions {
     pub unsafe_commands: bool,
     pub allow_destructive: bool,
+    pub locale: String,
 }
 
 pub struct ExecutionReport {
@@ -23,7 +24,10 @@ pub fn execute(
     opts: &ExecuteOptions,
 ) -> Result<ExecutionReport> {
     if !opts.allow_destructive && plan_has_destructive_step(plan) {
-        bail!("plan requested destructive operations; re-run with --allow-destructive");
+        bail!(
+            "{}",
+            crate::i18n::t(&opts.locale, "runtime.wizard.executor.error.destructive")
+        );
     }
 
     let mut version_cache = BTreeMap::<String, String>::new();
@@ -33,14 +37,22 @@ pub fn execute(
         if let WizardStep::RunCommand(cmd) = step {
             if !opts.unsafe_commands && !is_allowed_program(&cmd.program) {
                 bail!(
-                    "command `{}` is not allowed by default; use --unsafe-commands to allow it",
-                    cmd.program
+                    "{}",
+                    crate::i18n::tf(
+                        &opts.locale,
+                        "runtime.wizard.executor.error.command_not_allowed",
+                        &[("program", cmd.program.clone())],
+                    )
                 );
             }
             if args_look_unsafe(&cmd.args) {
                 bail!(
-                    "command `{}` contains blocked shell-like arguments; refusing to execute",
-                    cmd.program
+                    "{}",
+                    crate::i18n::tf(
+                        &opts.locale,
+                        "runtime.wizard.executor.error.unsafe_args",
+                        &[("program", cmd.program.clone())],
+                    )
                 );
             }
 
@@ -61,10 +73,16 @@ pub fn execute(
                 .status()?;
             if !status.success() {
                 bail!(
-                    "wizard step command failed: {} {:?} (exit code {:?})",
-                    cmd.program,
-                    cmd.args,
-                    status.code()
+                    "{}",
+                    crate::i18n::tf(
+                        &opts.locale,
+                        "runtime.wizard.executor.error.step_failed",
+                        &[
+                            ("program", cmd.program.clone()),
+                            ("args", format!("{:?}", cmd.args)),
+                            ("exit_code", format!("{:?}", status.code())),
+                        ],
+                    )
                 );
             }
             executed += 1;
@@ -88,10 +106,16 @@ fn validate_version_pin(plan: &WizardPlan, program: &str, actual_version: &str) 
         && expected != actual_version
     {
         bail!(
-            "replay pin mismatch for `{}`: expected `{}`, got `{}`",
-            program,
-            expected,
-            actual_version
+            "{}",
+            crate::i18n::tf(
+                &plan.metadata.locale,
+                "runtime.wizard.executor.error.replay_pin_mismatch",
+                &[
+                    ("program", program.to_string()),
+                    ("expected", expected.clone()),
+                    ("actual", actual_version.to_string()),
+                ],
+            )
         );
     }
     Ok(())

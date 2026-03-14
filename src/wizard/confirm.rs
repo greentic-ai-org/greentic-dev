@@ -2,7 +2,14 @@ use std::io::{self, IsTerminal, Write};
 
 use anyhow::{Result, bail};
 
-pub fn ensure_execute_allowed(summary: &str, yes: bool, non_interactive: bool) -> Result<()> {
+use crate::i18n;
+
+pub fn ensure_execute_allowed(
+    summary: &str,
+    yes: bool,
+    non_interactive: bool,
+    locale: &str,
+) -> Result<()> {
     if yes {
         return Ok(());
     }
@@ -13,12 +20,13 @@ pub fn ensure_execute_allowed(summary: &str, yes: bool, non_interactive: bool) -
             return Ok(());
         }
         bail!(
-            "refusing to execute in non-interactive mode without confirmation. Re-run with `--execute --yes` or `--execute --non-interactive`."
+            "{}",
+            i18n::t(locale, "runtime.wizard.confirm.error.non_interactive")
         );
     }
 
     eprintln!("{summary}");
-    eprint!("Execute plan? [y/N]: ");
+    eprint!("{}", i18n::t(locale, "runtime.wizard.confirm.prompt"));
     io::stderr().flush()?;
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;
@@ -26,6 +34,9 @@ pub fn ensure_execute_allowed(summary: &str, yes: bool, non_interactive: bool) -
     if accepted {
         Ok(())
     } else {
-        bail!("execution canceled by user")
+        bail!(
+            "{}",
+            i18n::t(locale, "runtime.wizard.confirm.error.canceled")
+        )
     }
 }

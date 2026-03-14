@@ -97,11 +97,11 @@ pub fn launch(args: WizardLaunchArgs) -> Result<()> {
             return Ok(());
         };
 
-        run_interactive_delegate(&answers)?;
+        run_interactive_delegate(&answers, &locale)?;
     }
 }
 
-fn run_interactive_delegate(answers: &serde_json::Value) -> Result<()> {
+fn run_interactive_delegate(answers: &serde_json::Value, locale: &str) -> Result<()> {
     let selected_action = answers
         .get("selected_action")
         .and_then(|value| value.as_str())
@@ -116,7 +116,10 @@ fn run_interactive_delegate(answers: &serde_json::Value) -> Result<()> {
     let bin = resolve_binary(program)?;
     let mut command = Command::new(&bin);
     command
-        .arg("wizard")
+        .args(interactive_delegate_args(program, locale))
+        .env("LANG", locale)
+        .env("LC_ALL", locale)
+        .env("LC_MESSAGES", locale)
         .stdin(Stdio::inherit())
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit());
@@ -135,6 +138,18 @@ fn run_interactive_delegate(answers: &serde_json::Value) -> Result<()> {
             ["wizard"],
             status.code()
         );
+    }
+}
+
+fn interactive_delegate_args(program: &str, locale: &str) -> Vec<String> {
+    if program == "greentic-bundle" {
+        vec![
+            "--locale".to_string(),
+            locale.to_string(),
+            "wizard".to_string(),
+        ]
+    } else {
+        vec!["wizard".to_string()]
     }
 }
 
@@ -231,14 +246,18 @@ fn run_from_inputs(
 
     if mode == ExecutionMode::Execute {
         confirm::ensure_execute_allowed(
-            &format!(
-                "Plan `{}.{}` with {} step(s)",
-                plan.metadata.target,
-                plan.metadata.mode,
-                plan.steps.len()
+            &crate::i18n::tf(
+                &locale,
+                "runtime.wizard.confirm.summary",
+                &[
+                    ("target", plan.metadata.target.clone()),
+                    ("mode", plan.metadata.mode.clone()),
+                    ("step_count", plan.steps.len().to_string()),
+                ],
             ),
             yes,
             non_interactive,
+            &locale,
         )?;
         let report = executor::execute(
             &plan,
@@ -246,6 +265,7 @@ fn run_from_inputs(
             &ExecuteOptions {
                 unsafe_commands,
                 allow_destructive,
+                locale: locale.clone(),
             },
         )?;
         annotate_execution_metadata(&mut plan, &report);
@@ -324,7 +344,7 @@ fn prompt_launcher_answers(mode: ExecutionMode, locale: &str) -> Result<Option<s
         eprintln!();
         eprintln!("{}", i18n::t(locale, "cli.wizard.launcher.option_pack"));
         eprintln!("{}", i18n::t(locale, "cli.wizard.launcher.option_bundle"));
-        eprintln!("0) Exit");
+        eprintln!("{}", i18n::t(locale, "cli.wizard.launcher.option_exit"));
         eprintln!();
         eprint!("{}", i18n::t(locale, "cli.wizard.launcher.select_option"));
         io::stderr().flush()?;
@@ -508,8 +528,8 @@ mod tests {
 
     use super::{
         AnswerDocument, LauncherMenuChoice, SCHEMA_ID, WIZARD_ID, build_answer_document,
-        build_launcher_answers, merge_answers, parse_launcher_menu_choice,
-        validate_answer_document_identity,
+        build_launcher_answers, interactive_delegate_args, merge_answers,
+        parse_launcher_menu_choice, validate_answer_document_identity,
     };
     use crate::wizard::plan::{WizardFrontend, WizardPlan, WizardPlanMetadata};
 
@@ -604,5 +624,21 @@ mod tests {
         let answers = build_launcher_answers(super::ExecutionMode::DryRun, "bundle");
         assert_eq!(answers["selected_action"], "bundle");
         assert!(answers.get("delegate_answer_document").is_some());
+    }
+
+    #[test]
+    fn bundle_delegate_receives_locale_flag() {
+        assert_eq!(
+            interactive_delegate_args("greentic-bundle", "en-GB"),
+            vec!["--locale", "en-GB", "wizard"]
+        );
+    }
+
+    #[test]
+    fn pack_delegate_keeps_plain_wizard_args() {
+        assert_eq!(
+            interactive_delegate_args("greentic-pack", "en-GB"),
+            vec!["wizard"]
+        );
     }
 }

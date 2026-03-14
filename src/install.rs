@@ -28,8 +28,8 @@ const OCI_LAYER_JSON_MEDIA_TYPE: &str = "application/json";
 const OAUTH_USER: &str = "oauth2";
 
 pub fn run(args: InstallArgs) -> Result<()> {
-    tools::install(false)?;
     let locale = i18n::select_locale(args.locale.as_deref());
+    tools::install(false, &locale)?;
 
     let Some(tenant) = args.tenant else {
         return Ok(());

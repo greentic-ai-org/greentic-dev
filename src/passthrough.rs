@@ -7,13 +7,24 @@ use std::process::{Command, ExitStatus, Stdio};
 
 /// Resolve a binary by name using env override, then PATH.
 pub fn resolve_binary(name: &str) -> Result<PathBuf> {
+    let locale = crate::i18n::select_locale(None);
     let env_key = format!("GREENTIC_DEV_BIN_{}", name.replace('-', "_").to_uppercase());
     if let Ok(path) = env::var(&env_key) {
         let pb = PathBuf::from(path);
         if pb.exists() {
             return Ok(pb);
         }
-        bail!("{env_key} points to non-existent binary: {}", pb.display());
+        bail!(
+            "{}",
+            crate::i18n::tf(
+                &locale,
+                "runtime.passthrough.error.env_binary_missing",
+                &[
+                    ("env_key", env_key.clone()),
+                    ("path", pb.display().to_string()),
+                ],
+            )
+        );
     }
 
     if let Ok(path) = which::which(name) {
@@ -21,13 +32,29 @@ pub fn resolve_binary(name: &str) -> Result<PathBuf> {
     }
 
     bail!(
-        "failed to find `{name}` in PATH; set {env_key}, install `{name}` with cargo binstall, or run `greentic-dev install tools` (`--latest` to force-refresh)"
+        "{}",
+        crate::i18n::tf(
+            &locale,
+            "runtime.passthrough.error.binary_not_found",
+            &[("name", name.to_string()), ("env_key", env_key)],
+        )
     )
 }
 
 pub fn run_passthrough(bin: &Path, args: &[OsString], verbose: bool) -> Result<ExitStatus> {
+    let locale = crate::i18n::select_locale(None);
     if verbose {
-        eprintln!("greentic-dev passthrough -> {} {:?}", bin.display(), args);
+        eprintln!(
+            "{}",
+            crate::i18n::tf(
+                &locale,
+                "runtime.passthrough.debug.exec",
+                &[
+                    ("bin", bin.display().to_string()),
+                    ("args", format!("{args:?}")),
+                ],
+            )
+        );
         let _ = Command::new(bin)
             .arg("--version")
             .stdout(Stdio::inherit())
@@ -41,7 +68,13 @@ pub fn run_passthrough(bin: &Path, args: &[OsString], verbose: bool) -> Result<E
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .status()
-        .map_err(|e| anyhow!("failed to execute {}: {e}", bin.display()))
+        .map_err(|e| {
+            anyhow!(crate::i18n::tf(
+                &locale,
+                "runtime.passthrough.error.execute",
+                &[("bin", bin.display().to_string()), ("error", e.to_string())],
+            ))
+        })
 }
 
 #[derive(Clone, Copy)]
@@ -81,18 +114,25 @@ const DELEGATED_INSTALL_SPECS: [InstallSpec; 7] = [
     },
 ];
 
-pub fn install_all_delegated_tools(latest: bool) -> Result<()> {
+pub fn install_all_delegated_tools(latest: bool, locale: &str) -> Result<()> {
     ensure_cargo_binstall()?;
     for spec in DELEGATED_INSTALL_SPECS {
-        install_with_binstall(spec, latest)?;
+        install_with_binstall(spec, latest, locale)?;
     }
     Ok(())
 }
 
-fn install_with_binstall(spec: InstallSpec, force_latest: bool) -> Result<()> {
+fn install_with_binstall(spec: InstallSpec, force_latest: bool, locale: &str) -> Result<()> {
     eprintln!(
-        "greentic-dev: installing `{}` from crate `{}` via cargo binstall...",
-        spec.bin_name, spec.crate_name
+        "{}",
+        crate::i18n::tf(
+            locale,
+            "runtime.tools.install.installing",
+            &[
+                ("bin_name", spec.bin_name.to_string()),
+                ("crate_name", spec.crate_name.to_string()),
+            ],
+        )
     );
 
     let mut cmd = Command::new("cargo");
@@ -111,24 +151,34 @@ fn install_with_binstall(spec: InstallSpec, force_latest: bool) -> Result<()> {
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .status()
-        .with_context(|| "failed to execute `cargo binstall`")?;
+        .with_context(|| crate::i18n::t(locale, "runtime.tools.install.error.execute_binstall"))?;
 
     if status.success() {
         Ok(())
     } else {
         bail!(
-            "`cargo binstall` failed while installing `{}` (crate `{}`), exit code {:?}",
-            spec.bin_name,
-            spec.crate_name,
-            status.code()
+            "{}",
+            crate::i18n::tf(
+                locale,
+                "runtime.tools.install.error.binstall_failed",
+                &[
+                    ("bin_name", spec.bin_name.to_string()),
+                    ("crate_name", spec.crate_name.to_string()),
+                    ("exit_code", format!("{:?}", status.code())),
+                ],
+            )
         );
     }
 }
 
 fn ensure_cargo_binstall() -> Result<()> {
+    let locale = crate::i18n::select_locale(None);
     let installed_version = installed_cargo_binstall_version()?;
     if installed_version.is_none() {
-        eprintln!("greentic-dev: installing `cargo-binstall` via cargo...");
+        eprintln!(
+            "{}",
+            crate::i18n::t(&locale, "runtime.tools.install.installing_binstall")
+        );
         return install_cargo_binstall();
     }
 
@@ -140,14 +190,29 @@ fn ensure_cargo_binstall() -> Result<()> {
             }
 
             eprintln!(
-                "greentic-dev: updating `cargo-binstall` from {} to {} via cargo...",
-                installed_version, latest_version
+                "{}",
+                crate::i18n::tf(
+                    &locale,
+                    "runtime.tools.install.updating_binstall",
+                    &[
+                        ("installed_version", installed_version.to_string()),
+                        ("latest_version", latest_version.to_string()),
+                    ],
+                )
             );
             install_cargo_binstall()
         }
         Err(err) => {
             eprintln!(
-                "greentic-dev: failed to check latest `cargo-binstall` version ({err}); continuing with installed version {installed_version}."
+                "{}",
+                crate::i18n::tf(
+                    &locale,
+                    "runtime.tools.install.warn.latest_check_failed",
+                    &[
+                        ("error", err.to_string()),
+                        ("installed_version", installed_version.to_string()),
+                    ],
+                )
             );
             Ok(())
         }
@@ -163,14 +228,24 @@ fn install_cargo_binstall() -> Result<()> {
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .status()
-        .with_context(|| "failed to execute `cargo install cargo-binstall --locked`")?;
+        .with_context(|| {
+            crate::i18n::t(
+                &crate::i18n::select_locale(None),
+                "runtime.tools.install.error.execute_install_binstall",
+            )
+        })?;
 
     if status.success() {
         Ok(())
     } else {
+        let locale = crate::i18n::select_locale(None);
         bail!(
-            "failed to install cargo-binstall; `cargo install cargo-binstall --locked` exit code {:?}",
-            status.code()
+            "{}",
+            crate::i18n::tf(
+                &locale,
+                "runtime.tools.install.error.install_binstall_failed",
+                &[("exit_code", format!("{:?}", status.code()))],
+            )
         );
     }
 }
