@@ -96,6 +96,7 @@ Behavior:
   - pack path -> delegates to `greentic-pack wizard`
   - bundle path -> delegates to `greentic-bundle wizard`
 - `wizard --answers <FILE>` loads a launcher `AnswerDocument` and executes it directly.
+- If the launcher answers include `answers.delegate_answer_document`, the delegated wizard is replayed via its own `wizard apply --answers <FILE>` path instead of opening an inner interactive menu.
 - `--dry-run` builds/renders plan without delegated execution.
 - `wizard --answers <FILE> --dry-run` builds plan from `AnswerDocument` without delegated execution.
 - `validate` builds plan from `AnswerDocument` without delegated execution.

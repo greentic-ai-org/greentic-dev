@@ -52,6 +52,27 @@ fn write_launcher_answers(path: &Path, action: &str) {
     .expect("write answers doc");
 }
 
+fn write_launcher_answers_with_delegate(path: &Path, action: &str, delegate_doc: &str) {
+    fs::write(
+        path,
+        format!(
+            r#"{{
+  "wizard_id": "greentic-dev.wizard.launcher.main",
+  "schema_id": "greentic-dev.launcher.main",
+  "schema_version": "1.0.0",
+  "locale": "en-US",
+  "answers": {{
+    "selected_action": "{action}",
+    "delegate_answer_document": {delegate_doc}
+  }},
+  "locks": {{}}
+}}
+"#
+        ),
+    )
+    .expect("write delegated answers doc");
+}
+
 #[test]
 fn wizard_no_subcommand_requires_interactive_terminal() {
     let mut cmd = cargo_bin_cmd!("greentic-dev");
@@ -211,6 +232,117 @@ exit 0
     assert!(exec_log.contains("RUN greentic-pack wizard"));
     let stub_log = fs::read_to_string(&runlog).expect("read stub run log");
     assert!(stub_log.contains("wizard"));
+}
+
+#[test]
+fn wizard_top_level_dry_run_plan_includes_delegated_answers_apply() {
+    let tmp = TempDir::new().expect("temp dir");
+    let out = tmp.path().join("wiz-top-level-dry-delegated");
+    let answers_doc = tmp.path().join("answers-doc.json");
+    write_launcher_answers_with_delegate(
+        &answers_doc,
+        "bundle",
+        r#"{
+      "wizard_id": "greentic-bundle.wizard.main",
+      "schema_id": "greentic-bundle.main",
+      "schema_version": "1.0.0",
+      "locale": "en-US",
+      "answers": {
+        "selected_action": "create"
+      },
+      "locks": {}
+    }"#,
+    );
+
+    let mut cmd = cargo_bin_cmd!("greentic-dev");
+    cmd.args([
+        "wizard",
+        "--answers",
+        answers_doc.to_str().expect("utf8 path"),
+        "--dry-run",
+        "--out",
+        out.to_str().expect("utf8 path"),
+    ]);
+    cmd.assert()
+        .success()
+        .stdout(contains("\"program\": \"greentic-bundle\""))
+        .stdout(contains("\"apply\""))
+        .stdout(contains("delegated-answers.json"))
+        .stdout(contains("\"--dry-run\""));
+
+    let delegated = fs::read_to_string(out.join("delegated-answers.json")).expect("read delegated");
+    assert!(delegated.contains("\"wizard_id\": \"greentic-bundle.wizard.main\""));
+    assert!(delegated.contains("\"selected_action\": \"create\""));
+    assert!(
+        !out.join("exec.log").exists(),
+        "top-level delegated dry-run should not create exec.log"
+    );
+}
+
+#[test]
+fn wizard_top_level_answers_document_replays_delegated_answers_non_interactively() {
+    let tmp = TempDir::new().expect("temp dir");
+    let bin_dir = tmp.path().join("bin");
+    fs::create_dir_all(&bin_dir).expect("create bin dir");
+    let out = tmp.path().join("wiz-top-level-delegated-apply");
+    let runlog = tmp.path().join("top-level-delegated-apply-runs.log");
+    let answers_doc = tmp.path().join("answers-doc.json");
+    write_launcher_answers_with_delegate(
+        &answers_doc,
+        "bundle",
+        r#"{
+      "wizard_id": "greentic-bundle.wizard.main",
+      "schema_id": "greentic-bundle.main",
+      "schema_version": "1.0.0",
+      "locale": "en-US",
+      "answers": {
+        "selected_action": "create"
+      },
+      "locks": {}
+    }"#,
+    );
+
+    write_stub_bin(
+        &bin_dir,
+        "greentic-bundle",
+        &format!(
+            r#"
+if [ "$1" = "--version" ]; then
+  echo "greentic-bundle 0.4.test"
+  exit 0
+fi
+echo "$@" >> "{}"
+if [ "$1" != "wizard" ] || [ "$2" != "apply" ] || [ "$3" != "--answers" ]; then
+  echo "unexpected argv: $@" >&2
+  exit 9
+fi
+if ! grep -q '"selected_action": "create"' "$4"; then
+  echo "delegated answers missing expected payload" >&2
+  exit 10
+fi
+exit 0
+"#,
+            runlog.display()
+        ),
+    );
+
+    let mut cmd = cargo_bin_cmd!("greentic-dev");
+    cmd.env("PATH", prepend_path(&bin_dir)).args([
+        "wizard",
+        "--answers",
+        answers_doc.to_str().expect("utf8 path"),
+        "--yes",
+        "--non-interactive",
+        "--out",
+        out.to_str().expect("utf8 path"),
+    ]);
+    cmd.assert().success();
+
+    let exec_log = fs::read_to_string(out.join("exec.log")).expect("read exec log");
+    assert!(exec_log.contains("RUN greentic-bundle wizard apply --answers"));
+    assert!(exec_log.contains("delegated-answers.json"));
+    let stub_log = fs::read_to_string(&runlog).expect("read stub run log");
+    assert!(stub_log.contains("wizard apply --answers"));
 }
 
 #[test]

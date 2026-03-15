@@ -10,6 +10,7 @@ pub struct PersistedPaths {
     pub answers_path: PathBuf,
     pub plan_path: PathBuf,
     pub exec_log_path: PathBuf,
+    pub delegated_answers_path: PathBuf,
 }
 
 pub fn resolve_out_dir(out: Option<&Path>) -> PathBuf {
@@ -29,6 +30,7 @@ pub fn prepare_dir(root: &Path) -> Result<PersistedPaths> {
         answers_path: root.join("answers.json"),
         plan_path: root.join("plan.json"),
         exec_log_path: root.join("exec.log"),
+        delegated_answers_path: root.join("delegated-answers.json"),
     })
 }
 
@@ -45,5 +47,12 @@ pub fn persist_plan_and_answers(
     let plan_json = serde_json::to_string_pretty(plan).context("render plan JSON")?;
     fs::write(&paths.plan_path, plan_json)
         .with_context(|| format!("failed to write {}", paths.plan_path.display()))?;
+    Ok(())
+}
+
+pub fn persist_delegated_answers(path: &Path, delegated_answers: &serde_json::Value) -> Result<()> {
+    let answers_json =
+        serde_json::to_string_pretty(delegated_answers).context("render delegated answers JSON")?;
+    fs::write(path, answers_json).with_context(|| format!("failed to write {}", path.display()))?;
     Ok(())
 }

@@ -25,6 +25,7 @@ Selection mapping:
 
 - `selected_action = "pack"` -> delegated command `greentic-pack wizard`
 - `selected_action = "bundle"` -> delegated command `greentic-bundle wizard`
+- when `answers.delegate_answer_document` is present, delegated execution uses `wizard apply --answers <persisted-file>` instead of the interactive delegated menu
 
 For dry-run plans, delegated args include `--dry-run`.
 

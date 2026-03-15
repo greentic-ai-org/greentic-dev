@@ -23,6 +23,7 @@
 
 - `selected_action = pack` -> `greentic-pack wizard`
 - `selected_action = bundle` -> `greentic-bundle wizard`
+- if `answers.delegate_answer_document` is present, persist it under the launcher output dir and delegate through `wizard apply --answers <persisted-file>`
 
 ## AnswerDocument Rules
 

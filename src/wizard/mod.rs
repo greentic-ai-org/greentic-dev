@@ -248,12 +248,17 @@ fn run_from_inputs(
     }
 
     let merged_answers = merge_answers(None, None, Some(loaded.answers.clone()), None);
+    let delegated_answers_path = persist_delegated_answers_if_present(
+        &paths_for_provider(out.as_deref())?,
+        &merged_answers,
+    )?;
     let provider = ShellWizardProvider;
     let req = ProviderRequest {
         frontend: frontend.clone(),
         locale: locale.clone(),
         dry_run: mode == ExecutionMode::DryRun,
         answers: merged_answers.clone(),
+        delegated_answers_path,
     };
     let mut plan = provider.build_plan(&req)?;
 
@@ -300,6 +305,25 @@ fn run_from_inputs(
     }
 
     Ok(())
+}
+
+fn paths_for_provider(out: Option<&Path>) -> Result<persistence::PersistedPaths> {
+    let out_dir = persistence::resolve_out_dir(out);
+    persistence::prepare_dir(&out_dir)
+}
+
+fn persist_delegated_answers_if_present(
+    paths: &persistence::PersistedPaths,
+    answers: &WizardAnswers,
+) -> Result<Option<PathBuf>> {
+    let Some(delegated_answers) = answers.data.get("delegate_answer_document") else {
+        return Ok(None);
+    };
+    if !delegated_answers.is_object() {
+        bail!("answers.delegate_answer_document must be a JSON object");
+    }
+    persistence::persist_delegated_answers(&paths.delegated_answers_path, delegated_answers)?;
+    Ok(Some(paths.delegated_answers_path.clone()))
 }
 
 fn render_plan(plan: &WizardPlan) -> Result<()> {
