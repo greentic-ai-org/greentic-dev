@@ -27,12 +27,15 @@
 
 ## AnswerDocument Rules
 
-Only launcher identity is accepted:
+Launcher identity is accepted directly:
 
 - `wizard_id = greentic-dev.wizard.launcher.main`
 - `schema_id = greentic-dev.launcher.main`
 
-Documents with non-launcher IDs are rejected.
+Top-level bundle and pack AnswerDocuments may also be passed to `greentic-dev wizard --answers <FILE>`.
+They are normalized into launcher answers with `selected_action` plus `delegate_answer_document`.
+
+Other non-launcher IDs are rejected.
 
 ## Determinism
 

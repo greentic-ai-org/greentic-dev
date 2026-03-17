@@ -31,7 +31,7 @@ For dry-run plans, delegated args include `--dry-run`.
 
 ## AnswerDocument
 
-`validate` and `apply` accept only launcher documents.
+`validate` and `apply` natively accept launcher documents.
 
 Required identity fields:
 
@@ -52,6 +52,14 @@ Example:
   "locks": {}
 }
 ```
+
+Bundle and pack AnswerDocuments are also accepted at the top level of `greentic-dev wizard --answers <FILE>`.
+They are wrapped into launcher answers automatically as:
+
+- bundle document -> `selected_action = "bundle"`
+- pack document -> `selected_action = "pack"`
+
+and delegated through `wizard apply --answers <persisted-file>`.
 
 ## Frontends
 

@@ -96,6 +96,7 @@ Behavior:
   - pack path -> delegates to `greentic-pack wizard`
   - bundle path -> delegates to `greentic-bundle wizard`
 - `wizard --answers <FILE>` loads a launcher `AnswerDocument` and executes it directly.
+- `wizard --answers <FILE>` also accepts direct `greentic-bundle` / `greentic-pack` AnswerDocuments and wraps them into launcher delegation automatically.
 - If the launcher answers include `answers.delegate_answer_document`, the delegated wizard is replayed via its own `wizard apply --answers <FILE>` path instead of opening an inner interactive menu.
 - `--dry-run` builds/renders plan without delegated execution.
 - `wizard --answers <FILE> --dry-run` builds plan from `AnswerDocument` without delegated execution.
@@ -103,12 +104,12 @@ Behavior:
 - `apply` builds and executes delegation from `AnswerDocument`.
 - `wizard run` and `wizard replay` are removed.
 
-AnswerDocument identity is strict:
+Launcher AnswerDocument identity is strict:
 
 - `wizard_id`: `greentic-dev.wizard.launcher.main`
 - `schema_id`: `greentic-dev.launcher.main`
 
-Non-launcher IDs are rejected by `validate` / `apply`.
+Other non-launcher IDs are rejected by `validate` / `apply`.
 
 ## Tips
 

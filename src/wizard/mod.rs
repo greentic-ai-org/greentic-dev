@@ -25,6 +25,8 @@ const DEFAULT_LOCALE: &str = "en-US";
 const DEFAULT_SCHEMA_VERSION: &str = "1.0.0";
 const WIZARD_ID: &str = "greentic-dev.wizard.launcher.main";
 const SCHEMA_ID: &str = "greentic-dev.launcher.main";
+const BUNDLE_WIZARD_ID_PREFIX: &str = "greentic-bundle.";
+const PACK_WIZARD_ID_PREFIX: &str = "greentic-pack.";
 const EMBEDDED_WIZARD_ROOT_ZERO_ACTION_ENV: &str = "GREENTIC_WIZARD_ROOT_ZERO_ACTION";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -56,7 +58,7 @@ struct AnswerDocument {
     locale: String,
     answers: serde_json::Value,
     #[serde(default)]
-    locks: BTreeMap<String, String>,
+    locks: serde_json::Map<String, serde_json::Value>,
 }
 
 pub fn launch(args: WizardLaunchArgs) -> Result<()> {
@@ -448,38 +450,53 @@ fn load_answer_document(
 
     let mut doc: AnswerDocument = serde_json::from_value(value)
         .with_context(|| format!("failed to parse AnswerDocument from {}", path.display()))?;
-    validate_answer_document_identity(&doc, path)?;
+    if is_launcher_answer_document(&doc) {
+        if let Some(schema_version) = requested_schema_version
+            && doc.schema_version != schema_version
+        {
+            if migrate {
+                doc = migrate_answer_document(doc, schema_version);
+            } else {
+                bail!(
+                    "answers schema_version `{}` does not match requested `{}`; re-run with --migrate",
+                    doc.schema_version,
+                    schema_version
+                );
+            }
+        }
 
-    if let Some(schema_version) = requested_schema_version
-        && doc.schema_version != schema_version
-    {
-        if migrate {
-            doc = migrate_answer_document(doc, schema_version);
-        } else {
+        if !doc.answers.is_object() {
             bail!(
-                "answers schema_version `{}` does not match requested `{}`; re-run with --migrate",
-                doc.schema_version,
-                schema_version
+                "AnswerDocument `answers` must be a JSON object in {}",
+                path.display()
             );
         }
+
+        return Ok(LoadedAnswers {
+            answers: doc.answers.clone(),
+            inferred_locale: Some(doc.locale),
+            schema_version: Some(doc.schema_version),
+        });
     }
 
-    if !doc.answers.is_object() {
-        bail!(
-            "AnswerDocument `answers` must be a JSON object in {}",
-            path.display()
-        );
+    if let Some(selected_action) = delegated_selected_action(&doc) {
+        return Ok(LoadedAnswers {
+            answers: wrap_delegated_answer_document(selected_action, &doc),
+            inferred_locale: Some(doc.locale),
+            schema_version: Some(
+                requested_schema_version
+                    .unwrap_or(DEFAULT_SCHEMA_VERSION)
+                    .to_string(),
+            ),
+        });
     }
 
-    Ok(LoadedAnswers {
-        answers: doc.answers.clone(),
-        inferred_locale: Some(doc.locale),
-        schema_version: Some(doc.schema_version),
-    })
+    validate_answer_document_identity(&doc, path)?;
+    unreachable!("launcher identity validation must error for unsupported documents");
 }
 
 fn validate_answer_document_identity(doc: &AnswerDocument, path: &Path) -> Result<()> {
-    if doc.wizard_id != WIZARD_ID {
+    if !is_launcher_answer_document(doc) {
         bail!(
             "unsupported wizard_id `{}` in {}; expected `{}`",
             doc.wizard_id,
@@ -496,6 +513,30 @@ fn validate_answer_document_identity(doc: &AnswerDocument, path: &Path) -> Resul
         );
     }
     Ok(())
+}
+
+fn is_launcher_answer_document(doc: &AnswerDocument) -> bool {
+    doc.wizard_id == WIZARD_ID && doc.schema_id == SCHEMA_ID
+}
+
+fn delegated_selected_action(doc: &AnswerDocument) -> Option<&'static str> {
+    if doc.wizard_id.starts_with(BUNDLE_WIZARD_ID_PREFIX) {
+        Some("bundle")
+    } else if doc.wizard_id.starts_with(PACK_WIZARD_ID_PREFIX) {
+        Some("pack")
+    } else {
+        None
+    }
+}
+
+fn wrap_delegated_answer_document(
+    selected_action: &str,
+    doc: &AnswerDocument,
+) -> serde_json::Value {
+    serde_json::json!({
+        "selected_action": selected_action,
+        "delegate_answer_document": doc,
+    })
 }
 
 fn merge_answers(
@@ -533,13 +574,18 @@ fn build_answer_document(
     answers: &WizardAnswers,
     plan: &WizardPlan,
 ) -> AnswerDocument {
+    let locks = plan
+        .inputs
+        .iter()
+        .map(|(key, value)| (key.clone(), serde_json::Value::String(value.clone())))
+        .collect();
     AnswerDocument {
         wizard_id: WIZARD_ID.to_string(),
         schema_id: SCHEMA_ID.to_string(),
         schema_version: schema_version.to_string(),
         locale: locale.to_string(),
         answers: answers.data.clone(),
-        locks: plan.inputs.clone(),
+        locks,
     }
 }
 
@@ -571,8 +617,9 @@ mod tests {
 
     use super::{
         AnswerDocument, LauncherMenuChoice, SCHEMA_ID, WIZARD_ID, build_answer_document,
-        build_launcher_answers, interactive_delegate_args, merge_answers,
-        parse_launcher_menu_choice, validate_answer_document_identity,
+        build_launcher_answers, interactive_delegate_args, is_launcher_answer_document,
+        merge_answers, parse_launcher_menu_choice, validate_answer_document_identity,
+        wrap_delegated_answer_document,
     };
     use crate::wizard::plan::{WizardFrontend, WizardPlan, WizardPlanMetadata};
 
@@ -616,7 +663,7 @@ mod tests {
         assert_eq!(doc.answers["selected_action"], "pack");
         assert_eq!(
             doc.locks.get("resolved_versions.greentic-pack"),
-            Some(&"greentic-pack 0.1".to_string())
+            Some(&json!("greentic-pack 0.1"))
         );
     }
 
@@ -628,10 +675,41 @@ mod tests {
             schema_version: "1.0.0".to_string(),
             locale: "en-US".to_string(),
             answers: json!({}),
-            locks: BTreeMap::new(),
+            locks: serde_json::Map::new(),
         };
         let err = validate_answer_document_identity(&doc, Path::new("answers.json")).unwrap_err();
         assert!(err.to_string().contains("unsupported wizard_id"));
+    }
+
+    #[test]
+    fn launcher_identity_matches_expected_pair() {
+        let doc = AnswerDocument {
+            wizard_id: WIZARD_ID.to_string(),
+            schema_id: SCHEMA_ID.to_string(),
+            schema_version: "1.0.0".to_string(),
+            locale: "en-US".to_string(),
+            answers: json!({}),
+            locks: serde_json::Map::new(),
+        };
+        assert!(is_launcher_answer_document(&doc));
+    }
+
+    #[test]
+    fn wrap_delegated_bundle_document_builds_launcher_shape() {
+        let doc = AnswerDocument {
+            wizard_id: "greentic-bundle.wizard.main".to_string(),
+            schema_id: "greentic-bundle.main".to_string(),
+            schema_version: "1.0.0".to_string(),
+            locale: "en-US".to_string(),
+            answers: json!({"selected_action":"create"}),
+            locks: serde_json::Map::new(),
+        };
+        let wrapped = wrap_delegated_answer_document("bundle", &doc);
+        assert_eq!(wrapped["selected_action"], "bundle");
+        assert_eq!(
+            wrapped["delegate_answer_document"]["wizard_id"],
+            "greentic-bundle.wizard.main"
+        );
     }
 
     #[test]
