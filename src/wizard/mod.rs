@@ -175,11 +175,7 @@ fn interactive_delegate_args(program: &str, locale: &str) -> Vec<String> {
 }
 
 pub fn validate(args: WizardValidateArgs) -> Result<()> {
-    let loaded = load_answer_document(
-        &args.answers,
-        args.schema_version.as_deref(),
-        args.migrate,
-    )?;
+    let loaded = load_answer_document(&args.answers, args.schema_version.as_deref(), args.migrate)?;
 
     run_from_inputs(
         args.frontend,
@@ -197,11 +193,7 @@ pub fn validate(args: WizardValidateArgs) -> Result<()> {
 }
 
 pub fn apply(args: WizardApplyArgs) -> Result<()> {
-    let loaded = load_answer_document(
-        &args.answers,
-        args.schema_version.as_deref(),
-        args.migrate,
-    )?;
+    let loaded = load_answer_document(&args.answers, args.schema_version.as_deref(), args.migrate)?;
 
     run_from_inputs(
         args.frontend,
@@ -468,8 +460,8 @@ fn load_answer_document(
         let path = Path::new(path_or_url);
         fs::read_to_string(path).with_context(|| format!("failed to read {}", path.display()))?
     };
-    let value: serde_json::Value = serde_json::from_str(&raw)
-        .with_context(|| format!("failed to parse {}", path_or_url))?;
+    let value: serde_json::Value =
+        serde_json::from_str(&raw).with_context(|| format!("failed to parse {}", path_or_url))?;
 
     let mut doc: AnswerDocument = serde_json::from_value(value)
         .with_context(|| format!("failed to parse AnswerDocument from {}", path_or_url))?;
