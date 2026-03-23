@@ -34,7 +34,7 @@ Scope: CI security review for Dependabot alerts, code scanning alerts, and PR de
 - No code or dependency remediation was required because no actionable vulnerabilities were identified.
 
 ## Constraints
-- `cargo audit` could not run in this CI sandbox due to Rust toolchain update attempts writing to a read-only rustup temp path (`/home/runner/.rustup/tmp/...`).
+- `cargo audit` is not installed in this CI environment (`cargo-audit not installed`).
 - This constraint did not affect the result because alert feeds were empty and dependency changes were non-functional (metadata-only).
 
 ## Files Modified
