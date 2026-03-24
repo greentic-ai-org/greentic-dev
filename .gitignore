@@ -3,3 +3,6 @@
 /dist
 /.target-local
 /.tmp
+
+# OS
+.DS_Store
