@@ -329,6 +329,154 @@ fn bundle_update_steps() -> Vec<FormStep> {
     }]
 }
 
+fn bundle_path_steps(title: &str, desc: &str) -> Vec<FormStep> {
+    vec![FormStep {
+        id: "bundle_target".into(),
+        title: title.into(),
+        description: desc.into(),
+        fields: vec![FormField {
+            id: "bundle_target".into(),
+            label: "Bundle Directory or .gtbundle Path".into(),
+            kind: FieldKind::Text,
+            required: true,
+            default_value: Some(".".into()),
+            placeholder: Some("./my-bundle".into()),
+            choices: vec![],
+            depends_on: None,
+        }],
+    }]
+}
+
+fn ext_catalog_field() -> FormField {
+    FormField {
+        id: "extension_catalog_ref".into(),
+        label: "Extension Catalog Reference".into(),
+        kind: FieldKind::Text,
+        required: false,
+        default_value: None,
+        placeholder: Some("https://... or leave empty for bundled catalog".into()),
+        choices: vec![],
+        depends_on: None,
+    }
+}
+
+fn ext_type_field() -> FormField {
+    FormField {
+        id: "extension_type_id".into(),
+        label: "Extension Type ID".into(),
+        kind: FieldKind::Text,
+        required: true,
+        default_value: None,
+        placeholder: Some(
+            "e.g. control, deployer, messaging, oauth, secrets, state, events, telemetry".into(),
+        ),
+        choices: vec![],
+        depends_on: None,
+    }
+}
+
+fn pack_create_ext_steps() -> Vec<FormStep> {
+    vec![
+        FormStep {
+            id: "ext_basics".into(),
+            title: "Create Extension Pack".into(),
+            description: "Create a new extension pack from a catalog template.".into(),
+            fields: vec![
+                ext_catalog_field(),
+                ext_type_field(),
+                FormField {
+                    id: "extension_template_id".into(),
+                    label: "Extension Template ID".into(),
+                    kind: FieldKind::Text,
+                    required: true,
+                    default_value: None,
+                    placeholder: Some("e.g. control-basic, secrets-env".into()),
+                    choices: vec![],
+                    depends_on: None,
+                },
+            ],
+        },
+        FormStep {
+            id: "ext_pack_dir".into(),
+            title: "Pack Location".into(),
+            description: "Where to create the extension pack.".into(),
+            fields: vec![FormField {
+                id: "pack_dir".into(),
+                label: "Pack Directory".into(),
+                kind: FieldKind::Text,
+                required: true,
+                default_value: None,
+                placeholder: Some("./my-extension-pack".into()),
+                choices: vec![],
+                depends_on: None,
+            }],
+        },
+    ]
+}
+
+fn pack_update_ext_steps() -> Vec<FormStep> {
+    vec![FormStep {
+        id: "ext_update".into(),
+        title: "Update Extension Pack".into(),
+        description: "Update an existing extension pack.".into(),
+        fields: vec![
+            FormField {
+                id: "pack_dir".into(),
+                label: "Pack Directory".into(),
+                kind: FieldKind::Text,
+                required: true,
+                default_value: Some(".".into()),
+                placeholder: Some("./my-extension-pack".into()),
+                choices: vec![],
+                depends_on: None,
+            },
+            ext_catalog_field(),
+            FormField {
+                id: "run_doctor".into(),
+                label: "Run doctor (validate pack)".into(),
+                kind: FieldKind::Boolean,
+                required: false,
+                default_value: Some("true".into()),
+                placeholder: None,
+                choices: vec![],
+                depends_on: None,
+            },
+            FormField {
+                id: "run_build".into(),
+                label: "Run build (compile pack)".into(),
+                kind: FieldKind::Boolean,
+                required: false,
+                default_value: Some("true".into()),
+                placeholder: None,
+                choices: vec![],
+                depends_on: None,
+            },
+        ],
+    }]
+}
+
+fn pack_add_ext_steps() -> Vec<FormStep> {
+    vec![FormStep {
+        id: "ext_add".into(),
+        title: "Add Extension to Existing Pack".into(),
+        description: "Add an extension entry to an existing pack.".into(),
+        fields: vec![
+            FormField {
+                id: "pack_dir".into(),
+                label: "Pack Directory".into(),
+                kind: FieldKind::Text,
+                required: true,
+                default_value: Some(".".into()),
+                placeholder: Some("./my-pack".into()),
+                choices: vec![],
+                depends_on: None,
+            },
+            ext_catalog_field(),
+            ext_type_field(),
+        ],
+    }]
+}
+
 // ---------------------------------------------------------------------------
 // Server state
 // ---------------------------------------------------------------------------
@@ -628,8 +776,19 @@ async fn get_wizard_steps(State(state): State<Arc<UiState>>) -> Json<Option<Wiza
     let steps = match (wt.as_str(), sa.as_str()) {
         ("pack", "create_app") => pack_create_steps(),
         ("pack", "update_app") => pack_update_steps(),
+        ("pack", "create_ext") => pack_create_ext_steps(),
+        ("pack", "update_ext") => pack_update_ext_steps(),
+        ("pack", "add_ext") => pack_add_ext_steps(),
         ("bundle", "create") => bundle_create_steps(),
         ("bundle", "update") => bundle_update_steps(),
+        ("bundle", "validate") => bundle_path_steps(
+            "Validate Bundle",
+            "Preview the normalized bundle plan without writing files.",
+        ),
+        ("bundle", "doctor") => bundle_path_steps("Doctor", "Run doctor checks against a bundle."),
+        ("bundle", "inspect") => {
+            bundle_path_steps("Inspect", "Inspect bundle workspace or artifact metadata.")
+        }
         _ => vec![],
     };
     Json(Some(WizardStepsResponse {
@@ -706,6 +865,11 @@ fn execute_wizard(
     answers: &BTreeMap<String, serde_json::Value>,
     locale: &str,
 ) -> ExecutionResult {
+    // Bundle direct commands (doctor/inspect/validate) run without AnswerDocument
+    if wizard_type == "bundle" && matches!(sub_action, "doctor" | "inspect" | "validate") {
+        return execute_bundle_direct(sub_action, answers, locale);
+    }
+
     let program = match wizard_type {
         "pack" => "greentic-pack",
         "bundle" => "greentic-bundle",
@@ -759,8 +923,58 @@ fn execute_wizard(
         tmp.display().to_string(),
     ]);
 
-    match Command::new(&bin)
-        .args(&args)
+    run_command(&bin, &args, locale)
+}
+
+fn execute_bundle_direct(
+    sub_action: &str,
+    answers: &BTreeMap<String, serde_json::Value>,
+    locale: &str,
+) -> ExecutionResult {
+    let bin = match resolve_binary("greentic-bundle") {
+        Ok(b) => b,
+        Err(e) => {
+            return ExecutionResult {
+                success: false,
+                stdout: String::new(),
+                stderr: format!("Failed to resolve greentic-bundle: {e}"),
+                exit_code: None,
+            };
+        }
+    };
+
+    let target = answers
+        .get("bundle_target")
+        .and_then(|v| v.as_str())
+        .unwrap_or(".");
+
+    let mut args = vec![
+        "--locale".to_string(),
+        locale.to_string(),
+        sub_action.to_string(),
+        "--root".to_string(),
+        target.to_string(),
+        "--json".to_string(),
+    ];
+
+    // validate is done via wizard with dry-run
+    if sub_action == "validate" {
+        args = vec![
+            "--locale".to_string(),
+            locale.to_string(),
+            "build".to_string(),
+            "--root".to_string(),
+            target.to_string(),
+            "--dry-run".to_string(),
+        ];
+    }
+
+    run_command(&bin, &args, locale)
+}
+
+fn run_command(bin: &std::path::Path, args: &[String], locale: &str) -> ExecutionResult {
+    match Command::new(bin)
+        .args(args)
         .env("LANG", locale)
         .env("LC_ALL", locale)
         .stdin(Stdio::null())
@@ -777,7 +991,7 @@ fn execute_wizard(
         Err(e) => ExecutionResult {
             success: false,
             stdout: String::new(),
-            stderr: format!("Failed to execute {program}: {e}"),
+            stderr: format!("Failed to execute {}: {e}", bin.display()),
             exit_code: None,
         },
     }
@@ -792,6 +1006,9 @@ fn build_answer_document(
     match (wizard_type, sub_action) {
         ("pack", "create_app") => build_pack_create_answer_document(answers, locale),
         ("pack", "update_app") => build_pack_update_answer_document(answers, locale),
+        ("pack", "create_ext") => build_pack_create_ext_answer_document(answers, locale),
+        ("pack", "update_ext") => build_pack_update_answer_document(answers, locale),
+        ("pack", "add_ext") => build_pack_add_ext_answer_document(answers, locale),
         ("bundle", "create") => build_bundle_answer_document(answers, locale),
         _ => serde_json::json!({}),
     }
@@ -905,6 +1122,94 @@ fn build_pack_update_answer_document(
         "schema_version": "1.0.0",
         "locale": locale,
         "answers": doc_answers,
+        "locks": {}
+    })
+}
+
+fn build_pack_create_ext_answer_document(
+    answers: &BTreeMap<String, serde_json::Value>,
+    locale: &str,
+) -> serde_json::Value {
+    let pack_dir = answers
+        .get("pack_dir")
+        .and_then(|v| v.as_str())
+        .unwrap_or("./");
+    let catalog_ref = answers
+        .get("extension_catalog_ref")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+    let type_id = answers
+        .get("extension_type_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+    let template_id = answers
+        .get("extension_template_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+
+    serde_json::json!({
+        "wizard_id": "greentic-pack.wizard.run",
+        "schema_id": "greentic-pack.wizard.answers",
+        "schema_version": "1.0.0",
+        "locale": locale,
+        "answers": {
+            "selected_actions": [
+                "main.create_extension_pack",
+                "create_extension_pack.start"
+            ],
+            "pack_dir": pack_dir,
+            "extension_operation": "create_extension_pack",
+            "extension_catalog_ref": catalog_ref,
+            "extension_type_id": type_id,
+            "extension_template_id": template_id,
+            "extension_template_qa_answers": {},
+            "extension_edit_answers": {},
+            "run_doctor": true,
+            "run_build": true,
+            "sign": false,
+            "mode": "interactive"
+        },
+        "locks": {}
+    })
+}
+
+fn build_pack_add_ext_answer_document(
+    answers: &BTreeMap<String, serde_json::Value>,
+    locale: &str,
+) -> serde_json::Value {
+    let pack_dir = answers
+        .get("pack_dir")
+        .and_then(|v| v.as_str())
+        .unwrap_or(".");
+    let catalog_ref = answers
+        .get("extension_catalog_ref")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+    let type_id = answers
+        .get("extension_type_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+
+    serde_json::json!({
+        "wizard_id": "greentic-pack.wizard.run",
+        "schema_id": "greentic-pack.wizard.answers",
+        "schema_version": "1.0.0",
+        "locale": locale,
+        "answers": {
+            "selected_actions": [
+                "main.add_extension",
+                "add_extension.start"
+            ],
+            "pack_dir": pack_dir,
+            "extension_operation": "add_extension",
+            "extension_catalog_ref": catalog_ref,
+            "extension_type_id": type_id,
+            "extension_edit_answers": {},
+            "run_doctor": true,
+            "run_build": true,
+            "sign": false,
+            "mode": "interactive"
+        },
         "locks": {}
     })
 }
