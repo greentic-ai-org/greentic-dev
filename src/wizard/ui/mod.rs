@@ -696,8 +696,19 @@ fn build_bundle_answer_document(
             .get("app_pack_scope")
             .and_then(|v| v.as_str())
             .unwrap_or("global");
+        // Derive pack_id from reference (last segment or full ref)
+        let pack_id = reference
+            .rsplit('/')
+            .next()
+            .unwrap_or(reference)
+            .split(':')
+            .next()
+            .unwrap_or(reference);
         app_packs.push(serde_json::json!({
             "reference": reference,
+            "detected_kind": "reference",
+            "pack_id": pack_id,
+            "display_name": pack_id,
             "mapping": {
                 "scope": scope
             }
