@@ -1114,6 +1114,7 @@ fn execute_wizard(
         "apply".to_string(),
         "--answers".to_string(),
         tmp.display().to_string(),
+        "--migrate".to_string(),
     ]);
 
     run_command(&bin, &args, locale)
