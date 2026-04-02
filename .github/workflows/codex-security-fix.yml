@@ -16,6 +16,11 @@ permissions:
   contents: write
   pull-requests: write
   security-events: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   security-fix:
     uses: greenticai/.github/.github/workflows/codex-security-fix.yml@main
@@ -23,4 +28,3 @@ jobs:
       branch: ${{ github.event.inputs.branch || '' }}
       max_alerts: ${{ github.event.inputs.max_alerts || '20' }}
     secrets: inherit
-
