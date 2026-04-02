@@ -1,7 +1,9 @@
 .github/workflows/perf.yml
 Cargo.lock
 Cargo.toml
+SECURITY_FIX_REPORT.md
 benches/perf.rs
+pr-changed-files.txt
 src/component_cli.rs
 src/dev_runner/runner.rs
 src/dev_runner/schema.rs
