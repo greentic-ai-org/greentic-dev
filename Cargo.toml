@@ -1,6 +1,6 @@
 [package]
 name = "greentic-dev"
-version = "0.4.70"
+version = "0.4.71"
 edition = "2024"
 description = "Developer CLI and local tooling for Greentic flows, packs, and components"
 license = "MIT"
@@ -37,8 +37,8 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_cbor = "0.11"
 toml = "1"
-toml_edit = "0.23"
-semver = "1.0"
+toml_edit = "0.25"
+semver = "1"
 sha2 = "0.11"
 time = { version = "0.3", features = ["macros", "formatting"] }
 wit-component = "0.246"
@@ -92,7 +92,7 @@ greentic-secrets-api = "0.4"
 async-trait = "0.1"
 assert_cmd = "2"
 predicates = "3"
-criterion = "0.5"
+criterion = "0.8"
 
 [[bench]]
 name = "perf"
