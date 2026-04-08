@@ -253,7 +253,7 @@ fn install_cargo_binstall() -> Result<()> {
 fn installed_cargo_binstall_version() -> Result<Option<Version>> {
     let output = Command::new("cargo")
         .arg("binstall")
-        .arg("--version")
+        .arg("-V")
         .stdin(Stdio::null())
         .stderr(Stdio::null())
         .output();
@@ -265,8 +265,8 @@ fn installed_cargo_binstall_version() -> Result<Option<Version>> {
         return Ok(None);
     }
 
-    let stdout = String::from_utf8(output.stdout)
-        .context("`cargo binstall --version` returned non-UTF8 output")?;
+    let stdout =
+        String::from_utf8(output.stdout).context("`cargo binstall -V` returned non-UTF8 output")?;
     parse_installed_cargo_binstall_version(&stdout)
 }
 

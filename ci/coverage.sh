@@ -15,6 +15,9 @@ POLICY_FILE="${COVERAGE_POLICY_FILE:-coverage-policy.json}"
 REPORT_DIR="${COVERAGE_REPORT_DIR:-target/coverage}"
 REPORT_FILE="${COVERAGE_REPORT_FILE:-${REPORT_DIR}/coverage.json}"
 COVERAGE_SKIP_RUN="${COVERAGE_SKIP_RUN:-false}"
+TOOLCHAIN_FILE="rust-toolchain.toml"
+TOOLCHAIN_CHANNEL_DEFAULT="stable"
+TOOLCHAIN_CHANNEL="${RUSTUP_TOOLCHAIN:-$TOOLCHAIN_CHANNEL_DEFAULT}"
 
 if command -v python3 >/dev/null 2>&1; then
   PYTHON_BIN="python3"
@@ -34,6 +37,33 @@ fi
 
 log() {
   echo "[coverage] $*"
+}
+
+resolve_toolchain() {
+  if [[ ! -r "${TOOLCHAIN_FILE}" ]]; then
+    return 0
+  fi
+  local resolved
+  if ! resolved=$("${PYTHON_BIN}" - <<'PY'
+import pathlib
+
+path = pathlib.Path("rust-toolchain.toml")
+text = path.read_text()
+channel = ""
+for line in text.splitlines():
+    line = line.strip()
+    if line.startswith("channel") and "=" in line:
+        channel = line.split("=", 1)[1].strip().strip('"')
+        break
+print(channel)
+PY
+  ); then
+    return 1
+  fi
+  resolved=$(printf '%s' "${resolved}" | tr -d '\r')
+  if [[ -n "${resolved}" ]]; then
+    TOOLCHAIN_CHANNEL="${resolved}"
+  fi
 }
 
 print_policy_missing_instructions() {
@@ -88,21 +118,25 @@ ensure_llvm_tools() {
     echo "[coverage] rustup is required to add llvm-tools-preview" >&2
     return 1
   fi
-  if rustup component list --installed | grep -q '^llvm-tools-preview'; then
+  if rustup component list --toolchain "${TOOLCHAIN_CHANNEL}" --installed | grep -q '^llvm-tools-preview'; then
     return 0
   fi
   if [[ -n "${OFFLINE_FLAG}" ]]; then
     echo "[coverage] llvm-tools-preview is missing and offline mode is enabled" >&2
     return 1
   fi
-  log "installing llvm-tools-preview"
-  rustup component add llvm-tools-preview
+  log "installing llvm-tools-preview for toolchain ${TOOLCHAIN_CHANNEL}"
+  rustup component add --toolchain "${TOOLCHAIN_CHANNEL}" llvm-tools-preview
 }
 
 if [[ ! -f "${POLICY_FILE}" ]]; then
   print_policy_missing_instructions
   exit "${POLICY_MISSING_EXIT_CODE}"
 fi
+
+resolve_toolchain
+export RUSTUP_TOOLCHAIN="${TOOLCHAIN_CHANNEL}"
+log "using rust toolchain ${RUSTUP_TOOLCHAIN}"
 
 log "ensuring coverage tools are installed"
 if [[ "${COVERAGE_SKIP_RUN}" != "true" ]]; then
