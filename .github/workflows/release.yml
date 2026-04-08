@@ -3,9 +3,9 @@ name: Release
 on:
   # Branch pushes to master and manual dispatch:
   # - run CI (build/test)
-  # - publish to crates.io
   # - build release artifacts
   # - create/update a GitHub Release
+  # - publish to crates.io
   push:
     branches:
       - main
@@ -22,80 +22,10 @@ jobs:
   ci:
     uses: ./.github/workflows/ci.yml
 
-  publish:
-    name: Publish
-    needs: ci
-    runs-on: ubuntu-latest
-    env:
-      CARGO_TERM_COLOR: always
-      CARGO_NET_RETRY: "10"
-      CARGO_HTTP_CHECK_REVOKE: "false"
-      CARGO_HOME: ${{ github.workspace }}/.cargo-${{ github.job }}-${{ github.run_id }}
-      CARGO_TARGET_DIR: ${{ github.workspace }}/.target-${{ github.job }}-${{ github.run_id }}
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Free disk space
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          sudo rm -rf /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL /usr/share/dotnet || true
-          df -h
-
-      - name: Use Rust 1.94.0
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: 1.94.0
-
-      - name: Add cargo bin to PATH
-        run: echo "${CARGO_HOME}/bin" >> "$GITHUB_PATH"
-
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ${{ env.CARGO_HOME }}/registry/index
-            ${{ env.CARGO_HOME }}/registry/cache
-            ${{ env.CARGO_HOME }}/git/db
-            ${{ env.CARGO_TARGET_DIR }}
-          key: release-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Fetch dependencies
-        run: cargo fetch --locked
-
-      - name: Cargo package (dry-run)
-        run: cargo package --locked --allow-dirty --no-verify || true
-
-      - name: Publish to crates.io
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: |
-          set -eo pipefail
-          set +e
-          publish_output=$(cargo publish --locked 2>&1)
-          publish_status=$?
-          set -e
-
-          printf "%s\n" "$publish_output"
-
-          if [ "$publish_status" -eq 0 ]; then
-            exit 0
-          fi
-
-          if printf "%s\n" "$publish_output" | grep -qi "already exists on crates.io index"; then
-            echo "crate version already published; skipping publish step."
-            echo "crate version already on crates.io; no new publish performed."
-            exit 0
-          fi
-
-          exit "$publish_status"
-
   dist:
     name: Build release binaries (${{ matrix.target }})
     runs-on: ${{ matrix.os }}
-    needs: publish
+    needs: ci
     strategy:
       matrix:
         include:
@@ -120,7 +50,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
       - name: Free disk space
         if: runner.os == 'Linux'
         shell: bash
@@ -193,8 +122,8 @@ jobs:
 
   release:
     name: GitHub Release
-    needs: [publish, dist]
-    if: needs.publish.result == 'success' && needs.dist.result == 'success'
+    needs: dist
+    if: needs.dist.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -226,3 +155,74 @@ jobs:
           name: greentic-dev v${{ steps.version.outputs.version }}
           files: dist/**/*.tgz
           generate_release_notes: true
+
+  publish:
+    name: Publish
+    needs: release
+    if: needs.release.result == 'success'
+    runs-on: ubuntu-latest
+    env:
+      CARGO_TERM_COLOR: always
+      CARGO_NET_RETRY: "10"
+      CARGO_HTTP_CHECK_REVOKE: "false"
+      CARGO_HOME: ${{ github.workspace }}/.cargo-${{ github.job }}-${{ github.run_id }}
+      CARGO_TARGET_DIR: ${{ github.workspace }}/.target-${{ github.job }}-${{ github.run_id }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Free disk space
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo rm -rf /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL /usr/share/dotnet || true
+          df -h
+
+      - name: Use Rust 1.94.0
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.94.0
+
+      - name: Add cargo bin to PATH
+        run: echo "${CARGO_HOME}/bin" >> "$GITHUB_PATH"
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.CARGO_HOME }}/registry/index
+            ${{ env.CARGO_HOME }}/registry/cache
+            ${{ env.CARGO_HOME }}/git/db
+            ${{ env.CARGO_TARGET_DIR }}
+          key: release-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Fetch dependencies
+        run: cargo fetch --locked
+
+      - name: Cargo package (dry-run)
+        run: cargo package --locked --allow-dirty --no-verify || true
+
+      - name: Publish to crates.io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          set -eo pipefail
+          set +e
+          publish_output=$(cargo publish --locked 2>&1)
+          publish_status=$?
+          set -e
+
+          printf "%s\n" "$publish_output"
+
+          if [ "$publish_status" -eq 0 ]; then
+            exit 0
+          fi
+
+          if printf "%s\n" "$publish_output" | grep -qi "already exists on crates.io index"; then
+            echo "crate version already published; skipping publish step."
+            echo "crate version already on crates.io; no new publish performed."
+            exit 0
+          fi
+
+          exit "$publish_status"
