@@ -177,7 +177,13 @@ fn runner_help_passthrough_via_pack_run() {
 #[test]
 fn mcp_compose_passthrough() {
     assert_passthrough_help(
-        &["mcp", "--compose", "./weatherapi.wasm", "-o", "weatherapi.component.wasm"],
+        &[
+            "mcp",
+            "--compose",
+            "./weatherapi.wasm",
+            "-o",
+            "weatherapi.component.wasm",
+        ],
         &["mcp:compose:./weatherapi.wasm:-o:weatherapi.component.wasm"],
     );
 }
