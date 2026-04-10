@@ -83,7 +83,7 @@ struct InstallSpec {
     bin_name: &'static str,
 }
 
-const DELEGATED_INSTALL_SPECS: [InstallSpec; 7] = [
+const DELEGATED_INSTALL_SPECS: [InstallSpec; 8] = [
     InstallSpec {
         crate_name: "greentic-component",
         bin_name: "greentic-component",
@@ -111,6 +111,10 @@ const DELEGATED_INSTALL_SPECS: [InstallSpec; 7] = [
     InstallSpec {
         crate_name: "greentic-secrets",
         bin_name: "greentic-secrets",
+    },
+    InstallSpec {
+        crate_name: "greentic-mcp",
+        bin_name: "greentic-mcp",
     },
 ];
 
