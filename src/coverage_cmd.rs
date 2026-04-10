@@ -403,9 +403,11 @@ impl CoverageReport {
 
 fn relativize_path(root: &Path, raw: &str) -> String {
     let path = PathBuf::from(raw);
+    let canonical_root = root.canonicalize().ok();
     path.canonicalize()
         .ok()
         .and_then(|canon| {
+            let root = canonical_root.as_deref().unwrap_or(root);
             canon
                 .strip_prefix(root)
                 .ok()
