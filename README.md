@@ -63,7 +63,9 @@ Install delegated tools explicitly with `greentic-dev install tools` (or `greent
 - `greentic-dev pack …` → `greentic-pack` (components, update, build, doctor/inspect, run via greentic-runner-cli)
 - `greentic-dev gui …` → `greentic-gui` helpers
 - `greentic-dev secrets …` → `greentic-secrets` helpers
-- `greentic-dev mcp …` → MCP doctor (optional feature)
+- `greentic-dev mcp doctor …` → built-in MCP doctor
+- `greentic-dev mcp --compose …` → `greentic-mcp compose …`
+- `greentic-dev mcp …` → `greentic-mcp` passthrough for other MCP commands
 - `greentic-dev wizard …` → deterministic plan-first orchestration (see `docs/wizard/README.md`)
 
 Links to upstream CLI docs for the full flag sets:

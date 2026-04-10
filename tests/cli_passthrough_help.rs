@@ -11,7 +11,6 @@ const COMPONENT_HELP: &str =
 const PACK_HELP: &str = "PACK_HELP build lint components update new sign verify gui inspect doctor plan events config run init new-provider";
 const RUNNER_HELP: &str = "RUNNER_HELP --pack --entry --input --json";
 const GUI_HELP: &str = "GUI_HELP serve pack-dev";
-
 struct StubBins {
     _dir: TempDir,
     flow: PathBuf,
@@ -19,6 +18,7 @@ struct StubBins {
     pack: PathBuf,
     runner: PathBuf,
     gui: PathBuf,
+    mcp: PathBuf,
 }
 
 fn write_stub(dir: &Path, name: &str, output: &str) -> PathBuf {
@@ -45,6 +45,30 @@ fn write_stub(dir: &Path, name: &str, output: &str) -> PathBuf {
     path
 }
 
+fn write_mcp_stub(dir: &Path) -> PathBuf {
+    #[cfg(windows)]
+    let path = dir.join("greentic-mcp.cmd");
+    #[cfg(not(windows))]
+    let path = dir.join("greentic-mcp");
+
+    #[cfg(windows)]
+    let script = "@echo mcp:%1:%2:%3:%4\r\n";
+    #[cfg(not(windows))]
+    let script = "#!/bin/sh\necho \"mcp:$1:$2:$3:$4\"\n";
+
+    fs::write(&path, script).unwrap();
+
+    #[cfg(not(windows))]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = fs::metadata(&path).unwrap().permissions();
+        perms.set_mode(0o755);
+        fs::set_permissions(&path, perms).unwrap();
+    }
+
+    path
+}
+
 fn build_stubs() -> StubBins {
     let dir = TempDir::new().unwrap();
     let root = dir.path().to_path_buf();
@@ -55,6 +79,7 @@ fn build_stubs() -> StubBins {
         pack: write_stub(&root, "greentic-pack", PACK_HELP),
         runner: write_stub(&root, "greentic-runner-cli", RUNNER_HELP),
         gui: write_stub(&root, "greentic-gui", GUI_HELP),
+        mcp: write_mcp_stub(&root),
     }
 }
 
@@ -65,7 +90,8 @@ fn assert_passthrough_help(args: &[&str], expected: &[&str]) {
         .env("GREENTIC_DEV_BIN_GREENTIC_COMPONENT", &stubs.component)
         .env("GREENTIC_DEV_BIN_GREENTIC_PACK", &stubs.pack)
         .env("GREENTIC_DEV_BIN_GREENTIC_RUNNER_CLI", &stubs.runner)
-        .env("GREENTIC_DEV_BIN_GREENTIC_GUI", &stubs.gui);
+        .env("GREENTIC_DEV_BIN_GREENTIC_GUI", &stubs.gui)
+        .env("GREENTIC_DEV_BIN_GREENTIC_MCP", &stubs.mcp);
 
     let mut assert = cmd.args(args).assert().success();
     for item in expected {
@@ -145,5 +171,13 @@ fn runner_help_passthrough_via_pack_run() {
     assert_passthrough_help(
         &["pack", "run", "--help"],
         &["RUNNER_HELP", "--pack", "--entry"],
+    );
+}
+
+#[test]
+fn mcp_compose_passthrough() {
+    assert_passthrough_help(
+        &["mcp", "--compose", "./weatherapi.wasm", "-o", "weatherapi.component.wasm"],
+        &["mcp:compose:./weatherapi.wasm:-o:weatherapi.component.wasm"],
     );
 }

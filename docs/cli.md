@@ -19,7 +19,9 @@
 
 - `gui ...` delegates to `greentic-gui`.
 - `secrets ...` wraps `greentic-secrets` convenience flows.
-- `mcp doctor` is available when the optional feature is enabled.
+- `mcp doctor ...` uses the built-in MCP provider metadata inspector.
+- `mcp --compose ...` delegates to `greentic-mcp compose ...`.
+- other non-`doctor` `mcp` invocations delegate directly to `greentic-mcp`.
 
 ## CBOR
 
@@ -139,3 +141,4 @@ Other non-launcher IDs are rejected by `validate` / `apply`.
   - `GREENTIC_DEV_BIN_GREENTIC_RUNNER_CLI`
   - `GREENTIC_DEV_BIN_GREENTIC_GUI`
   - `GREENTIC_DEV_BIN_GREENTIC_SECRETS`
+  - `GREENTIC_DEV_BIN_GREENTIC_MCP`

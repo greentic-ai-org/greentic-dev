@@ -21,6 +21,7 @@ use greentic_dev::wizard;
 fn main() -> Result<()> {
     let argv: Vec<OsString> = env::args_os().collect();
     maybe_delegate_external_subcommand(&argv);
+    maybe_delegate_mcp_passthrough(&argv)?;
     maybe_render_localized_help(&argv);
     let selected_locale = greentic_dev::i18n::select_locale(
         greentic_dev::i18n::cli_locale_from_argv(&argv).as_deref(),
@@ -85,6 +86,47 @@ fn main() -> Result<()> {
         }
         Command::Secrets(secrets) => run_secrets_command(secrets, &selected_locale),
     }
+}
+
+fn maybe_delegate_mcp_passthrough(argv: &[OsString]) -> Result<()> {
+    let Some(raw_subcmd) = argv.get(1) else {
+        return Ok(());
+    };
+    let Some(subcmd) = raw_subcmd.to_str() else {
+        return Ok(());
+    };
+    if subcmd != "mcp" {
+        return Ok(());
+    }
+
+    let Some(raw_mcp_arg) = argv.get(2) else {
+        return Ok(());
+    };
+    let Some(mcp_arg) = raw_mcp_arg.to_str() else {
+        return Ok(());
+    };
+
+    if matches!(mcp_arg, "doctor" | "-h" | "--help") {
+        return Ok(());
+    }
+
+    let bin = resolve_binary("greentic-mcp")?;
+    let delegated_args = rewritten_mcp_passthrough_args(&argv[2..]);
+    let status = run_passthrough(&bin, &delegated_args, false)?;
+    std::process::exit(status.code().unwrap_or(1));
+}
+
+fn rewritten_mcp_passthrough_args(args: &[OsString]) -> Vec<OsString> {
+    if let Some(first) = args.first()
+        && first.to_str() == Some("--compose")
+    {
+        let mut rewritten = Vec::with_capacity(args.len());
+        rewritten.push(OsString::from("compose"));
+        rewritten.extend(args[1..].iter().cloned());
+        return rewritten;
+    }
+
+    args.to_vec()
 }
 
 fn maybe_render_localized_help(argv: &[OsString]) {
