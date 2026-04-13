@@ -19,5 +19,5 @@ jobs:
     uses: greenticai/.github/.github/workflows/dev-publish.yml@main
     with:
       crates: "greentic-dev"
-      setup-script: "if ! command -v cargo-binstall >/dev/null 2>&1; then cargo install cargo-binstall --locked; fi && cargo binstall -y greentic-flow greentic-component --force"
+      setup-script: "if ! command -v cargo-binstall >/dev/null 2>&1; then cargo install cargo-binstall --locked; fi && cargo binstall -y greentic-flow greentic-component greentic-pack --force"
     secrets: inherit
