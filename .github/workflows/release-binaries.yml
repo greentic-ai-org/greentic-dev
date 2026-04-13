@@ -1,0 +1,26 @@
+name: Release Binaries
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    uses: greenticai/.github/.github/workflows/release-binaries.yml@main
+    with:
+      package: greentic-dev
+      binary: greentic-dev
+      extra-files: |
+        README.md
+        LICENSE-MIT
+        LICENSE-APACHE
+    secrets: inherit
