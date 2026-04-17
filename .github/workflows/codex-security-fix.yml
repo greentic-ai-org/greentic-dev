@@ -23,6 +23,8 @@ concurrency:
 
 jobs:
   security-fix:
+    # Do not run on fork PRs to avoid passing untrusted refs into privileged remediation workflows.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     uses: greenticai/.github/.github/workflows/codex-security-fix.yml@main
     with:
       branch: ${{ github.event.inputs.branch || '' }}
