@@ -15,22 +15,8 @@ jobs:
     uses: greenticai/.github/.github/workflows/pr-ci.yml@main
     with:
       variant: host
-      # dependency-review already runs via dependency-review.yml (which also
-      # wires the Codex remediation path); avoid duplicate runs.
-      run-dependency-review: false
 
-  # Entangled: installs delegated tool binaries via greentic-dev and runs a
-  # release-mode build as a pack-smoke gate. pr-ci.yml doesn't cover either.
-  pack-smoke:
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    env:
-      CARGO_TERM_COLOR: always
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.95.0
-      - uses: Swatinem/rust-cache@v2
-      - name: Install delegated tool binaries via greentic-dev
-        run: cargo run -p greentic-dev --locked -- install tools --latest
-      - name: Release build (pack smoke)
-        run: cargo build --workspace --locked --release
+  # pack-smoke moved to nightly.yml (plans/binary-bifurcation.md Phase A).
+  # The job installs delegated tool binaries and runs a workspace release
+  # build — ~40 minutes on every PR is too expensive for the signal (release
+  # build regression is rare and already covered by weekly-stable cuts).

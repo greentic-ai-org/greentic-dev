@@ -17,6 +17,7 @@ fn fixture_component() -> (PathBuf, PathBuf) {
 }
 
 #[test]
+#[ignore = "requires `greentic-component` on PATH; run after `cargo binstall greentic-component` or via `greentic-dev install tools`"]
 fn doctor_reports_export_failures_for_legacy_fixture() {
     let (wasm, _) = fixture_component();
     cargo_bin_cmd!("greentic-dev")
@@ -28,6 +29,7 @@ fn doctor_reports_export_failures_for_legacy_fixture() {
 }
 
 #[test]
+#[ignore = "requires `greentic-component` on PATH; run after `cargo binstall greentic-component` or via `greentic-dev install tools`"]
 fn doctor_fails_without_manifest_when_separated() {
     let (wasm, manifest) = fixture_component();
     let temp = tempdir().expect("tempdir");
