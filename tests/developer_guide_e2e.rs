@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 use zip::ZipArchive;
 
 #[test]
+#[ignore = "requires `greentic-flow` / `greentic-component` / `greentic-pack` on PATH; run after `greentic-dev install tools`"]
 fn developer_guide_happy_path() {
     // Keep temp artifacts inside the workspace so path safety checks pass.
     let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -134,6 +135,7 @@ fn developer_guide_happy_path() {
 }
 
 #[test]
+#[ignore = "requires `greentic-pack` on PATH; run after `greentic-dev install tools`"]
 fn developer_guide_hello2_remote_templates_pack_run() {
     // Mirrors the developer-guide "hello2-pack" example using an OCI component reference.
     // TODO: This currently fails because the runner cannot resolve the OCI component from the pack.
