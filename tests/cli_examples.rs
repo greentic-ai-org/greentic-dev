@@ -3,6 +3,7 @@ use predicates::prelude::PredicateBooleanExt;
 use predicates::str::contains;
 
 #[test]
+#[ignore] // requires `greentic-flow` on PATH — integration-only
 fn flow_doctor_example_succeeds() {
     let mut cmd = cargo_bin_cmd!("greentic-dev");
     cmd.args([
@@ -17,6 +18,7 @@ fn flow_doctor_example_succeeds() {
 }
 
 #[test]
+#[ignore] // requires `greentic-component` on PATH — integration-only
 fn component_doctor_example_reports_expected_failures() {
     let wasm = "fixtures/components/dev.greentic.echo/component.wasm";
     let manifest = "fixtures/components/dev.greentic.echo/component.manifest.json";
