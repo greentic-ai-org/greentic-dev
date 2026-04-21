@@ -15,9 +15,6 @@ jobs:
     uses: greenticai/.github/.github/workflows/pr-ci.yml@main
     with:
       variant: host
-      # dependency-review already runs via dependency-review.yml (which also
-      # wires the Codex remediation path); avoid duplicate runs.
-      run-dependency-review: false
 
   # Entangled: installs delegated tool binaries via greentic-dev and runs a
   # release-mode build as a pack-smoke gate. pr-ci.yml doesn't cover either.
