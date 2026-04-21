@@ -64,3 +64,23 @@ jobs:
             target/coverage/**
             target/**/*.dSYM
           if-no-files-found: ignore
+
+  # Release-mode pack-smoke gate. Moved off ci.yml (PR-time) per
+  # plans/binary-bifurcation.md Phase A — the ~40-minute release build
+  # gave thin signal on every PR. Kept as a sibling nightly job so the
+  # release path still gets a daily verification; `workflow_dispatch`
+  # above makes it manually re-runnable.
+  pack-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      CARGO_TERM_COLOR: always
+      RUSTUP_TOOLCHAIN: "1.95.0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.95.0
+      - uses: Swatinem/rust-cache@v2
+      - name: Install delegated tool binaries via greentic-dev
+        run: cargo run -p greentic-dev --locked -- install tools --latest
+      - name: Release build (pack smoke)
+        run: cargo build --workspace --locked --release
