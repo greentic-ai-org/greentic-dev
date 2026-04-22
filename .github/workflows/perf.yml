@@ -3,7 +3,7 @@ name: Perf (lightweight)
 on:
   schedule:
     # 04:45 UTC — assigned slot (plans/binary-bifurcation.md Phase A.4 Wave 2).
-    - cron: "45 4 * * *"
+    - cron: "40 3 * * *"
   push:
     branches: [main]
   workflow_dispatch:
