@@ -1,11 +1,8 @@
 name: CI
-
 on:
   workflow_call:
   pull_request:
     branches: [main]
-  workflow_dispatch: {}
-
 permissions:
   contents: read
 
@@ -14,80 +11,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
-    name: Test (stable)
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    env:
-      CARGO_TERM_COLOR: always
-      CARGO_NET_RETRY: "10"
-      CARGO_HTTP_CHECK_REVOKE: "false"
-      RUSTFLAGS: "-D warnings"
-      CARGO_INCREMENTAL: "0"
-      CARGO_PROFILE_TEST_DEBUG: "1"
+  ci:
+    uses: greenticai/.github/.github/workflows/pr-ci.yml@main
+    with:
+      variant: host
 
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: false
-          fetch-depth: 0
-
-      - name: Free disk space
-        run: |
-          sudo rm -rf /usr/local/lib/android /opt/ghc /usr/share/dotnet || true
-          docker system prune -af || true
-
-      - name: Use Rust 1.94.0
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: 1.94.0
-
-      - name: Configure cargo directories
-        run: |
-          echo "CARGO_HOME=${{ runner.temp }}/cargo-${{ github.job }}-${{ github.run_id }}" >> "$GITHUB_ENV"
-          echo "CARGO_TARGET_DIR=${{ runner.temp }}/target-${{ github.job }}-${{ github.run_id }}" >> "$GITHUB_ENV"
-          echo "CARGO_TARGET_DIR_RELEASE=${{ runner.temp }}/target-release-${{ github.job }}-${{ github.run_id }}" >> "$GITHUB_ENV"
-          echo "${{ runner.temp }}/cargo-${{ github.job }}-${{ github.run_id }}/bin" >> "$GITHUB_PATH"
-
-      - name: Install tomlq
-        run: cargo install tomlq --locked
-
-      - name: Prime caches
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ env.CARGO_HOME }}/registry/index
-            ${{ env.CARGO_HOME }}/registry/cache
-            ${{ env.CARGO_HOME }}/git/db
-          key: ci-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.job }}
-          restore-keys: |
-            ci-${{ runner.os }}-${{ github.job }}-
-
-      - name: Install minimal deps
-        run: |
-          rustup --version
-          cargo --version
-          cargo fetch --locked
-
-      - name: Lint (clippy + fmt)
-        run: |
-          cargo fmt --all -- --check
-          cargo clippy --all --all-features --locked -- -D warnings
-
-      - name: Build (all)
-        run: cargo build --workspace --all-features --locked
-
-      - name: Install delegated tool binaries via greentic-dev
-        run: cargo run -p greentic-dev --locked -- install tools --latest
-
-      - name: Tests
-        run: cargo test --workspace --all-features --locked -- --nocapture
-
-      - name: Free space before release build
-        run: rm -rf "${CARGO_TARGET_DIR}" || true
-
-      - name: Pack smoke
-        if: hashFiles('**/Cargo.toml') != ''
-        env:
-          CARGO_TARGET_DIR: ${{ env.CARGO_TARGET_DIR_RELEASE }}
-        run: cargo build --workspace --locked --release
+  # pack-smoke moved to nightly.yml (plans/binary-bifurcation.md Phase A).
+  # The job installs delegated tool binaries and runs a workspace release
+  # build — ~40 minutes on every PR is too expensive for the signal (release
+  # build regression is rare and already covered by weekly-stable cuts).

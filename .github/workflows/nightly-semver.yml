@@ -1,0 +1,31 @@
+name: Nightly Semver Advisory
+
+# Advisory-mode cargo-semver-checks moved off pull_request onto a nightly
+# schedule. See plans/binary-bifurcation.md Phase A.4 Wave 2.
+# The real semver gate remains at weekly-stable-prepare on the main branch;
+# this is the compass, not the gate.
+
+on:
+  schedule:
+    # 06:11 UTC — staggered to avoid the 00/05/15/30/45 hot-spots.
+    - cron: "57 3 * * *"
+  workflow_dispatch:
+    inputs:
+      baseline-rev:
+        description: "Optional explicit baseline git ref (default: latest vX.Y.Z tag)"
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-semver-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  advisory:
+    uses: greenticai/.github/.github/workflows/nightly-semver-advisory.yml@main
+    with:
+      semver-baseline-rev: ${{ inputs.baseline-rev || '' }}
