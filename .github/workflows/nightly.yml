@@ -1,8 +1,13 @@
 name: Nightly
 
+# Nightly full build/test/coverage + release-mode pack-smoke. Gate + notify
+# pattern per plans/binary-bifurcation.md Phase A.7.
+
 on:
   schedule:
-    - cron: "17 2 * * *"
+    # 03:50 UTC — inside the 03:00-03:59 UTC nightly window per A.7.2
+    # (custom/heavy nightlies 03:35-03:59).
+    - cron: "50 3 * * *"
   workflow_dispatch: {}
 
 permissions:
@@ -13,7 +18,66 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.gate.outputs.should-run }}
+    steps:
+      - id: gate
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          WORKFLOW: ${{ github.workflow }}
+          HEAD_SHA: ${{ github.sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          emit() {
+            local should_run="$1"
+            local reason="$2"
+            echo "should-run=${should_run}" >> "${GITHUB_OUTPUT}"
+            {
+              echo "## Nightly gate"
+              echo ""
+              echo "- **Event:** \`${EVENT_NAME}\`"
+              echo "- **Workflow:** \`${WORKFLOW}\`"
+              echo "- **HEAD:** \`${HEAD_SHA}\`"
+              echo "- **Decision:** \`${should_run}\` — ${reason}"
+            } >> "${GITHUB_STEP_SUMMARY}"
+            echo "gate: should-run=${should_run} (${reason})"
+          }
+
+          if [ "${EVENT_NAME}" != "schedule" ]; then
+            emit true "non-schedule event (${EVENT_NAME:-unknown}) always runs"
+            exit 0
+          fi
+
+          last_sha=$(gh run list \
+            --repo "${REPO}" \
+            --workflow "${WORKFLOW}" \
+            --status success \
+            --event schedule \
+            --limit 1 \
+            --json headSha \
+            --jq '.[0].headSha // ""' 2>/dev/null || echo "")
+
+          if [ -z "${last_sha}" ]; then
+            emit true "no prior successful scheduled run — establishing baseline"
+            exit 0
+          fi
+
+          if [ "${last_sha}" = "${HEAD_SHA}" ]; then
+            emit false "unchanged since last successful scheduled run (${last_sha})"
+            exit 0
+          fi
+
+          emit true "changed since last successful scheduled run (${last_sha} → ${HEAD_SHA})"
+
   nightly:
+    needs: gate
+    if: needs.gate.outputs.should-run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
@@ -71,6 +135,8 @@ jobs:
   # release path still gets a daily verification; `workflow_dispatch`
   # above makes it manually re-runnable.
   pack-smoke:
+    needs: gate
+    if: needs.gate.outputs.should-run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
@@ -84,3 +150,14 @@ jobs:
         run: cargo run -p greentic-dev --locked -- install tools --latest
       - name: Release build (pack smoke)
         run: cargo build --workspace --locked --release
+
+  notify-failure:
+    needs: [gate, nightly, pack-smoke]
+    if: failure() && github.event_name == 'schedule'
+    uses: greenticai/.github/.github/workflows/notify-failure.yml@main
+    with:
+      workflow-name: nightly
+      repo: ${{ github.repository }}
+      step: nightly
+      error: "Nightly full build/test or release-mode pack-smoke failed."
+    secrets: inherit
