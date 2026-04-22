@@ -32,6 +32,7 @@ fn median(values: &mut [Duration; 3]) -> Duration {
 }
 
 #[test]
+#[ignore = "CPU-scaling assertion is chronically flaky on shared CI runners due to CPU steal; run locally with `cargo test -p greentic-dev --test perf_scaling -- --ignored`"]
 fn scaling_should_not_degrade_badly() {
     let mut one = [Duration::ZERO; 3];
     let mut four = [Duration::ZERO; 3];
