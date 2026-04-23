@@ -150,14 +150,3 @@ jobs:
         run: cargo run -p greentic-dev --locked -- install tools --latest
       - name: Release build (pack smoke)
         run: cargo build --workspace --locked --release
-
-  notify-failure:
-    needs: [gate, nightly, pack-smoke]
-    if: failure() && github.event_name == 'schedule'
-    uses: greenticai/.github/.github/workflows/notify-failure.yml@main
-    with:
-      workflow-name: nightly
-      repo: ${{ github.repository }}
-      step: nightly
-      error: "Nightly full build/test or release-mode pack-smoke failed."
-    secrets: inherit
