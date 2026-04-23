@@ -1856,7 +1856,7 @@ dependencies = [
 
 [[package]]
 name = "greentic-dev"
-version = "0.4.73"
+version = "0.4.74"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -1908,9 +1908,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-distributor-client"
-version = "0.4.41"
+version = "0.4.42"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bfa6d4112088b487595ca940bc4c418d2ca812acef5e8dc4152d44e53025580b"
+checksum = "8f64cb6f94cacec5b75d6eb260e8976f9484be192fe1b1fb8fe3a65126597549"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3750,7 +3750,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "27c6023962132f4b30eb4c172c91ce92d933da334c59c23cddee82358ddafb0b"
 dependencies = [
  "anyhow",
- "itertools 0.14.0",
+ "itertools 0.13.0",
  "proc-macro2",
  "quote",
  "syn",
