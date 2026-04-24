@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "Kötegelés átengedése (greentic-bundle)",
   "cli.command.cbor.about": "CBOR fájl dekódolása szöveggé",
   "cli.command.cbor.path": "A dekódolandó CBOR-fájl elérési útja",
   "cli.command.component.about": "Komponens átengedés (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "MCP-szolgáltató azonosítója vagy konfigurációs útvonal",
   "cli.command.pack.about": "Pack átengedés (greentic-pack; a pack run a greentic-runner-cli-t használja)",
   "cli.command.passthrough.args": "Közvetlenül a mögöttes parancsnak átadott argumentumok",
+  "cli.command.runner.about": "Futtató átengedése (greentic-runner)",
   "cli.command.secrets.about": "Kényelmi burkolók a titkokhoz",
   "cli.command.secrets.init.about": "Delegálás a greentic-secretsnek egy csomag titkainak inicializálásához",
   "cli.command.secrets.init.pack": "Az inicializálandó csomag (.gtpack) elérési útja",

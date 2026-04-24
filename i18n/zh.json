@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "Bundle 透传（greentic-bundle）",
   "cli.command.cbor.about": "将 CBOR 文件解码为文本",
   "cli.command.cbor.path": "要解码的 CBOR 文件路径",
   "cli.command.component.about": "组件透传（greentic-component）",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "MCP 提供方标识符或配置路径",
   "cli.command.pack.about": "打包透传（greentic-pack；pack run 使用 greentic-runner-cli）",
   "cli.command.passthrough.args": "直接传递给底层命令的参数",
+  "cli.command.runner.about": "Runner 透传（greentic-runner）",
   "cli.command.secrets.about": "Secrets 便捷包装器",
   "cli.command.secrets.init.about": "委托给 greentic-secrets 为 pack 初始化 secrets",
   "cli.command.secrets.init.pack": "要初始化的 pack（.gtpack）路径",

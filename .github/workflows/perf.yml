@@ -1,11 +1,10 @@
 name: Perf (lightweight)
 
 on:
+  # Nightly-only per plans/binary-bifurcation.md Phase A.8: push-trigger removed
+  # because post-merge perf runs were burning 15+ min without actionable signal.
   schedule:
-    # 04:45 UTC — assigned slot (plans/binary-bifurcation.md Phase A.4 Wave 2).
     - cron: "40 3 * * *"
-  push:
-    branches: [main]
   workflow_dispatch:
 
 jobs:

@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "Panolseuiliztli panoltia (greentic-bundle)",
   "cli.command.cbor.about": "Xicpatla se archivo CBOR itech tlajtol",
   "cli.command.cbor.path": "Ojtli para in archivo CBOR tlen mopatla",
   "cli.command.component.about": "Panoltiliztli de componente (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "Identificador de proveedor MCP noso ojtli de config",
   "cli.command.pack.about": "Panoltiliztli de pack (greentic-pack; pack run quipia greentic-runner-cli)",
   "cli.command.passthrough.args": "Argumentos tlen yawi directamente campa in comando tlen moneltoca",
+  "cli.command.runner.about": "Tlalohuani panoltia (greentic-runner)",
   "cli.command.secrets.about": "Tlapalehuiliztli envoltorios para secretos",
   "cli.command.secrets.init.about": "Xicdelegaro itech greentic-secrets para quipehualtiz secretos para se pack",
   "cli.command.secrets.init.pack": "Ohtli para in pack (.gtpack) para quipehualtiz",

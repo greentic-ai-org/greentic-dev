@@ -44,6 +44,8 @@ pub fn localized_help_command(locale: &str) -> clap::Command {
         ("flow", "cli.command.flow.about"),
         ("pack", "cli.command.pack.about"),
         ("component", "cli.command.component.about"),
+        ("bundle", "cli.command.bundle.about"),
+        ("runner", "cli.command.runner.about"),
         ("config", "cli.command.config.about"),
         ("coverage", "cli.command.coverage.about"),
         ("mcp", "cli.command.mcp.about"),
@@ -304,6 +306,10 @@ pub enum Command {
     Pack(PassthroughArgs),
     /// cli.command.component.about
     Component(PassthroughArgs),
+    /// cli.command.bundle.about
+    Bundle(PassthroughArgs),
+    /// cli.command.runner.about
+    Runner(PassthroughArgs),
     /// cli.command.config.about
     #[command(subcommand)]
     Config(ConfigCommand),

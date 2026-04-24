@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "Bundle nisqapaq passthrough (greentic-bundle)",
   "cli.command.cbor.about": "Huk CBOR willayta qillqaman tikray",
   "cli.command.cbor.path": "Qichuypaq CBOR willay kachkanan ñan",
   "cli.command.component.about": "Componente passthrough (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "MCP proveedor sutichiq utaq config ñan",
   "cli.command.pack.about": "Pack passthrough (greentic-pack; pack runqa greentic-runner-cli nisqata llamk'achin)",
   "cli.command.passthrough.args": "Uray kaq kamachiman chiqanta pasanapaq argumentos",
+  "cli.command.runner.about": "Runner nisqapaq passthrough (greentic-runner)",
   "cli.command.secrets.about": "Secretospaq yanapaq envolturas",
   "cli.command.secrets.init.about": "greentic-secretsman delegay huk packpaq secretos qallarinanpaq",
   "cli.command.secrets.init.pack": "Qallarichinapaq pack (.gtpack) ñan",

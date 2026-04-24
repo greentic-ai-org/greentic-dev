@@ -11,6 +11,8 @@ const COMPONENT_HELP: &str =
 const PACK_HELP: &str = "PACK_HELP build lint components update new sign verify gui inspect doctor plan events config run init new-provider";
 const RUNNER_HELP: &str = "RUNNER_HELP --pack --entry --input --json";
 const GUI_HELP: &str = "GUI_HELP serve pack-dev";
+const BUNDLE_HELP: &str = "BUNDLE_HELP info init build verify";
+const RUNNER_MAIN_HELP: &str = "RUNNER_MAIN_HELP info serve";
 struct StubBins {
     _dir: TempDir,
     flow: PathBuf,
@@ -19,6 +21,8 @@ struct StubBins {
     runner: PathBuf,
     gui: PathBuf,
     mcp: PathBuf,
+    bundle: PathBuf,
+    runner_main: PathBuf,
 }
 
 fn write_stub(dir: &Path, name: &str, output: &str) -> PathBuf {
@@ -80,6 +84,8 @@ fn build_stubs() -> StubBins {
         runner: write_stub(&root, "greentic-runner-cli", RUNNER_HELP),
         gui: write_stub(&root, "greentic-gui", GUI_HELP),
         mcp: write_mcp_stub(&root),
+        bundle: write_stub(&root, "greentic-bundle", BUNDLE_HELP),
+        runner_main: write_stub(&root, "greentic-runner", RUNNER_MAIN_HELP),
     }
 }
 
@@ -91,7 +97,9 @@ fn assert_passthrough_help(args: &[&str], expected: &[&str]) {
         .env("GREENTIC_DEV_BIN_GREENTIC_PACK", &stubs.pack)
         .env("GREENTIC_DEV_BIN_GREENTIC_RUNNER_CLI", &stubs.runner)
         .env("GREENTIC_DEV_BIN_GREENTIC_GUI", &stubs.gui)
-        .env("GREENTIC_DEV_BIN_GREENTIC_MCP", &stubs.mcp);
+        .env("GREENTIC_DEV_BIN_GREENTIC_MCP", &stubs.mcp)
+        .env("GREENTIC_DEV_BIN_GREENTIC_BUNDLE", &stubs.bundle)
+        .env("GREENTIC_DEV_BIN_GREENTIC_RUNNER", &stubs.runner_main);
 
     let mut assert = cmd.args(args).assert().success();
     for item in expected {
@@ -172,6 +180,70 @@ fn runner_help_passthrough_via_pack_run() {
         &["pack", "run", "--help"],
         &["RUNNER_HELP", "--pack", "--entry"],
     );
+}
+
+#[test]
+fn bundle_help_passthrough() {
+    assert_passthrough_help(
+        &["bundle", "--help"],
+        &["BUNDLE_HELP", "info", "init", "build", "verify"],
+    );
+}
+
+#[test]
+fn runner_help_passthrough() {
+    assert_passthrough_help(
+        &["runner", "--help"],
+        &["RUNNER_MAIN_HELP", "info", "serve"],
+    );
+}
+
+#[test]
+fn bundle_info_passthrough_forwards_args() {
+    let dir = TempDir::new().unwrap();
+    let stub = write_arg_echo_stub(dir.path(), "greentic-bundle");
+    let mut cmd = cargo_bin_cmd!("greentic-dev");
+    cmd.env("GREENTIC_DEV_BIN_GREENTIC_BUNDLE", &stub);
+    cmd.args(["bundle", "info", "my.gtbundle", "--json"]);
+    cmd.assert()
+        .success()
+        .stdout(contains("ARGS: info my.gtbundle --json"));
+}
+
+#[test]
+fn runner_info_passthrough_forwards_args() {
+    let dir = TempDir::new().unwrap();
+    let stub = write_arg_echo_stub(dir.path(), "greentic-runner");
+    let mut cmd = cargo_bin_cmd!("greentic-dev");
+    cmd.env("GREENTIC_DEV_BIN_GREENTIC_RUNNER", &stub);
+    cmd.args(["runner", "info", "my.gtpack", "--json"]);
+    cmd.assert()
+        .success()
+        .stdout(contains("ARGS: info my.gtpack --json"));
+}
+
+fn write_arg_echo_stub(dir: &Path, name: &str) -> PathBuf {
+    #[cfg(windows)]
+    let path = dir.join(format!("{name}.cmd"));
+    #[cfg(not(windows))]
+    let path = dir.join(name);
+
+    #[cfg(windows)]
+    let script = "@echo ARGS: %*\r\n";
+    #[cfg(not(windows))]
+    let script = "#!/bin/sh\necho \"ARGS: $*\"\n";
+
+    fs::write(&path, script).unwrap();
+
+    #[cfg(not(windows))]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = fs::metadata(&path).unwrap().permissions();
+        perms.set_mode(0o755);
+        fs::set_permissions(&path, perms).unwrap();
+    }
+
+    path
 }
 
 #[test]
