@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "Bundle ဖြတ်သန်းပေးမှု (greentic-bundle)",
   "cli.command.cbor.about": "CBOR ဖိုင်ကို စာသားအဖြစ် ဖြည်ပါ",
   "cli.command.cbor.path": "ဒီကုဒ်ဖြည်ရန် CBOR ဖိုင်၏ လမ်းကြောင်း",
   "cli.command.component.about": "Component passthrough (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "MCP provider identifier သို့မဟုတ် config လမ်းကြောင်း",
   "cli.command.pack.about": "Pack passthrough (greentic-pack; pack run သည် greentic-runner-cli ကို အသုံးပြုသည်)",
   "cli.command.passthrough.args": "အခြေခံ command သို့ တိုက်ရိုက်ပို့မည့် arguments များ",
+  "cli.command.runner.about": "Runner ဖြတ်သန်းပေးမှု (greentic-runner)",
   "cli.command.secrets.about": "Secrets အတွက် အဆင်ပြေသော wrapper များ",
   "cli.command.secrets.init.about": "pack တစ်ခုအတွက် secrets ကို စတင်သတ်မှတ်ရန် greentic-secrets သို့ လွှဲအပ်ပါ",
   "cli.command.secrets.init.pack": "စတင်သတ်မှတ်မည့် pack (.gtpack) ၏ လမ်းကြောင်း",

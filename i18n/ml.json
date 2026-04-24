@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "ബണ്ടിൽ പാസ്‌ത്രൂ (greentic-bundle)",
   "cli.command.cbor.about": "ഒരു CBOR ഫയൽ ടെക്സ്റ്റാക്കി ഡീകോഡ് ചെയ്യുക",
   "cli.command.cbor.path": "ഡീകോഡ് ചെയ്യാനുള്ള CBOR ഫയലിലേക്കുള്ള പാത",
   "cli.command.component.about": "കമ്പോണന്റ് പാസ്‌ത്രൂ (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "MCP പ്രൊവൈഡർ ഐഡന്റിഫയർ അല്ലെങ്കിൽ കോൺഫിഗ് പാത",
   "cli.command.pack.about": "പാക്ക് പാസ്‌ത്രൂ (greentic-pack; pack run greentic-runner-cli ഉപയോഗിക്കുന്നു)",
   "cli.command.passthrough.args": "അടിസ്ഥാന കമാൻഡിലേക്ക് നേരിട്ട് പാസ്സാക്കുന്ന ആർഗ്യുമെന്റുകൾ",
+  "cli.command.runner.about": "റണ്ണർ പാസ്‌ത്രൂ (greentic-runner)",
   "cli.command.secrets.about": "സീക്രെറ്റുകൾക്കായുള്ള സൗകര്യപ്രദമായ റാപ്പറുകൾ",
   "cli.command.secrets.init.about": "ഒരു പാക്കിനായി സീക്രെറ്റുകൾ ഇൻഷ്യലൈസ് ചെയ്യാൻ greentic-secrets-ലേക്ക് ഡെലിഗേറ്റ് ചെയ്യുക",
   "cli.command.secrets.init.pack": "ഇൻഷ്യലൈസ് ചെയ്യേണ്ട പാക്കിലേക്കുള്ള പാത (.gtpack)",

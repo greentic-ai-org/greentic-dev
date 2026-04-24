@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "ส่งผ่าน Bundle (greentic-bundle)",
   "cli.command.cbor.about": "ถอดรหัสไฟล์ CBOR เป็นข้อความ",
   "cli.command.cbor.path": "พาธไปยังไฟล์ CBOR ที่จะถอดรหัส",
   "cli.command.component.about": "ส่งผ่านคอมโพเนนต์ (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "ตัวระบุผู้ให้บริการ MCP หรือพาธคอนฟิก",
   "cli.command.pack.about": "ส่งผ่านแพ็ก (greentic-pack; การเรียกใช้ pack run ใช้ greentic-runner-cli)",
   "cli.command.passthrough.args": "อาร์กิวเมนต์ที่ส่งผ่านโดยตรงไปยังคำสั่งพื้นฐาน",
+  "cli.command.runner.about": "ส่งผ่าน Runner (greentic-runner)",
   "cli.command.secrets.about": "ตัวห่ออำนวยความสะดวกสำหรับ Secrets",
   "cli.command.secrets.init.about": "มอบหมายให้ greentic-secrets เริ่มต้น secrets สำหรับแพ็ก",
   "cli.command.secrets.init.pack": "พาธไปยังแพ็ก (.gtpack) ที่จะเริ่มต้น",

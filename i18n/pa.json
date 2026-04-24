@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "ਬੰਡਲ ਪਾਸਥਰੂ (greentic-bundle)",
   "cli.command.cbor.about": "ਇੱਕ CBOR ਫਾਈਲ ਨੂੰ ਪਾਠ ਵਿੱਚ ਡੀਕੋਡ ਕਰੋ",
   "cli.command.cbor.path": "ਡੀਕੋਡ ਕਰਨ ਲਈ CBOR ਫਾਇਲ ਦਾ ਪਾਥ",
   "cli.command.component.about": "ਕੰਪੋਨੈਂਟ ਪਾਸਥਰੂ (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "MCP provider ਪਹਿਚਾਣਕਰਤਾ ਜਾਂ config ਪਾਥ",
   "cli.command.pack.about": "ਪੈਕ ਪਾਸਥਰੂ (greentic-pack; pack run greentic-runner-cli ਵਰਤਦਾ ਹੈ)",
   "cli.command.passthrough.args": "ਮੂਲ command ਨੂੰ ਸਿੱਧੇ ਪਾਸ ਕੀਤੇ arguments",
+  "cli.command.runner.about": "ਰਨਰ ਪਾਸਥਰੂ (greentic-runner)",
   "cli.command.secrets.about": "ਸੀਕ੍ਰੇਟਸ ਲਈ ਸੁਵਿਧਾਜਨਕ ਰੈਪਰ",
   "cli.command.secrets.init.about": "ਇੱਕ ਪੈਕ ਲਈ ਸੀਕ੍ਰੇਟਸ ਸ਼ੁਰੂ ਕਰਨ ਵਾਸਤੇ greentic-secrets ਨੂੰ ਸੌਂਪੋ",
   "cli.command.secrets.init.pack": "ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਪੈਕ (.gtpack) ਦਾ ਪਾਥ",

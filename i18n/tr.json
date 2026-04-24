@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "Paket geçişi (greentic-bundle)",
   "cli.command.cbor.about": "Bir CBOR dosyasını metne çözümle",
   "cli.command.cbor.path": "Çözümlenecek CBOR dosyasının yolu",
   "cli.command.component.about": "Bileşen aktarma (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "MCP sağlayıcı tanımlayıcısı veya yapılandırma yolu",
   "cli.command.pack.about": "Paket aktarma (greentic-pack; pack run, greentic-runner-cli kullanır)",
   "cli.command.passthrough.args": "Doğrudan temel komuta geçirilen argümanlar",
+  "cli.command.runner.about": "Çalıştırıcı geçişi (greentic-runner)",
   "cli.command.secrets.about": "Secrets için kolaylık sarmalayıcıları",
   "cli.command.secrets.init.about": "Bir paket için secrets başlatmak üzere greentic-secrets'a devret",
   "cli.command.secrets.init.pack": "Başlatılacak paketin (.gtpack) yolu",

@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "Μεταβίβαση δέσμης (greentic-bundle)",
   "cli.command.cbor.about": "Αποκωδικοποίηση αρχείου CBOR σε κείμενο",
   "cli.command.cbor.path": "Διαδρομή προς το αρχείο CBOR για αποκωδικοποίηση",
   "cli.command.component.about": "Διέλευση component (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "Αναγνωριστικό παρόχου MCP ή διαδρομή ρυθμίσεων",
   "cli.command.pack.about": "Διέλευση pack (greentic-pack· το pack run χρησιμοποιεί το greentic-runner-cli)",
   "cli.command.passthrough.args": "Ορίσματα που περνούν απευθείας στην υποκείμενη εντολή",
+  "cli.command.runner.about": "Μεταβίβαση εκτελεστή (greentic-runner)",
   "cli.command.secrets.about": "Βολικά περιτυλίγματα για μυστικά",
   "cli.command.secrets.init.about": "Ανάθεση στο greentic-secrets για αρχικοποίηση μυστικών για ένα pack",
   "cli.command.secrets.init.pack": "Διαδρομή προς το pack (.gtpack) για αρχικοποίηση",

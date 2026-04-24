@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "ಬಂಡಲ್ ಪಾಸ್‌ಥ್ರೂ (greentic-bundle)",
   "cli.command.cbor.about": "CBOR ಫೈಲ್ ಅನ್ನು ಪಠ್ಯಕ್ಕೆ ಡಿಕೋಡ್ ಮಾಡಿ",
   "cli.command.cbor.path": "ಡಿಕೋಡ್ ಮಾಡಲು CBOR ಕಡತದ ಪಥ",
   "cli.command.component.about": "ಕಾಂಪೊನೆಂಟ್ ಪಾಸ್‌ಥ್ರೂ (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "MCP ಪೂರೈಕೆದಾರ ಗುರುತಿನಚಿಹ್ನೆ ಅಥವಾ config ಪಥ",
   "cli.command.pack.about": "ಪ್ಯಾಕ್ ಪಾಸ್‌ಥ್ರೂ (greentic-pack; pack run greentic-runner-cli ಅನ್ನು ಬಳಸುತ್ತದೆ)",
   "cli.command.passthrough.args": "ಆಧಾರಿತ command ಗೆ ನೇರವಾಗಿ ಕಳುಹಿಸಲಾದ arguments",
+  "cli.command.runner.about": "ರನ್ನರ್ ಪಾಸ್‌ಥ್ರೂ (greentic-runner)",
   "cli.command.secrets.about": "ರಹಸ್ಯಗಳ ಅನುಕೂಲ ರ್ಯಾಪರ್‌ಗಳು",
   "cli.command.secrets.init.about": "ಒಂದು pack ಗಾಗಿ secrets ಅನ್ನು ಆರಂಭಿಸಲು greentic-secrets ಗೆ ಪ್ರತಿನಿಯೋಜಿಸಿ",
   "cli.command.secrets.init.pack": "ಆರಂಭಿಸಲು pack (.gtpack) ನ ಪಥ",

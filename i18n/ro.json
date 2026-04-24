@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "Transmitere bundle (greentic-bundle)",
   "cli.command.cbor.about": "Decodifică un fișier CBOR în text",
   "cli.command.cbor.path": "Calea către fișierul CBOR de decodat",
   "cli.command.component.about": "Passthrough pentru componentă (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "Identificatorul furnizorului MCP sau calea către config",
   "cli.command.pack.about": "Passthrough pentru pachet (greentic-pack; pack run folosește greentic-runner-cli)",
   "cli.command.passthrough.args": "Argumente transmise direct comenzii de bază",
+  "cli.command.runner.about": "Transmitere runner (greentic-runner)",
   "cli.command.secrets.about": "Wrappere de conveniență pentru secrete",
   "cli.command.secrets.init.about": "Delegă către greentic-secrets pentru a inițializa secretele pentru un pachet",
   "cli.command.secrets.init.pack": "Calea către pachetul (.gtpack) de inițializat",

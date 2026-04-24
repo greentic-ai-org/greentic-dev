@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "Paki läbilase (greentic-bundle)",
   "cli.command.cbor.about": "Dekodeeri CBOR-fail tekstiks",
   "cli.command.cbor.path": "Dekodeeritava CBOR-faili tee",
   "cli.command.component.about": "Komponendi läbisuunamine (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "MCP pakkuja identifikaator või konfiguratsioonitee",
   "cli.command.pack.about": "Paki läbisuunamine (greentic-pack; pack run kasutab greentic-runner-cli-d)",
   "cli.command.passthrough.args": "Argumendid, mis edastatakse otse aluseks olevale käsule",
+  "cli.command.runner.about": "Käivitaja läbilase (greentic-runner)",
   "cli.command.secrets.about": "Saladuste mugavusmähised",
   "cli.command.secrets.init.about": "Delegeeri greentic-secretsile paki saladuste lähtestamine",
   "cli.command.secrets.init.pack": "Lähtestatava paki (.gtpack) tee",

@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "تمرير الحزمة (greentic-bundle)",
   "cli.command.cbor.about": "فكّ ترميز ملف CBOR إلى نص",
   "cli.command.cbor.path": "المسار إلى ملف CBOR لفكّ ترميزه",
   "cli.command.component.about": "تمرير المكوّن كما هو (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "معرّف مزوّد MCP أو مسار الإعدادات",
   "cli.command.pack.about": "تمرير الحزمة كما هي (greentic-pack; pack run يستعمل greentic-runner-cli)",
   "cli.command.passthrough.args": "الوسائط التي تُمرَّر مباشرة إلى الأمر الأساسي",
+  "cli.command.runner.about": "تمرير المشغّل (greentic-runner)",
   "cli.command.secrets.about": "أغلفة تسهيلية للأسرار",
   "cli.command.secrets.init.about": "فوّض إلى greentic-secrets لتهيئة الأسرار لحزمة",
   "cli.command.secrets.init.pack": "المسار إلى الحزمة (.gtpack) المطلوب تهيئتها",

@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "Pass-through du bundle (greentic-bundle)",
   "cli.command.cbor.about": "Décoder un fichier CBOR en texte",
   "cli.command.cbor.path": "Chemin vers le fichier CBOR à décoder",
   "cli.command.component.about": "Transparence de composant (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "Identifiant du fournisseur MCP ou chemin de configuration",
   "cli.command.pack.about": "Transparence de pack (greentic-pack; pack run utilise greentic-runner-cli)",
   "cli.command.passthrough.args": "Arguments transmis directement à la commande sous-jacente",
+  "cli.command.runner.about": "Pass-through du runner (greentic-runner)",
   "cli.command.secrets.about": "Wrappers pratiques pour les secrets",
   "cli.command.secrets.init.about": "Déléguer à greentic-secrets l'initialisation des secrets pour un pack",
   "cli.command.secrets.init.pack": "Chemin vers le pack (.gtpack) à initialiser",

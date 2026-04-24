@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "ສົ່ງຜ່ານ Bundle (greentic-bundle)",
   "cli.command.cbor.about": "ຖອດລະຫັດໄຟລ໌ CBOR ເປັນຂໍ້ຄວາມ",
   "cli.command.cbor.path": "ເສັ້ນທາງໄປຫາໄຟລ໌ CBOR ທີ່ຈະຖອດລະຫັດ",
   "cli.command.component.about": "ສົ່ງຕໍ່ Component (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "ຕົວລະບຸຜູ້ໃຫ້ບໍລິການ MCP ຫຼື ເສັ້ນທາງ config",
   "cli.command.pack.about": "ສົ່ງຕໍ່ Pack (greentic-pack; pack run ໃຊ້ greentic-runner-cli)",
   "cli.command.passthrough.args": "ອາກິວເມັນທີ່ສົ່ງຕໍ່ໂດຍກົງໃຫ້ຄຳສັ່ງພື້ນຖານ",
+  "cli.command.runner.about": "ສົ່ງຜ່ານ Runner (greentic-runner)",
   "cli.command.secrets.about": "ຕົວຫໍ່ຄວາມສະດວກສຳລັບ Secrets",
   "cli.command.secrets.init.about": "ມອບໝາຍໃຫ້ greentic-secrets ເພື່ອເລີ່ມຕົ້ນ secrets ສຳລັບ pack ໜຶ່ງ",
   "cli.command.secrets.init.pack": "ເສັ້ນທາງໄປຫາ pack (.gtpack) ທີ່ຈະເລີ່ມຕົ້ນ",
