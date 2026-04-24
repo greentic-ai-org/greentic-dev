@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "Truyền qua gói (greentic-bundle)",
   "cli.command.cbor.about": "Giải mã tệp CBOR thành văn bản",
   "cli.command.cbor.path": "Đường dẫn đến tệp CBOR để giải mã",
   "cli.command.component.about": "Chuyển tiếp component (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "Mã định danh nhà cung cấp MCP hoặc đường dẫn cấu hình",
   "cli.command.pack.about": "Chuyển tiếp pack (greentic-pack; pack run sử dụng greentic-runner-cli)",
   "cli.command.passthrough.args": "Các đối số được truyền trực tiếp đến lệnh nền",
+  "cli.command.runner.about": "Truyền qua trình chạy (greentic-runner)",
   "cli.command.secrets.about": "Trình bao tiện lợi cho secrets",
   "cli.command.secrets.init.about": "Ủy quyền cho greentic-secrets để khởi tạo secrets cho một pack",
   "cli.command.secrets.init.pack": "Đường dẫn đến pack (.gtpack) cần khởi tạo",

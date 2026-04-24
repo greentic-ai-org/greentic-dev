@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "பண்டில் பாஸ்த்ரூ (greentic-bundle)",
   "cli.command.cbor.about": "ஒரு CBOR கோப்பை உரையாக டிகோடு செய்",
   "cli.command.cbor.path": "டிகோட் செய்ய வேண்டிய CBOR கோப்பிற்கான பாதை",
   "cli.command.component.about": "கூறு பாஸ்த்ரூ (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "MCP provider அடையாளம் அல்லது config பாதை",
   "cli.command.pack.about": "Pack பாஸ்த்ரூ (greentic-pack; pack run greentic-runner-cli-ஐ பயன்படுத்துகிறது)",
   "cli.command.passthrough.args": "அடிப்படை command-க்கு நேரடியாக அனுப்பப்படும் arguments",
+  "cli.command.runner.about": "ரன்னர் பாஸ்த்ரூ (greentic-runner)",
   "cli.command.secrets.about": "Secrets வசதி wrappers",
   "cli.command.secrets.init.about": "ஒரு pack-க்கு secrets-ஐ துவக்க greentic-secrets-க்கு ஒப்படை",
   "cli.command.secrets.init.pack": "துவக்க வேண்டிய pack (.gtpack) இற்கான பாதை",

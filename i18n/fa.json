@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "عبور مستقیم باندل (greentic-bundle)",
   "cli.command.cbor.about": "رمزگشایی یک فایل CBOR به متن",
   "cli.command.cbor.path": "مسیر فایل CBOR برای decode کردن",
   "cli.command.component.about": "عبور مستقیم مؤلفه (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "شناسه ارائه‌دهنده MCP یا مسیر پیکربندی",
   "cli.command.pack.about": "عبور مستقیم بسته‌بندی (greentic-pack؛ pack run از greentic-runner-cli استفاده می‌کند)",
   "cli.command.passthrough.args": "آرگومان‌هایی که مستقیماً به فرمان زیربنایی ارسال می‌شوند",
+  "cli.command.runner.about": "عبور مستقیم رانر (greentic-runner)",
   "cli.command.secrets.about": "پوسته‌های ساده‌ساز برای اسرار",
   "cli.command.secrets.init.about": "واگذاری به greentic-secrets برای مقداردهی اولیه secrets برای یک pack",
   "cli.command.secrets.init.pack": "مسیر pack (.gtpack) برای مقداردهی اولیه",

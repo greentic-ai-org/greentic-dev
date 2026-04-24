@@ -53,6 +53,16 @@ fn main() -> Result<()> {
             let status = run_passthrough(&bin, &args.args, false)?;
             std::process::exit(status.code().unwrap_or(1));
         }
+        Command::Bundle(args) => {
+            let bin = resolve_binary("greentic-bundle")?;
+            let status = run_passthrough(&bin, &args.args, false)?;
+            std::process::exit(status.code().unwrap_or(1));
+        }
+        Command::Runner(args) => {
+            let bin = resolve_binary("greentic-runner")?;
+            let status = run_passthrough(&bin, &args.args, false)?;
+            std::process::exit(status.code().unwrap_or(1));
+        }
         Command::Config(config_cmd) => config::run(config_cmd),
         Command::Coverage(args) => coverage_cmd::run(args),
         Command::Cbor(args) => cbor_cmd::run(args),
@@ -141,7 +151,10 @@ fn maybe_render_localized_help(argv: &[OsString]) {
     let help_path = help_subcommand_path(argv);
     let first_command = help_path.first().map(String::as_str);
 
-    if matches!(first_command, Some("flow" | "pack" | "component" | "gui")) {
+    if matches!(
+        first_command,
+        Some("flow" | "pack" | "component" | "bundle" | "runner" | "gui")
+    ) {
         return;
     }
 
@@ -234,6 +247,8 @@ fn is_known_subcommand(subcmd: &str) -> bool {
         "flow"
             | "pack"
             | "component"
+            | "bundle"
+            | "runner"
             | "config"
             | "coverage"
             | "mcp"

@@ -6,6 +6,8 @@
   "cli.command.flow.about": "Flow passthrough (greentic-flow)",
   "cli.command.pack.about": "Pack passthrough (greentic-pack; pack run uses greentic-runner-cli)",
   "cli.command.component.about": "Component passthrough (greentic-component)",
+  "cli.command.bundle.about": "Bundle passthrough (greentic-bundle)",
+  "cli.command.runner.about": "Runner passthrough (greentic-runner)",
   "cli.command.config.about": "Manage greentic-dev configuration",
   "cli.command.coverage.about": "Run coverage checks against coverage-policy.json",
   "cli.command.coverage.skip_run": "Reuse an existing target/coverage/coverage.json report instead of rerunning tests",

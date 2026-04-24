@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "Passthrough bundle (greentic-bundle)",
   "cli.command.cbor.about": "Nyahkod fail CBOR kepada teks",
   "cli.command.cbor.path": "Laluan ke fail CBOR untuk dinyahkod",
   "cli.command.component.about": "Laluan terus komponen (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "Pengecam pembekal MCP atau laluan konfigurasi",
   "cli.command.pack.about": "Laluan terus pack (greentic-pack; pack run menggunakan greentic-runner-cli)",
   "cli.command.passthrough.args": "Argumen dihantar terus ke arahan asas",
+  "cli.command.runner.about": "Passthrough runner (greentic-runner)",
   "cli.command.secrets.about": "Pembalut kemudahan rahsia",
   "cli.command.secrets.init.about": "Wakilkan kepada greentic-secrets untuk memulakan secrets bagi satu pack",
   "cli.command.secrets.init.pack": "Laluan ke pack (.gtpack) untuk dimulakan",

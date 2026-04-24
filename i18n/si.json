@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "බණ්ඩල් පසුමාරුව (greentic-bundle)",
   "cli.command.cbor.about": "CBOR ගොනුවක් පෙළට විකේතනය කරන්න",
   "cli.command.cbor.path": "විකේතනය කිරීමට ඇති CBOR ගොනුවේ මාර්ගය",
   "cli.command.component.about": "සංරචක passthrough (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "MCP සපයන්නාගේ හඳුනාගැනීම හෝ වින්‍යාස මාර්ගය",
   "cli.command.pack.about": "පැක් passthrough (greentic-pack; pack run විසින් greentic-runner-cli භාවිතා කරයි)",
   "cli.command.passthrough.args": "යටින් ඇති විධානයට සෘජුවම යවන arguments",
+  "cli.command.runner.about": "රන්නර් පසුමාරුව (greentic-runner)",
   "cli.command.secrets.about": "රහස් සඳහා පහසු wrapper",
   "cli.command.secrets.init.about": "පැක් එකක් සඳහා රහස් ආරම්භ කිරීමට greentic-secrets වෙත පවරන්න",
   "cli.command.secrets.init.pack": "ආරම්භ කිරීමට ඇති පැක් (.gtpack) වෙත මාර්ගය",

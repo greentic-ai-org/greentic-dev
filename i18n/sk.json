@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "Priamy prenos bundle (greentic-bundle)",
   "cli.command.cbor.about": "Dekódovať súbor CBOR do textu",
   "cli.command.cbor.path": "Cesta k súboru CBOR na dekódovanie",
   "cli.command.component.about": "Odovzdanie komponentu (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "Identifikátor poskytovateľa MCP alebo cesta ku konfigurácii",
   "cli.command.pack.about": "Odovzdanie packu (greentic-pack; pack run používa greentic-runner-cli)",
   "cli.command.passthrough.args": "Argumenty odovzdané priamo podkladovému príkazu",
+  "cli.command.runner.about": "Priamy prenos runnera (greentic-runner)",
   "cli.command.secrets.about": "Pohodlné obaly pre secrets",
   "cli.command.secrets.init.about": "Delegovať na greentic-secrets na inicializáciu secrets pre pack",
   "cli.command.secrets.init.pack": "Cesta k packu (.gtpack), ktorý sa má inicializovať",

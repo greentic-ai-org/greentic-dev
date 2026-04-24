@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "Komplektēšanas starpnieks (greentic-bundle)",
   "cli.command.cbor.about": "Atkodēt CBOR failu tekstā",
   "cli.command.cbor.path": "Ceļš uz atkodējamo CBOR failu",
   "cli.command.component.about": "Komponenta starpniekpārsūtīšana (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "MCP nodrošinātāja identifikators vai konfigurācijas ceļš",
   "cli.command.pack.about": "Pack starpniekpārsūtīšana (greentic-pack; pack run izmanto greentic-runner-cli)",
   "cli.command.passthrough.args": "Argumenti, kas tiek tieši nodoti pamatā esošajai komandai",
+  "cli.command.runner.about": "Palaišanas starpnieks (greentic-runner)",
   "cli.command.secrets.about": "Ērtie ietvari noslēpumiem",
   "cli.command.secrets.init.about": "Deleģēt greentic-secrets, lai inicializētu noslēpumus pakotnei",
   "cli.command.secrets.init.pack": "Ceļš uz inicializējamo pakotni (.gtpack)",

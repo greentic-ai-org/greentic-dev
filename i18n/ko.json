@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "번들 패스스루 (greentic-bundle)",
   "cli.command.cbor.about": "CBOR 파일을 텍스트로 디코드",
   "cli.command.cbor.path": "디코드할 CBOR 파일 경로",
   "cli.command.component.about": "컴포넌트 패스스루 (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "MCP 제공자 식별자 또는 config 경로",
   "cli.command.pack.about": "패키지 패스스루 (greentic-pack; pack run은 greentic-runner-cli 사용)",
   "cli.command.passthrough.args": "기본 명령에 직접 전달되는 인수",
+  "cli.command.runner.about": "러너 패스스루 (greentic-runner)",
   "cli.command.secrets.about": "시크릿 편의 래퍼",
   "cli.command.secrets.init.about": "팩의 시크릿을 초기화하도록 greentic-secrets에 위임합니다",
   "cli.command.secrets.init.pack": "초기화할 팩(.gtpack) 경로",

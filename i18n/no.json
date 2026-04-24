@@ -1,4 +1,5 @@
 {
+  "cli.command.bundle.about": "Bundle-videresending (greentic-bundle)",
   "cli.command.cbor.about": "Dekode en CBOR-fil til tekst",
   "cli.command.cbor.path": "Sti til CBOR-filen som skal dekodes",
   "cli.command.component.about": "Komponent-videresending (greentic-component)",
@@ -24,6 +25,7 @@
   "cli.command.mcp.doctor.provider": "MCP-leverandøridentifikator eller konfigurasjonssti",
   "cli.command.pack.about": "Pack-videresending (greentic-pack; pack run bruker greentic-runner-cli)",
   "cli.command.passthrough.args": "Argumenter sendt direkte til den underliggende kommandoen",
+  "cli.command.runner.about": "Runner-videresending (greentic-runner)",
   "cli.command.secrets.about": "Bekvemmelighetsomslag for secrets",
   "cli.command.secrets.init.about": "Deleger til greentic-secrets for å initialisere secrets for en pack",
   "cli.command.secrets.init.pack": "Sti til pack-en (.gtpack) som skal initialiseres",
