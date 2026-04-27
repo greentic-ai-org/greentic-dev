@@ -16,18 +16,22 @@ concurrency:
 
 jobs:
   # Stage 1 — tests + version stamping. Outputs the stamped dev version
-  # {M.m.GITHUB_RUN_ID} consumed by binaries + publish.
+  # consumed by binaries + publish. Form is M.m.p-dev.{RUN_ID} for
+  # dual-role repos (require-pre-release: true) so dev library publishes
+  # sort below stable on crates.io; M.m.{RUN_ID} regular release for
+  # binary-only repos (no stable namespace to protect) and pure libraries.
   dev-prepare:
     uses: greenticai/.github/.github/workflows/dev-prepare.yml@main
     with:
       setup-script: "if ! command -v cargo-binstall >/dev/null 2>&1; then cargo install cargo-binstall --locked; fi && cargo binstall -y greentic-flow greentic-component greentic-pack --force"
+      require-pre-release: true
 
   dev-binaries-greentic-dev:
     needs: dev-prepare
     uses: greenticai/.github/.github/workflows/dev-release-binaries.yml@main
     with:
       package: greentic-dev
-      version: ${{ needs.dev-prepare.outputs.version }}
+      version: ${{ needs.dev-prepare.outputs.binary-version }}
 
   dev-publish:
     needs: [dev-prepare, dev-binaries-greentic-dev]
@@ -35,7 +39,9 @@ jobs:
     with:
       version: ${{ needs.dev-prepare.outputs.version }}
       crates: "greentic-dev"
+      binary-version: ${{ needs.dev-prepare.outputs.binary-version }}
       setup-script: "if ! command -v cargo-binstall >/dev/null 2>&1; then cargo install cargo-binstall --locked; fi && cargo binstall -y greentic-flow greentic-component greentic-pack --force"
       binary-crates: "greentic-dev"
       dual-role-binary-crates: "greentic-dev"
+      require-pre-release: true
     secrets: inherit
