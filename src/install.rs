@@ -1094,10 +1094,17 @@ impl RealHttpDownloader {
         let Some(spec) = parse_github_release_url(url) else {
             return Ok(None);
         };
-        let api_url = format!(
-            "https://api.github.com/repos/{}/{}/releases/tags/{}",
-            spec.owner, spec.repo, spec.tag
-        );
+        let api_url = if spec.tag == "latest" {
+            format!(
+                "https://api.github.com/repos/{}/{}/releases/latest",
+                spec.owner, spec.repo
+            )
+        } else {
+            format!(
+                "https://api.github.com/repos/{}/{}/releases/tags/{}",
+                spec.owner, spec.repo, spec.tag
+            )
+        };
         let release = self
             .client
             .get(api_url)
@@ -1139,17 +1146,21 @@ fn parse_github_release_url(url: &str) -> Option<GithubReleaseUrlSpec> {
         return None;
     }
     let segments = parsed.path_segments()?.collect::<Vec<_>>();
-    if segments.len() < 6 {
+    if segments.len() < 6 || segments[2] != "releases" {
         return None;
     }
-    if segments[2] != "releases" || segments[3] != "download" {
+    let (tag, asset_start) = if segments[3] == "download" {
+        (segments[4], 5)
+    } else if segments[3] == "latest" && segments[4] == "download" {
+        ("latest", 5)
+    } else {
         return None;
-    }
+    };
     Some(GithubReleaseUrlSpec {
         owner: segments[0].to_string(),
         repo: segments[1].to_string(),
-        tag: segments[4].to_string(),
-        asset_name: segments[5..].join("/"),
+        tag: tag.to_string(),
+        asset_name: segments[asset_start..].join("/"),
     })
 }
 
@@ -1507,6 +1518,30 @@ mod tests {
             github_latest_release_api_url(),
             "https://api.github.com/repos/greentic-biz/customers-tools/releases/tags/latest"
         );
+    }
+
+    #[test]
+    fn parses_github_latest_release_download_url() {
+        let spec = parse_github_release_url(
+            "https://github.com/greentic-biz/greentic-mcp-generator/releases/latest/download/greentic-mcp-generator.json",
+        )
+        .unwrap();
+        assert_eq!(spec.owner, "greentic-biz");
+        assert_eq!(spec.repo, "greentic-mcp-generator");
+        assert_eq!(spec.tag, "latest");
+        assert_eq!(spec.asset_name, "greentic-mcp-generator.json");
+    }
+
+    #[test]
+    fn parses_github_tagged_release_download_url() {
+        let spec = parse_github_release_url(
+            "https://github.com/greentic-biz/greentic-mcp-generator/releases/download/v1.0.0/greentic-mcp-generator.json",
+        )
+        .unwrap();
+        assert_eq!(spec.owner, "greentic-biz");
+        assert_eq!(spec.repo, "greentic-mcp-generator");
+        assert_eq!(spec.tag, "v1.0.0");
+        assert_eq!(spec.asset_name, "greentic-mcp-generator.json");
     }
 
     #[test]
