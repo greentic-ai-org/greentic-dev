@@ -24,16 +24,23 @@ use crate::cmd::tools;
 use crate::i18n;
 
 const CUSTOMERS_TOOLS_REPO: &str = "ghcr.io/greentic-biz/customers-tools";
+const CUSTOMERS_TOOLS_GITHUB_OWNER: &str = "greentic-biz";
+const CUSTOMERS_TOOLS_GITHUB_REPO: &str = "customers-tools";
+const CUSTOMERS_TOOLS_GITHUB_RELEASE_TAG: &str = "latest";
 const OCI_LAYER_JSON_MEDIA_TYPE: &str = "application/json";
 const OAUTH_USER: &str = "oauth2";
 
 pub fn run(args: InstallArgs) -> Result<()> {
     let locale = i18n::select_locale(args.locale.as_deref());
-    tools::install(false, &locale)?;
 
     let Some(tenant) = args.tenant else {
+        println!("Use `greentic-dev install tools` for development/bootstrap tools.");
+        println!("Use `gtc install` for customer-approved pinned releases.");
+        println!("Pass `--tenant` to install tenant artifacts and docs.");
         return Ok(());
     };
+
+    tools::install(false, &locale)?;
 
     let token = resolve_token(args.token, &locale)
         .context(i18n::t(&locale, "cli.install.error.tenant_requires_token"))?;
@@ -264,6 +271,38 @@ struct TenantDocEntry {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+struct RemoteDocManifest {
+    #[serde(rename = "$schema", default)]
+    schema: Option<String>,
+    #[serde(default)]
+    schema_version: Option<String>,
+    id: String,
+    #[serde(default)]
+    title: Option<String>,
+    #[serde(default)]
+    source: Option<DocSource>,
+    #[serde(default)]
+    download_file_name: Option<String>,
+    #[serde(alias = "relative_path", default)]
+    default_relative_path: Option<String>,
+    #[serde(default)]
+    docs: Vec<RemoteDocManifestEntry>,
+    #[serde(default)]
+    i18n: std::collections::BTreeMap<String, DocTranslation>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+struct RemoteDocManifestEntry {
+    title: String,
+    source: DocSource,
+    download_file_name: String,
+    #[serde(alias = "relative_path")]
+    default_relative_path: String,
+    #[serde(default)]
+    i18n: std::collections::BTreeMap<String, DocTranslation>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
 struct SimpleTenantToolEntry {
     id: String,
     #[serde(default)]
@@ -301,6 +340,65 @@ struct RemoteManifestRef {
     id: String,
     #[serde(alias = "manifest_url")]
     url: String,
+}
+
+impl RemoteDocManifest {
+    fn into_entries(self) -> Result<Vec<TenantDocEntry>> {
+        let has_single_doc_fields = self.title.is_some()
+            || self.source.is_some()
+            || self.download_file_name.is_some()
+            || self.default_relative_path.is_some();
+        if has_single_doc_fields && !self.docs.is_empty() {
+            bail!(
+                "doc manifest `{}` must not mix single-doc fields with docs[]",
+                self.id
+            );
+        }
+
+        if !self.docs.is_empty() {
+            let schema = self.schema.clone();
+            let manifest_id = self.id;
+            return Ok(self
+                .docs
+                .into_iter()
+                .map(|entry| TenantDocEntry {
+                    schema: schema.clone(),
+                    id: format!("{}:{}", manifest_id, entry.download_file_name),
+                    title: entry.title,
+                    source: entry.source,
+                    download_file_name: entry.download_file_name,
+                    default_relative_path: entry.default_relative_path,
+                    i18n: entry.i18n,
+                })
+                .collect());
+        }
+
+        let Some(title) = self.title else {
+            bail!("doc manifest `{}` is missing `title`", self.id);
+        };
+        let Some(source) = self.source else {
+            bail!("doc manifest `{}` is missing `source`", self.id);
+        };
+        let Some(download_file_name) = self.download_file_name else {
+            bail!("doc manifest `{}` is missing `download_file_name`", self.id);
+        };
+        let Some(default_relative_path) = self.default_relative_path else {
+            bail!(
+                "doc manifest `{}` is missing `default_relative_path`",
+                self.id
+            );
+        };
+
+        Ok(vec![TenantDocEntry {
+            schema: self.schema,
+            id: self.id,
+            title,
+            source,
+            download_file_name,
+            default_relative_path,
+            i18n: self.i18n,
+        }])
+    }
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
@@ -439,10 +537,12 @@ where
         let mut installed_docs = Vec::new();
         let mut installed_doc_entries = Vec::new();
         for doc in &manifest.docs {
-            let doc = self.resolve_doc(doc, token).await?;
-            let path = self.install_doc(&doc, token).await?;
-            installed_doc_entries.push((doc.id.clone(), path.clone()));
-            installed_docs.push(path.display().to_string());
+            let docs = self.resolve_doc(doc, token).await?;
+            for doc in docs {
+                let path = self.install_doc(&doc, token).await?;
+                installed_doc_entries.push((doc.id.clone(), path.clone()));
+                installed_docs.push(path.display().to_string());
+            }
         }
 
         let manifest_path = self.env.manifests_dir.join(format!("tenant-{tenant}.json"));
@@ -524,10 +624,14 @@ where
         }
     }
 
-    async fn resolve_doc(&self, doc: &TenantDocDescriptor, token: &str) -> Result<TenantDocEntry> {
+    async fn resolve_doc(
+        &self,
+        doc: &TenantDocDescriptor,
+        token: &str,
+    ) -> Result<Vec<TenantDocEntry>> {
         match doc {
-            TenantDocDescriptor::Expanded(entry) => Ok(entry.clone()),
-            TenantDocDescriptor::Simple(entry) => Ok(TenantDocEntry {
+            TenantDocDescriptor::Expanded(entry) => Ok(vec![entry.clone()]),
+            TenantDocDescriptor::Simple(entry) => Ok(vec![TenantDocEntry {
                 schema: None,
                 id: entry.file_name.clone(),
                 title: entry.file_name.clone(),
@@ -538,11 +642,11 @@ where
                 download_file_name: entry.file_name.clone(),
                 default_relative_path: entry.file_name.clone(),
                 i18n: std::collections::BTreeMap::new(),
-            }),
+            }]),
             TenantDocDescriptor::Ref(reference) => {
                 enforce_github_url(&reference.url)?;
                 let bytes = self.downloader.download(&reference.url, token).await?;
-                let manifest: TenantDocEntry = serde_json::from_slice(&bytes)
+                let manifest: RemoteDocManifest = serde_json::from_slice(&bytes)
                     .with_context(|| format!("failed to parse doc manifest `{}`", reference.url))?;
                 if manifest.id != reference.id {
                     bail!(
@@ -551,7 +655,7 @@ where
                         manifest.id
                     );
                 }
-                Ok(manifest)
+                manifest.into_entries()
             }
             TenantDocDescriptor::Id(id) => bail!(
                 "doc id `{id}` requires a manifest URL; bare IDs are not supported by greentic-dev"
@@ -626,7 +730,7 @@ where
     }
 }
 
-fn block_on_maybe_runtime<F, T>(future: F) -> Result<T>
+pub(crate) fn block_on_maybe_runtime<F, T>(future: F) -> Result<T>
 where
     F: Future<Output = Result<T>>,
 {
@@ -1087,10 +1191,17 @@ impl RealHttpDownloader {
         let Some(spec) = parse_github_release_url(url) else {
             return Ok(None);
         };
-        let api_url = format!(
-            "https://api.github.com/repos/{}/{}/releases/tags/{}",
-            spec.owner, spec.repo, spec.tag
-        );
+        let api_url = if spec.tag == "latest" {
+            format!(
+                "https://api.github.com/repos/{}/{}/releases/latest",
+                spec.owner, spec.repo
+            )
+        } else {
+            format!(
+                "https://api.github.com/repos/{}/{}/releases/tags/{}",
+                spec.owner, spec.repo, spec.tag
+            )
+        };
         let release = self
             .client
             .get(api_url)
@@ -1132,17 +1243,21 @@ fn parse_github_release_url(url: &str) -> Option<GithubReleaseUrlSpec> {
         return None;
     }
     let segments = parsed.path_segments()?.collect::<Vec<_>>();
-    if segments.len() < 6 {
+    if segments.len() < 6 || segments[2] != "releases" {
         return None;
     }
-    if segments[2] != "releases" || segments[3] != "download" {
+    let (tag, asset_start) = if segments[3] == "download" {
+        (segments[4], 5)
+    } else if segments[3] == "latest" && segments[4] == "download" {
+        ("latest", 5)
+    } else {
         return None;
-    }
+    };
     Some(GithubReleaseUrlSpec {
         owner: segments[0].to_string(),
         repo: segments[1].to_string(),
-        tag: segments[4].to_string(),
-        asset_name: segments[5..].join("/"),
+        tag: tag.to_string(),
+        asset_name: segments[asset_start..].join("/"),
     })
 }
 
@@ -1207,6 +1322,65 @@ struct RealTenantManifestSource;
 #[async_trait]
 impl TenantManifestSource for RealTenantManifestSource {
     async fn fetch_manifest(&self, tenant: &str, token: &str) -> Result<Vec<u8>> {
+        if let Some(bytes) = self.fetch_github_release_manifest(tenant, token).await? {
+            return Ok(bytes);
+        }
+        self.fetch_oci_manifest(tenant, token).await
+    }
+}
+
+impl RealTenantManifestSource {
+    async fn fetch_github_release_manifest(
+        &self,
+        tenant: &str,
+        token: &str,
+    ) -> Result<Option<Vec<u8>>> {
+        let client = reqwest::Client::builder()
+            .user_agent(format!("greentic-dev/{}", env!("CARGO_PKG_VERSION")))
+            .build()
+            .context("failed to build GitHub HTTP client")?;
+        let release_url = github_latest_release_api_url();
+        let response = client
+            .get(&release_url)
+            .bearer_auth(token)
+            .header(reqwest::header::ACCEPT, "application/vnd.github+json")
+            .send()
+            .await
+            .with_context(|| format!("failed to resolve GitHub release `{release_url}`"))?;
+        if response.status() == reqwest::StatusCode::NOT_FOUND {
+            return Ok(None);
+        }
+        let release = response
+            .error_for_status()
+            .with_context(|| format!("failed to resolve GitHub release `{release_url}`"))?
+            .json::<GithubRelease>()
+            .await
+            .with_context(|| format!("failed to parse GitHub release `{release_url}`"))?;
+        let asset_name = tenant_manifest_asset_name(tenant);
+        let Some(asset) = release
+            .assets
+            .into_iter()
+            .find(|asset| asset.name == asset_name)
+        else {
+            return Ok(None);
+        };
+        let response = client
+            .get(&asset.url)
+            .bearer_auth(token)
+            .header(reqwest::header::ACCEPT, "application/octet-stream")
+            .send()
+            .await
+            .with_context(|| format!("failed to download tenant manifest asset `{asset_name}`"))?
+            .error_for_status()
+            .with_context(|| format!("failed to download tenant manifest asset `{asset_name}`"))?;
+        let bytes = response
+            .bytes()
+            .await
+            .with_context(|| format!("failed to read tenant manifest asset `{asset_name}`"))?;
+        Ok(Some(bytes.to_vec()))
+    }
+
+    async fn fetch_oci_manifest(&self, tenant: &str, token: &str) -> Result<Vec<u8>> {
         let opts = PackFetchOptions {
             allow_tags: true,
             accepted_manifest_types: vec![
@@ -1246,6 +1420,16 @@ impl TenantManifestSource for RealTenantManifestSource {
             )
         })
     }
+}
+
+fn github_latest_release_api_url() -> String {
+    format!(
+        "https://api.github.com/repos/{CUSTOMERS_TOOLS_GITHUB_OWNER}/{CUSTOMERS_TOOLS_GITHUB_REPO}/releases/tags/{CUSTOMERS_TOOLS_GITHUB_RELEASE_TAG}"
+    )
+}
+
+fn tenant_manifest_asset_name(tenant: &str) -> String {
+    format!("{tenant}.json")
 }
 
 #[cfg(test)]
@@ -1425,6 +1609,39 @@ mod tests {
     }
 
     #[test]
+    fn tenant_manifest_asset_name_uses_tenant_json() {
+        assert_eq!(tenant_manifest_asset_name("3point"), "3point.json");
+        assert_eq!(
+            github_latest_release_api_url(),
+            "https://api.github.com/repos/greentic-biz/customers-tools/releases/tags/latest"
+        );
+    }
+
+    #[test]
+    fn parses_github_latest_release_download_url() {
+        let spec = parse_github_release_url(
+            "https://github.com/greentic-biz/greentic-mcp-generator/releases/latest/download/greentic-mcp-generator.json",
+        )
+        .unwrap();
+        assert_eq!(spec.owner, "greentic-biz");
+        assert_eq!(spec.repo, "greentic-mcp-generator");
+        assert_eq!(spec.tag, "latest");
+        assert_eq!(spec.asset_name, "greentic-mcp-generator.json");
+    }
+
+    #[test]
+    fn parses_github_tagged_release_download_url() {
+        let spec = parse_github_release_url(
+            "https://github.com/greentic-biz/greentic-mcp-generator/releases/download/v1.0.0/greentic-mcp-generator.json",
+        )
+        .unwrap();
+        assert_eq!(spec.owner, "greentic-biz");
+        assert_eq!(spec.repo, "greentic-mcp-generator");
+        assert_eq!(spec.tag, "v1.0.0");
+        assert_eq!(spec.asset_name, "greentic-mcp-generator.json");
+    }
+
+    #[test]
     fn extracts_tar_gz_binary() -> Result<()> {
         let temp = TempDir::new()?;
         let archive = tar_gz_with_binary("greentic-x", b"hello");
@@ -1585,6 +1802,93 @@ mod tests {
         assert_eq!(
             fs::read_to_string(temp.path().join("docs/acme/onboarding/README.md"))?,
             "# onboarding\n"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn tenant_install_supports_referenced_multi_doc_manifest() -> Result<()> {
+        let temp = TempDir::new()?;
+        let tool_archive = tar_gz_with_binary("greentic-x", b"bin");
+        let sha = sha256_hex(&tool_archive);
+        let tool_url =
+            "https://github.com/acme/releases/download/v1.2.3/greentic-x-linux-x86_64.tar.gz";
+        let doc_a_url = "https://raw.githubusercontent.com/acme/docs/main/a.md";
+        let doc_b_url = "https://raw.githubusercontent.com/acme/docs/main/b.md";
+        let tool_manifest_url = "https://raw.githubusercontent.com/greenticai/customers-tools/main/tools/greentic-x-cli/manifest.json";
+        let doc_manifest_url = "https://raw.githubusercontent.com/greenticai/customers-tools/main/docs/acme-onboarding.json";
+        let tenant_manifest = referenced_manifest(tool_manifest_url, doc_manifest_url);
+        let tool_manifest = serde_json::to_vec(&TenantToolEntry {
+            schema: Some(
+                "https://raw.githubusercontent.com/greenticai/customers-tools/main/schemas/tool.schema.json".to_string(),
+            ),
+            id: "greentic-x-cli".to_string(),
+            name: "Greentic X CLI".to_string(),
+            description: Some("CLI".to_string()),
+            install: ToolInstall {
+                install_type: "release-binary".to_string(),
+                binary_name: "greentic-x".to_string(),
+                targets: vec![ReleaseTarget {
+                    os: "linux".to_string(),
+                    arch: "x86_64".to_string(),
+                    url: tool_url.to_string(),
+                    sha256: Some(sha),
+                }],
+            },
+            docs: vec!["acme-onboarding".to_string()],
+            i18n: std::collections::BTreeMap::new(),
+        })?;
+        let doc_manifest = serde_json::json!({
+            "schema_version": "1",
+            "id": "acme-onboarding",
+            "docs": [
+                {
+                    "title": "A",
+                    "source": {
+                        "type": "download",
+                        "url": doc_a_url
+                    },
+                    "download_file_name": "a.md",
+                    "default_relative_path": "docs/a.md"
+                },
+                {
+                    "title": "B",
+                    "source": {
+                        "type": "download",
+                        "url": doc_b_url
+                    },
+                    "download_file_name": "b.md",
+                    "default_relative_path": "docs/b.md"
+                }
+            ]
+        });
+
+        let installer = Installer::new(
+            FakeTenantManifestSource {
+                manifest: tenant_manifest,
+            },
+            FakeDownloader {
+                responses: HashMap::from([
+                    (tool_manifest_url.to_string(), tool_manifest),
+                    (
+                        doc_manifest_url.to_string(),
+                        serde_json::to_vec(&doc_manifest)?,
+                    ),
+                    (tool_url.to_string(), tool_archive),
+                    (doc_a_url.to_string(), b"# A\n".to_vec()),
+                    (doc_b_url.to_string(), b"# B\n".to_vec()),
+                ]),
+            },
+            test_env(&temp)?,
+        );
+        installer.install_tenant("acme", "secret-token")?;
+        assert_eq!(
+            fs::read_to_string(temp.path().join("docs/docs/a.md"))?,
+            "# A\n"
+        );
+        assert_eq!(
+            fs::read_to_string(temp.path().join("docs/docs/b.md"))?,
+            "# B\n"
         );
         Ok(())
     }

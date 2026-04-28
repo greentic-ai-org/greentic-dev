@@ -55,8 +55,8 @@ That sequence produces a runnable pack that uses your local component, validates
 ## CLI Overview
 
 This CLI passes through directly to the upstream tools. See the detailed options and examples in [`docs/cli.md`](docs/cli.md).
-`greentic-dev` does not auto-install delegated binaries.
-Install delegated tools explicitly with `greentic-dev install tools` (or `greentic-dev install tools --latest` to force-refresh to newest available versions).
+`greentic-dev` does not auto-install delegated binaries during normal passthrough commands.
+Use `greentic-dev install tools` to bootstrap development tools from the canonical Greentic tool catalogue, or `greentic-dev install tools --latest` to force-refresh them. Customer-approved pinned toolchain releases are installed with `gtc install`.
 
 - `greentic-dev flow …` → `greentic-flow` (doctor, add-step, etc.)
 - `greentic-dev component …` → `greentic-component` (new, build, doctor, describe, pack, templates)
@@ -66,6 +66,7 @@ Install delegated tools explicitly with `greentic-dev install tools` (or `greent
 - `greentic-dev mcp doctor …` → built-in MCP doctor
 - `greentic-dev mcp --compose …` → `greentic-mcp compose …`
 - `greentic-dev mcp …` → `greentic-mcp` passthrough for other MCP commands
+- `greentic-dev release …` → generate, publish, and promote GHCR toolchain release manifests
 - `greentic-dev wizard …` → deterministic plan-first orchestration (see `docs/wizard/README.md`)
 
 Links to upstream CLI docs for the full flag sets:
@@ -98,7 +99,7 @@ Everything is validated before execution: flows are checked against component de
 
 ## Requirements
 
-- Rust 1.90+ (repo pins `rust-toolchain.toml`)
+- Rust 1.95+ (repo pins `rust-toolchain.toml`)
 - `wasm32-wasip2` target for component builds: `rustup target add wasm32-wasip2`
 - Network optional: most flows/components can run offline; remote component pulls require connectivity unless cached.
 

@@ -6,8 +6,10 @@ use std::ffi::OsString;
 use std::process::{Command as ProcessCommand, Stdio};
 
 use greentic_dev::cli::{Cli, Command};
-use greentic_dev::cli::{InstallSubcommand, McpCommand, ToolsCommand, WizardSubcommand};
-use greentic_dev::passthrough::{resolve_binary, run_passthrough};
+use greentic_dev::cli::{
+    InstallSubcommand, McpCommand, ReleaseCommand, ToolsCommand, WizardSubcommand,
+};
+use greentic_dev::passthrough::{delegated_binary_name, resolve_binary, run_passthrough};
 
 use greentic_dev::cbor_cmd;
 use greentic_dev::cmd::config;
@@ -15,6 +17,7 @@ use greentic_dev::cmd::tools;
 use greentic_dev::coverage_cmd;
 use greentic_dev::install;
 use greentic_dev::mcp_cmd;
+use greentic_dev::release_cmd;
 use greentic_dev::secrets_cli::run_secrets_command;
 use greentic_dev::wizard;
 
@@ -84,6 +87,13 @@ fn main() -> Result<()> {
                 None => install::run(args),
             }
         }
+        Command::Release(release) => match release {
+            ReleaseCommand::Generate(args) => release_cmd::generate(args),
+            ReleaseCommand::Publish(args) => release_cmd::publish(args),
+            ReleaseCommand::View(args) => release_cmd::view(args),
+            ReleaseCommand::Latest(args) => release_cmd::latest(args),
+            ReleaseCommand::Promote(args) => release_cmd::promote(args),
+        },
         Command::Wizard(args) => match args.command {
             Some(WizardSubcommand::Validate(sub)) => wizard::validate(sub),
             Some(WizardSubcommand::Apply(sub)) => wizard::apply(sub),
@@ -256,6 +266,7 @@ fn is_known_subcommand(subcmd: &str) -> bool {
             | "secrets"
             | "tools"
             | "install"
+            | "release"
             | "cbor"
             | "wizard"
             | "help"
@@ -263,7 +274,7 @@ fn is_known_subcommand(subcmd: &str) -> bool {
 }
 
 fn try_delegate_to_prefixed(subcmd: &str, rest: &[OsString]) {
-    let exe = format!("greentic-{subcmd}");
+    let exe = delegated_binary_name(&format!("greentic-{subcmd}"));
 
     let status = match ProcessCommand::new(&exe)
         .args(rest)

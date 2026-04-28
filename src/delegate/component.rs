@@ -1,10 +1,9 @@
 use std::ffi::OsString;
 
-use anyhow::{Context, Result, anyhow, bail};
-use which::which;
-
 use crate::config::{self, GreenticConfig};
+use crate::passthrough::resolve_binary;
 use crate::util::process::{self, CommandOutput, CommandSpec, StreamMode};
+use anyhow::{Context, Result, anyhow, bail};
 
 const TOOL_NAME: &str = "greentic-component";
 
@@ -77,7 +76,7 @@ fn resolve_program(config: &GreenticConfig) -> Result<ResolvedProgram> {
         });
     }
 
-    match which(TOOL_NAME) {
+    match resolve_binary(TOOL_NAME) {
         Ok(path) => Ok(ResolvedProgram {
             program: path.into_os_string(),
         }),
