@@ -271,6 +271,38 @@ struct TenantDocEntry {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+struct RemoteDocManifest {
+    #[serde(rename = "$schema", default)]
+    schema: Option<String>,
+    #[serde(default)]
+    schema_version: Option<String>,
+    id: String,
+    #[serde(default)]
+    title: Option<String>,
+    #[serde(default)]
+    source: Option<DocSource>,
+    #[serde(default)]
+    download_file_name: Option<String>,
+    #[serde(alias = "relative_path", default)]
+    default_relative_path: Option<String>,
+    #[serde(default)]
+    docs: Vec<RemoteDocManifestEntry>,
+    #[serde(default)]
+    i18n: std::collections::BTreeMap<String, DocTranslation>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+struct RemoteDocManifestEntry {
+    title: String,
+    source: DocSource,
+    download_file_name: String,
+    #[serde(alias = "relative_path")]
+    default_relative_path: String,
+    #[serde(default)]
+    i18n: std::collections::BTreeMap<String, DocTranslation>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
 struct SimpleTenantToolEntry {
     id: String,
     #[serde(default)]
@@ -308,6 +340,65 @@ struct RemoteManifestRef {
     id: String,
     #[serde(alias = "manifest_url")]
     url: String,
+}
+
+impl RemoteDocManifest {
+    fn into_entries(self) -> Result<Vec<TenantDocEntry>> {
+        let has_single_doc_fields = self.title.is_some()
+            || self.source.is_some()
+            || self.download_file_name.is_some()
+            || self.default_relative_path.is_some();
+        if has_single_doc_fields && !self.docs.is_empty() {
+            bail!(
+                "doc manifest `{}` must not mix single-doc fields with docs[]",
+                self.id
+            );
+        }
+
+        if !self.docs.is_empty() {
+            let schema = self.schema.clone();
+            let manifest_id = self.id;
+            return Ok(self
+                .docs
+                .into_iter()
+                .map(|entry| TenantDocEntry {
+                    schema: schema.clone(),
+                    id: format!("{}:{}", manifest_id, entry.download_file_name),
+                    title: entry.title,
+                    source: entry.source,
+                    download_file_name: entry.download_file_name,
+                    default_relative_path: entry.default_relative_path,
+                    i18n: entry.i18n,
+                })
+                .collect());
+        }
+
+        let Some(title) = self.title else {
+            bail!("doc manifest `{}` is missing `title`", self.id);
+        };
+        let Some(source) = self.source else {
+            bail!("doc manifest `{}` is missing `source`", self.id);
+        };
+        let Some(download_file_name) = self.download_file_name else {
+            bail!("doc manifest `{}` is missing `download_file_name`", self.id);
+        };
+        let Some(default_relative_path) = self.default_relative_path else {
+            bail!(
+                "doc manifest `{}` is missing `default_relative_path`",
+                self.id
+            );
+        };
+
+        Ok(vec![TenantDocEntry {
+            schema: self.schema,
+            id: self.id,
+            title,
+            source,
+            download_file_name,
+            default_relative_path,
+            i18n: self.i18n,
+        }])
+    }
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
@@ -446,10 +537,12 @@ where
         let mut installed_docs = Vec::new();
         let mut installed_doc_entries = Vec::new();
         for doc in &manifest.docs {
-            let doc = self.resolve_doc(doc, token).await?;
-            let path = self.install_doc(&doc, token).await?;
-            installed_doc_entries.push((doc.id.clone(), path.clone()));
-            installed_docs.push(path.display().to_string());
+            let docs = self.resolve_doc(doc, token).await?;
+            for doc in docs {
+                let path = self.install_doc(&doc, token).await?;
+                installed_doc_entries.push((doc.id.clone(), path.clone()));
+                installed_docs.push(path.display().to_string());
+            }
         }
 
         let manifest_path = self.env.manifests_dir.join(format!("tenant-{tenant}.json"));
@@ -531,10 +624,14 @@ where
         }
     }
 
-    async fn resolve_doc(&self, doc: &TenantDocDescriptor, token: &str) -> Result<TenantDocEntry> {
+    async fn resolve_doc(
+        &self,
+        doc: &TenantDocDescriptor,
+        token: &str,
+    ) -> Result<Vec<TenantDocEntry>> {
         match doc {
-            TenantDocDescriptor::Expanded(entry) => Ok(entry.clone()),
-            TenantDocDescriptor::Simple(entry) => Ok(TenantDocEntry {
+            TenantDocDescriptor::Expanded(entry) => Ok(vec![entry.clone()]),
+            TenantDocDescriptor::Simple(entry) => Ok(vec![TenantDocEntry {
                 schema: None,
                 id: entry.file_name.clone(),
                 title: entry.file_name.clone(),
@@ -545,11 +642,11 @@ where
                 download_file_name: entry.file_name.clone(),
                 default_relative_path: entry.file_name.clone(),
                 i18n: std::collections::BTreeMap::new(),
-            }),
+            }]),
             TenantDocDescriptor::Ref(reference) => {
                 enforce_github_url(&reference.url)?;
                 let bytes = self.downloader.download(&reference.url, token).await?;
-                let manifest: TenantDocEntry = serde_json::from_slice(&bytes)
+                let manifest: RemoteDocManifest = serde_json::from_slice(&bytes)
                     .with_context(|| format!("failed to parse doc manifest `{}`", reference.url))?;
                 if manifest.id != reference.id {
                     bail!(
@@ -558,7 +655,7 @@ where
                         manifest.id
                     );
                 }
-                Ok(manifest)
+                manifest.into_entries()
             }
             TenantDocDescriptor::Id(id) => bail!(
                 "doc id `{id}` requires a manifest URL; bare IDs are not supported by greentic-dev"
@@ -1705,6 +1802,93 @@ mod tests {
         assert_eq!(
             fs::read_to_string(temp.path().join("docs/acme/onboarding/README.md"))?,
             "# onboarding\n"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn tenant_install_supports_referenced_multi_doc_manifest() -> Result<()> {
+        let temp = TempDir::new()?;
+        let tool_archive = tar_gz_with_binary("greentic-x", b"bin");
+        let sha = sha256_hex(&tool_archive);
+        let tool_url =
+            "https://github.com/acme/releases/download/v1.2.3/greentic-x-linux-x86_64.tar.gz";
+        let doc_a_url = "https://raw.githubusercontent.com/acme/docs/main/a.md";
+        let doc_b_url = "https://raw.githubusercontent.com/acme/docs/main/b.md";
+        let tool_manifest_url = "https://raw.githubusercontent.com/greenticai/customers-tools/main/tools/greentic-x-cli/manifest.json";
+        let doc_manifest_url = "https://raw.githubusercontent.com/greenticai/customers-tools/main/docs/acme-onboarding.json";
+        let tenant_manifest = referenced_manifest(tool_manifest_url, doc_manifest_url);
+        let tool_manifest = serde_json::to_vec(&TenantToolEntry {
+            schema: Some(
+                "https://raw.githubusercontent.com/greenticai/customers-tools/main/schemas/tool.schema.json".to_string(),
+            ),
+            id: "greentic-x-cli".to_string(),
+            name: "Greentic X CLI".to_string(),
+            description: Some("CLI".to_string()),
+            install: ToolInstall {
+                install_type: "release-binary".to_string(),
+                binary_name: "greentic-x".to_string(),
+                targets: vec![ReleaseTarget {
+                    os: "linux".to_string(),
+                    arch: "x86_64".to_string(),
+                    url: tool_url.to_string(),
+                    sha256: Some(sha),
+                }],
+            },
+            docs: vec!["acme-onboarding".to_string()],
+            i18n: std::collections::BTreeMap::new(),
+        })?;
+        let doc_manifest = serde_json::json!({
+            "schema_version": "1",
+            "id": "acme-onboarding",
+            "docs": [
+                {
+                    "title": "A",
+                    "source": {
+                        "type": "download",
+                        "url": doc_a_url
+                    },
+                    "download_file_name": "a.md",
+                    "default_relative_path": "docs/a.md"
+                },
+                {
+                    "title": "B",
+                    "source": {
+                        "type": "download",
+                        "url": doc_b_url
+                    },
+                    "download_file_name": "b.md",
+                    "default_relative_path": "docs/b.md"
+                }
+            ]
+        });
+
+        let installer = Installer::new(
+            FakeTenantManifestSource {
+                manifest: tenant_manifest,
+            },
+            FakeDownloader {
+                responses: HashMap::from([
+                    (tool_manifest_url.to_string(), tool_manifest),
+                    (
+                        doc_manifest_url.to_string(),
+                        serde_json::to_vec(&doc_manifest)?,
+                    ),
+                    (tool_url.to_string(), tool_archive),
+                    (doc_a_url.to_string(), b"# A\n".to_vec()),
+                    (doc_b_url.to_string(), b"# B\n".to_vec()),
+                ]),
+            },
+            test_env(&temp)?,
+        );
+        installer.install_tenant("acme", "secret-token")?;
+        assert_eq!(
+            fs::read_to_string(temp.path().join("docs/docs/a.md"))?,
+            "# A\n"
+        );
+        assert_eq!(
+            fs::read_to_string(temp.path().join("docs/docs/b.md"))?,
+            "# B\n"
         );
         Ok(())
     }

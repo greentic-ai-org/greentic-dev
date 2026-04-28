@@ -5,6 +5,7 @@ use std::{collections::BTreeMap, process};
 
 use anyhow::{Result, bail};
 
+use crate::passthrough::resolve_binary;
 use crate::wizard::plan::{WizardPlan, WizardStep};
 
 pub struct ExecuteOptions {
@@ -65,7 +66,8 @@ pub fn execute(
 
             append_exec_log(exec_log_path, &cmd.program, &cmd.args)?;
 
-            let status = Command::new(&cmd.program)
+            let resolved_program = resolve_binary(&cmd.program)?;
+            let status = Command::new(&resolved_program)
                 .args(&cmd.args)
                 .stdin(Stdio::inherit())
                 .stdout(Stdio::inherit())
@@ -122,7 +124,8 @@ fn validate_version_pin(plan: &WizardPlan, program: &str, actual_version: &str) 
 }
 
 fn resolve_program_version(program: &str) -> Result<Option<String>> {
-    let output: process::Output = Command::new(program)
+    let resolved_program = resolve_binary(program)?;
+    let output: process::Output = Command::new(resolved_program)
         .arg("--version")
         .stdin(Stdio::null())
         .stdout(Stdio::piped())

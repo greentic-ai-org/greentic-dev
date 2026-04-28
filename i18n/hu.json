@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Pack átengedés (greentic-pack; a pack run a greentic-runner-cli-t használja)",
   "cli.command.passthrough.args": "Közvetlenül a mögöttes parancsnak átadott argumentumok",
   "cli.command.release.about": "Greentic eszközlánc-kiadások generálása, közzététele és előléptetése",
-  "cli.command.release.dev.about": "A fejlesztői eszközlánc manifest közzététele a legújabb csomagverziókkal",
+  "cli.command.release.latest.about": "A fejlesztői eszközlánc manifest közzététele a legújabb csomagverziókkal",
   "cli.command.release.dry_run": "Tervezett kiadási munka kiírása írás vagy közzététel nélkül",
   "cli.command.release.force": "Meglévő kiadási címke felülírása közzétételkor",
   "cli.command.release.from": "Metaadatokhoz vagy verziókorlátozásokhoz használt forráscímke",

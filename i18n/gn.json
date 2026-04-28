@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Jehasa hag̃ua pack (greentic-pack; pack run oipuru greentic-runner-cli)",
   "cli.command.passthrough.args": "Argumento oñembohasáva directamente tembiapo guýpe",
   "cli.command.release.about": "Ejapo, emoherakuã ha emotenonde Greentic toolchain rehegua ñeguenohẽ",
-  "cli.command.release.dev.about": "Emoherakuã dev toolchain manifest oguerekóva paquete versión ipyahuvéva",
+  "cli.command.release.latest.about": "Emoherakuã dev toolchain manifest oguerekóva paquete versión ipyahuvéva",
   "cli.command.release.dry_run": "Ehechauka ñeguenohẽ rembiapo oñeplanéava ehai térã emoherakuã'ỹre",
   "cli.command.release.force": "Ehai ári peteĩ release tag oĩmavare emoherakuã jave",
   "cli.command.release.from": "Source tag ojeporúva metadata térã version jejoko rehegua",

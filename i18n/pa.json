@@ -26,7 +26,7 @@
   "cli.command.pack.about": "ਪੈਕ ਪਾਸਥਰੂ (greentic-pack; pack run greentic-runner-cli ਵਰਤਦਾ ਹੈ)",
   "cli.command.passthrough.args": "ਮੂਲ command ਨੂੰ ਸਿੱਧੇ ਪਾਸ ਕੀਤੇ arguments",
   "cli.command.release.about": "Greentic ਟੂਲਚੇਨ ਰਿਲੀਜ਼ਾਂ ਬਣਾਓ, ਪ੍ਰਕਾਸ਼ਿਤ ਕਰੋ, ਅਤੇ ਪ੍ਰਮੋਟ ਕਰੋ",
-  "cli.command.release.dev.about": "ਨਵੀਨਤਮ ਪੈਕੇਜ ਵਰਜਨਾਂ ਨਾਲ ਡੈਵ ਟੂਲਚੇਨ ਮੈਨਿਫੈਸਟ ਪ੍ਰਕਾਸ਼ਿਤ ਕਰੋ",
+  "cli.command.release.latest.about": "ਨਵੀਨਤਮ ਪੈਕੇਜ ਵਰਜਨਾਂ ਨਾਲ ਡੈਵ ਟੂਲਚੇਨ ਮੈਨਿਫੈਸਟ ਪ੍ਰਕਾਸ਼ਿਤ ਕਰੋ",
   "cli.command.release.dry_run": "ਲਿਖਣ ਜਾਂ ਪ੍ਰਕਾਸ਼ਿਤ ਕੀਤੇ ਬਿਨਾਂ ਯੋਜਿਤ ਰਿਲੀਜ਼ ਕੰਮ ਪ੍ਰਿੰਟ ਕਰੋ",
   "cli.command.release.force": "ਪ੍ਰਕਾਸ਼ਿਤ ਕਰਦੇ ਸਮੇਂ ਮੌਜੂਦਾ ਰਿਲੀਜ਼ ਟੈਗ ਨੂੰ ਓਵਰਰਾਈਟ ਕਰੋ",
   "cli.command.release.from": "ਮੈਟਾਡੇਟਾ ਜਾਂ ਵਰਜਨ ਪਾਬੰਦੀਆਂ ਲਈ ਵਰਤਿਆ ਗਿਆ ਸਰੋਤ ਟੈਗ",

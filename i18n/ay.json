@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Pack passthrough (greentic-pack; pack run ukax greentic-runner-cli apnaqi)",
   "cli.command.passthrough.args": "Underlying comando ukar chiqak pasata argumentos",
   "cli.command.release.about": "Greentic toolchain ukan releases ukanak luraña, uñtayaña, ukhamarak nayrar sartayaña",
-  "cli.command.release.dev.about": "Dev toolchain manifest ukax qhipa paquete versión ukanakampi uñt'ayaña",
+  "cli.command.release.latest.about": "Dev toolchain manifest ukax qhipa paquete versión ukanakampi uñt'ayaña",
   "cli.command.release.dry_run": "Jan qillqasasa jan uñtayasasa wakicht'at release lurawinak imprimir luraña",
   "cli.command.release.force": "Uñtaykasaxa utjki uka release tag mayampi qillqaña",
   "cli.command.release.from": "Metadata jan ukax versión jark'awinakataki apnaqata source tag",

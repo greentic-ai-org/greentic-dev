@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Pack-vidarebefordran (greentic-pack; pack run använder greentic-runner-cli)",
   "cli.command.passthrough.args": "Argument som skickas direkt till det underliggande kommandot",
   "cli.command.release.about": "Generera, publicera och marknadsför Greentic-verktygskedjeutgåvor",
-  "cli.command.release.dev.about": "Publicera manifestet för utvecklingsverktygskedjan med de senaste paketversionerna",
+  "cli.command.release.latest.about": "Publicera manifestet för utvecklingsverktygskedjan med de senaste paketversionerna",
   "cli.command.release.dry_run": "Skriv ut planerat utgåvearbete utan att skriva eller publicera",
   "cli.command.release.force": "Skriv över en befintlig utgåvetagg vid publicering",
   "cli.command.release.from": "Källtagg som används för metadata eller versionsbegränsningar",

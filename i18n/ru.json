@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Сквозная передача pack (greentic-pack; pack run использует greentic-runner-cli)",
   "cli.command.passthrough.args": "Аргументы, напрямую передаваемые базовой команде",
   "cli.command.release.about": "Создавать, публиковать и продвигать релизы набора инструментов Greentic",
-  "cli.command.release.dev.about": "Опубликовать манифест инструментальной цепочки разработки с последними версиями пакетов",
+  "cli.command.release.latest.about": "Опубликовать манифест инструментальной цепочки разработки с последними версиями пакетов",
   "cli.command.release.dry_run": "Вывести запланированные действия релиза без записи или публикации",
   "cli.command.release.force": "Перезаписать существующий тег релиза при публикации",
   "cli.command.release.from": "Исходный тег, используемый для метаданных или ограничений версии",

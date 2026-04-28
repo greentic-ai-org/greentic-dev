@@ -26,7 +26,7 @@
   "cli.command.pack.about": "ส่งผ่านแพ็ก (greentic-pack; การเรียกใช้ pack run ใช้ greentic-runner-cli)",
   "cli.command.passthrough.args": "อาร์กิวเมนต์ที่ส่งผ่านโดยตรงไปยังคำสั่งพื้นฐาน",
   "cli.command.release.about": "สร้าง เผยแพร่ และโปรโมตรีลีสชุดเครื่องมือ Greentic",
-  "cli.command.release.dev.about": "เผยแพร่แมนิเฟสต์ชุดเครื่องมือสำหรับการพัฒนาด้วยเวอร์ชันแพ็กเกจล่าสุด",
+  "cli.command.release.latest.about": "เผยแพร่แมนิเฟสต์ชุดเครื่องมือสำหรับการพัฒนาด้วยเวอร์ชันแพ็กเกจล่าสุด",
   "cli.command.release.dry_run": "พิมพ์งานรีลีสที่วางแผนไว้โดยไม่เขียนหรือเผยแพร่",
   "cli.command.release.force": "เขียนทับแท็กรีลีสที่มีอยู่เมื่อเผยแพร่",
   "cli.command.release.from": "แท็กต้นทางที่ใช้สำหรับเมตาดาต้าหรือข้อจำกัดเวอร์ชัน",

@@ -26,7 +26,7 @@
   "cli.command.pack.about": "پیک پاس تھرو (greentic-pack؛ pack run میں greentic-runner-cli استعمال ہوتا ہے)",
   "cli.command.passthrough.args": "arguments جو براہ راست underlying command کو پاس کیے جاتے ہیں",
   "cli.command.release.about": "Greentic ٹول چین ریلیزز بنائیں، شائع کریں، اور فروغ دیں",
-  "cli.command.release.dev.about": "تازہ ترین پیکیج ورژنز کے ساتھ dev ٹول چین مینی فیسٹ شائع کریں",
+  "cli.command.release.latest.about": "تازہ ترین پیکیج ورژنز کے ساتھ dev ٹول چین مینی فیسٹ شائع کریں",
   "cli.command.release.dry_run": "لکھے یا شائع کیے بغیر منصوبہ بند ریلیز کام پرنٹ کریں",
   "cli.command.release.force": "شائع کرتے وقت موجودہ ریلیز ٹیگ کو اوور رائٹ کریں",
   "cli.command.release.from": "میٹا ڈیٹا یا ورژن پابندیوں کے لیے استعمال ہونے والا سورس ٹیگ",

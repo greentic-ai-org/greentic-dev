@@ -10,7 +10,7 @@ fn parses_release_generate() {
         "--release",
         "1.0.5",
         "--from",
-        "dev",
+        "latest",
         "--token",
         "env:GHCR_TOKEN",
     ])
@@ -19,7 +19,7 @@ fn parses_release_generate() {
         panic!("expected release generate");
     };
     assert_eq!(args.release, "1.0.5");
-    assert_eq!(args.from, "dev");
+    assert_eq!(args.from, "latest");
     assert_eq!(args.token.as_deref(), Some("env:GHCR_TOKEN"));
 }
 
@@ -32,7 +32,7 @@ fn parses_release_publish_with_tag_and_force() {
         "--release",
         "1.0.5",
         "--from",
-        "dev",
+        "latest",
         "--tag",
         "rc",
         "--force",
@@ -42,7 +42,7 @@ fn parses_release_publish_with_tag_and_force() {
         panic!("expected release publish");
     };
     assert_eq!(args.release.as_deref(), Some("1.0.5"));
-    assert_eq!(args.from.as_deref(), Some("dev"));
+    assert_eq!(args.from.as_deref(), Some("latest"));
     assert_eq!(args.tag.as_deref(), Some("rc"));
     assert!(args.force);
 }
@@ -146,18 +146,18 @@ fn release_view_requires_release_or_tag() {
 }
 
 #[test]
-fn parses_release_dev() {
+fn parses_release_latest() {
     let cli = Cli::try_parse_from([
         "greentic-dev",
         "release",
-        "dev",
+        "latest",
         "--token",
         "env:GHCR_TOKEN",
         "--force",
     ])
     .unwrap();
-    let Command::Release(ReleaseCommand::Dev(args)) = cli.command else {
-        panic!("expected release dev");
+    let Command::Release(ReleaseCommand::Latest(args)) = cli.command else {
+        panic!("expected release latest");
     };
     assert_eq!(args.token.as_deref(), Some("env:GHCR_TOKEN"));
     assert!(args.force);

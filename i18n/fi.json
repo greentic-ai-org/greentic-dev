@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Pakkauksen läpivienti (greentic-pack; pack run käyttää greentic-runner-cli:tä)",
   "cli.command.passthrough.args": "Argumentit, jotka välitetään suoraan taustalla olevaan komentoon",
   "cli.command.release.about": "Luo, julkaise ja edistä Greentic-työkaluketjun julkaisuja",
-  "cli.command.release.dev.about": "Julkaise kehitystyökaluketjun manifesti uusimmilla pakettiversioilla",
+  "cli.command.release.latest.about": "Julkaise kehitystyökaluketjun manifesti uusimmilla pakettiversioilla",
   "cli.command.release.dry_run": "Tulosta suunniteltu julkaisutyö kirjoittamatta tai julkaisematta",
   "cli.command.release.force": "Korvaa olemassa oleva julkaisutagi julkaistaessa",
   "cli.command.release.from": "Metatiedoissa tai versiovaatimuksissa käytettävä lähdetagi",

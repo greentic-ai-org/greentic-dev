@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Passthrough pentru pachet (greentic-pack; pack run folosește greentic-runner-cli)",
   "cli.command.passthrough.args": "Argumente transmise direct comenzii de bază",
   "cli.command.release.about": "Generează, publică și promovează lansări ale lanțului de instrumente Greentic",
-  "cli.command.release.dev.about": "Publică manifestul lanțului de instrumente dev cu cele mai recente versiuni ale pachetelor",
+  "cli.command.release.latest.about": "Publică manifestul lanțului de instrumente dev cu cele mai recente versiuni ale pachetelor",
   "cli.command.release.dry_run": "Afișează lucrările de lansare planificate fără a scrie sau publica",
   "cli.command.release.force": "Suprascrie o etichetă de lansare existentă la publicare",
   "cli.command.release.from": "Etichetă sursă utilizată pentru metadate sau constrângeri de versiune",

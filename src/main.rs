@@ -9,7 +9,7 @@ use greentic_dev::cli::{Cli, Command};
 use greentic_dev::cli::{
     InstallSubcommand, McpCommand, ReleaseCommand, ToolsCommand, WizardSubcommand,
 };
-use greentic_dev::passthrough::{resolve_binary, run_passthrough};
+use greentic_dev::passthrough::{delegated_binary_name, resolve_binary, run_passthrough};
 
 use greentic_dev::cbor_cmd;
 use greentic_dev::cmd::config;
@@ -91,7 +91,7 @@ fn main() -> Result<()> {
             ReleaseCommand::Generate(args) => release_cmd::generate(args),
             ReleaseCommand::Publish(args) => release_cmd::publish(args),
             ReleaseCommand::View(args) => release_cmd::view(args),
-            ReleaseCommand::Dev(args) => release_cmd::dev(args),
+            ReleaseCommand::Latest(args) => release_cmd::latest(args),
             ReleaseCommand::Promote(args) => release_cmd::promote(args),
         },
         Command::Wizard(args) => match args.command {
@@ -274,7 +274,7 @@ fn is_known_subcommand(subcmd: &str) -> bool {
 }
 
 fn try_delegate_to_prefixed(subcmd: &str, rest: &[OsString]) {
-    let exe = format!("greentic-{subcmd}");
+    let exe = delegated_binary_name(&format!("greentic-{subcmd}"));
 
     let status = match ProcessCommand::new(&exe)
         .args(rest)

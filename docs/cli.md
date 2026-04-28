@@ -2,6 +2,8 @@
 
 `greentic-dev` is a passthrough wrapper over upstream CLIs, plus a launcher wizard.
 
+When invoked as `greentic-dev-dev`, delegated commands resolve to development binaries. For example, `greentic-dev-dev pack ...` runs `greentic-pack-dev`, while `greentic-dev pack ...` runs `greentic-pack`.
+
 ## Flow (passthrough to greentic-flow)
 
 - `flow ...` delegates directly to `greentic-flow` (including `--help`).
@@ -104,20 +106,22 @@ Default install locations:
 
 ## Release
 
-- `greentic-dev release generate --release 1.0.5 --from dev`
+- `greentic-dev release generate --release 1.0.5 --from latest`
 - `greentic-dev release generate --release 1.0.5 --token env:GHCR_TOKEN`
-- `greentic-dev release publish --release 1.0.5 --from dev`
+- `greentic-dev release publish --release 1.0.5 --from latest`
 - `greentic-dev release publish --manifest dist/toolchains/gtc-1.0.5.json --tag stable`
-- `greentic-dev release publish --release 1.0.5 --from dev --tag rc`
-- `greentic-dev release publish --release 1.0.5 --from dev --force`
+- `greentic-dev release publish --release 1.0.5 --from latest --tag rc`
+- `greentic-dev release publish --release 1.0.5 --from latest --force`
 - `greentic-dev release view --release 1.0.5`
 - `greentic-dev release view --tag stable`
-- `greentic-dev release dev --token env:GHCR_TOKEN --force`
+- `greentic-dev release latest --token env:GHCR_TOKEN --force`
 - `greentic-dev release promote --release 1.0.5 --tag stable`
 
 Behavior:
 
 - `release generate` creates a pinned `dist/toolchains/gtc-<release>.json` manifest from the canonical Greentic tool catalogue
+- generated filenames include the source channel: `--from stable` writes `gtc-<release>.json`, `--from dev` writes `gtc-dev-<release>.json`, and other channels write `gtc-<channel>-<release>.json`
+- `--from dev` also writes development binary names in the generated manifest, such as `greentic-flow-dev` and `greentic-component-dev`
 - `--from` resolves a source manifest/tag for metadata or version constraints; the package/bin list still comes from the canonical catalogue
 - if the source manifest does not exist yet, `release generate` bootstraps it at `<repo>:<from>` when GHCR credentials are available
 - `release generate --dry-run` shows the generated release manifest and reports the bootstrap it would perform without pushing
@@ -127,7 +131,7 @@ Behavior:
 - publishing an existing release tag fails unless `--force` is set
 - `release publish --tag <tag>` also moves that tag to the published release manifest
 - `release view --release <release>` or `release view --tag <tag>` downloads the selected manifest and prints it as pretty JSON
-- `release dev` publishes `gtc:dev` with every catalogue package set to `"version": "latest"`
+- `release latest` publishes `gtc:latest` with every catalogue package using `*-dev` bins and `"version": "latest"`
 - `release promote --release <release> --tag <tag>` moves a tag to an existing release without regenerating the manifest
 - `--token <TOKEN>` and `--token env:<VAR>` authenticate GHCR operations; when omitted, release commands use `GHCR_TOKEN`, then `GITHUB_TOKEN`
 - rollback is represented by promoting an older release to the desired tag

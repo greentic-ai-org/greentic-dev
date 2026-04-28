@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Předání pack (greentic-pack; pack run používá greentic-runner-cli)",
   "cli.command.passthrough.args": "Argumenty předané přímo podkladovému příkazu",
   "cli.command.release.about": "Generovat, publikovat a propagovat vydání nástrojového řetězce Greentic",
-  "cli.command.release.dev.about": "Publikovat manifest vývojového toolchainu s nejnovějšími verzemi balíčků",
+  "cli.command.release.latest.about": "Publikovat manifest vývojového toolchainu s nejnovějšími verzemi balíčků",
   "cli.command.release.dry_run": "Vypsat plánovanou práci na vydání bez zápisu nebo publikování",
   "cli.command.release.force": "Při publikování přepsat existující značku vydání",
   "cli.command.release.from": "Zdrojová značka použitá pro metadata nebo omezení verzí",

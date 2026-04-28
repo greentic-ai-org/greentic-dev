@@ -26,7 +26,7 @@
   "cli.command.pack.about": "പാക്ക് പാസ്‌ത്രൂ (greentic-pack; pack run greentic-runner-cli ഉപയോഗിക്കുന്നു)",
   "cli.command.passthrough.args": "അടിസ്ഥാന കമാൻഡിലേക്ക് നേരിട്ട് പാസ്സാക്കുന്ന ആർഗ്യുമെന്റുകൾ",
   "cli.command.release.about": "Greentic ടൂൾചെയിൻ റിലീസുകൾ സൃഷ്ടിക്കുക, പ്രസിദ്ധീകരിക്കുക, പ്രമോട്ട് ചെയ്യുക",
-  "cli.command.release.dev.about": "ഏറ്റവും പുതിയ പാക്കേജ് പതിപ്പുകളോടെ dev toolchain manifest പ്രസിദ്ധീകരിക്കുക",
+  "cli.command.release.latest.about": "ഏറ്റവും പുതിയ പാക്കേജ് പതിപ്പുകളോടെ dev toolchain manifest പ്രസിദ്ധീകരിക്കുക",
   "cli.command.release.dry_run": "എഴുതുകയോ പ്രസിദ്ധീകരിക്കുകയോ ചെയ്യാതെ പദ്ധതിയിട്ട റിലീസ് ജോലികൾ പ്രിന്റ് ചെയ്യുക",
   "cli.command.release.force": "പ്രസിദ്ധീകരിക്കുമ്പോൾ നിലവിലുള്ള റിലീസ് ടാഗ് ഓവർറൈറ്റ് ചെയ്യുക",
   "cli.command.release.from": "മെറ്റാഡാറ്റയ്ക്കോ പതിപ്പ് നിയന്ത്രണങ്ങൾക്കോ ഉപയോഗിക്കുന്ന സോഴ്‌സ് ടാഗ്",

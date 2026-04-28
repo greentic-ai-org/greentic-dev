@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Penerusan pack (greentic-pack; pack run menggunakan greentic-runner-cli)",
   "cli.command.passthrough.args": "Argumen yang diteruskan langsung ke perintah dasar",
   "cli.command.release.about": "Buat, publikasikan, dan promosikan rilis toolchain Greentic",
-  "cli.command.release.dev.about": "Publikasikan manifes toolchain dev dengan versi paket terbaru",
+  "cli.command.release.latest.about": "Publikasikan manifes toolchain dev dengan versi paket terbaru",
   "cli.command.release.dry_run": "Cetak pekerjaan rilis yang direncanakan tanpa menulis atau memublikasikan",
   "cli.command.release.force": "Timpa tag rilis yang sudah ada saat memublikasikan",
   "cli.command.release.from": "Tag sumber yang digunakan untuk metadata atau batasan versi",

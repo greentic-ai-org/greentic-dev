@@ -26,7 +26,7 @@
   "cli.command.pack.about": "패키지 패스스루 (greentic-pack; pack run은 greentic-runner-cli 사용)",
   "cli.command.passthrough.args": "기본 명령에 직접 전달되는 인수",
   "cli.command.release.about": "Greentic 툴체인 릴리스를 생성, 게시 및 승격",
-  "cli.command.release.dev.about": "최신 패키지 버전으로 개발 도구 체인 매니페스트 게시",
+  "cli.command.release.latest.about": "최신 패키지 버전으로 개발 도구 체인 매니페스트 게시",
   "cli.command.release.dry_run": "쓰기 또는 게시 없이 계획된 릴리스 작업 출력",
   "cli.command.release.force": "게시 시 기존 릴리스 태그 덮어쓰기",
   "cli.command.release.from": "메타데이터 또는 버전 제약 조건에 사용되는 소스 태그",

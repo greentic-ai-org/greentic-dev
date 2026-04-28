@@ -15,9 +15,10 @@ use time::OffsetDateTime;
 use time::format_description::well_known::Rfc3339;
 
 use crate::cli::{
-    ReleaseDevArgs, ReleaseGenerateArgs, ReleasePromoteArgs, ReleasePublishArgs, ReleaseViewArgs,
+    ReleaseGenerateArgs, ReleaseLatestArgs, ReleasePromoteArgs, ReleasePublishArgs, ReleaseViewArgs,
 };
 use crate::install::block_on_maybe_runtime;
+use crate::passthrough::{ToolchainChannel, delegated_binary_name_for_channel};
 use crate::toolchain_catalogue::GREENTIC_TOOLCHAIN_PACKAGES;
 
 const DEFAULT_OAUTH_USER: &str = "oauth2";
@@ -207,7 +208,7 @@ fn publish_manifest_input(
         .release
         .as_deref()
         .context("pass --release or --manifest")?;
-    let from = args.from.as_deref().unwrap_or("dev");
+    let from = args.from.as_deref().unwrap_or("latest");
     let resolver = CargoSearchVersionResolver;
     let source = block_on_maybe_runtime(load_source_manifest(
         &args.repo,
@@ -309,13 +310,13 @@ pub fn view(args: ReleaseViewArgs) -> Result<()> {
     Ok(())
 }
 
-pub fn dev(args: ReleaseDevArgs) -> Result<()> {
-    let manifest = latest_dev_manifest(Some(created_at_now()?));
+pub fn latest(args: ReleaseLatestArgs) -> Result<()> {
+    let manifest = latest_manifest(Some(created_at_now()?));
     if args.dry_run {
         println!("{}", serde_json::to_string_pretty(&manifest)?);
         println!(
             "Dry run: would publish {}",
-            toolchain_ref(&args.repo, "dev")
+            toolchain_ref(&args.repo, "latest")
         );
         return Ok(());
     }
@@ -323,35 +324,51 @@ pub fn dev(args: ReleaseDevArgs) -> Result<()> {
     let auth = registry_auth(args.token.as_deref())?;
     block_on_maybe_runtime(async {
         let client = oci_client();
-        let dev_ref = parse_reference(&args.repo, "dev")?;
-        if !args.force && manifest_exists(&client, &dev_ref, &auth).await? {
+        let latest_ref = parse_reference(&args.repo, "latest")?;
+        if !args.force && manifest_exists(&client, &latest_ref, &auth).await? {
             bail!(
-                "dev tag `{}` already exists; pass --force to overwrite it",
-                toolchain_ref(&args.repo, "dev")
+                "latest tag `{}` already exists; pass --force to overwrite it",
+                toolchain_ref(&args.repo, "latest")
             );
         }
-        push_manifest_layer(&client, &dev_ref, &auth, &manifest).await
+        push_manifest_layer(&client, &latest_ref, &auth, &manifest).await
     })?;
-    println!("Published {}", toolchain_ref(&args.repo, "dev"));
+    println!("Published {}", toolchain_ref(&args.repo, "latest"));
     Ok(())
 }
 
-fn latest_dev_manifest(created_at: Option<String>) -> ToolchainManifest {
+fn latest_manifest(created_at: Option<String>) -> ToolchainManifest {
     ToolchainManifest {
         schema: TOOLCHAIN_MANIFEST_SCHEMA.to_string(),
         toolchain: TOOLCHAIN_NAME.to_string(),
-        version: "dev".to_string(),
-        channel: Some("dev".to_string()),
+        version: "latest".to_string(),
+        channel: Some("latest".to_string()),
         created_at,
-        packages: GREENTIC_TOOLCHAIN_PACKAGES
-            .iter()
-            .map(|package| ToolchainPackage {
-                crate_name: package.crate_name.to_string(),
-                bins: package.bins.iter().map(|bin| (*bin).to_string()).collect(),
-                version: "latest".to_string(),
-            })
-            .collect(),
+        packages: latest_manifest_packages(),
     }
+}
+
+fn latest_manifest_packages() -> Vec<ToolchainPackage> {
+    std::iter::once(ToolchainPackage {
+        crate_name: TOOLCHAIN_NAME.to_string(),
+        bins: vec![delegated_binary_name_for_channel(
+            TOOLCHAIN_NAME,
+            ToolchainChannel::Development,
+        )],
+        version: "latest".to_string(),
+    })
+    .chain(GREENTIC_TOOLCHAIN_PACKAGES.iter().map(|package| {
+        ToolchainPackage {
+            crate_name: package.crate_name.to_string(),
+            bins: package
+                .bins
+                .iter()
+                .map(|bin| delegated_binary_name_for_channel(bin, ToolchainChannel::Development))
+                .collect(),
+            version: "latest".to_string(),
+        }
+    }))
+    .collect()
 }
 
 fn release_view_tag(args: &ReleaseViewArgs) -> Result<String> {
@@ -382,7 +399,7 @@ pub fn generate_manifest<R: CrateVersionResolver>(
         };
         packages.push(ToolchainPackage {
             crate_name: package.crate_name.to_string(),
-            bins: package.bins.iter().map(|bin| (*bin).to_string()).collect(),
+            bins: manifest_bins_for_source(from, package.bins),
             version,
         });
     }
@@ -390,12 +407,20 @@ pub fn generate_manifest<R: CrateVersionResolver>(
         schema: TOOLCHAIN_MANIFEST_SCHEMA.to_string(),
         toolchain: TOOLCHAIN_NAME.to_string(),
         version: release.to_string(),
-        channel: source
-            .and_then(|manifest| manifest.channel.clone())
-            .or_else(|| Some(from.to_string())),
+        channel: Some(from.to_string()),
         created_at,
         packages,
     })
+}
+
+fn manifest_bins_for_source(from: &str, bins: &[&str]) -> Vec<String> {
+    if from == "dev" {
+        bins.iter()
+            .map(|bin| delegated_binary_name_for_channel(bin, ToolchainChannel::Development))
+            .collect()
+    } else {
+        bins.iter().map(|bin| (*bin).to_string()).collect()
+    }
 }
 
 pub fn validate_manifest(manifest: &ToolchainManifest) -> Result<()> {
@@ -428,10 +453,17 @@ fn source_version_map(source: Option<&ToolchainManifest>) -> BTreeMap<String, St
 fn write_manifest(out_dir: &Path, manifest: &ToolchainManifest) -> Result<PathBuf> {
     fs::create_dir_all(out_dir)
         .with_context(|| format!("failed to create {}", out_dir.display()))?;
-    let path = out_dir.join(format!("gtc-{}.json", manifest.version));
+    let path = out_dir.join(manifest_file_name(manifest));
     let json = serde_json::to_vec_pretty(manifest).context("failed to serialize manifest")?;
     fs::write(&path, json).with_context(|| format!("failed to write {}", path.display()))?;
     Ok(path)
+}
+
+fn manifest_file_name(manifest: &ToolchainManifest) -> String {
+    match manifest.channel.as_deref() {
+        Some("stable") | None => format!("gtc-{}.json", manifest.version),
+        Some(channel) => format!("gtc-{channel}-{}.json", manifest.version),
+    }
 }
 
 fn created_at_now() -> Result<String> {
@@ -675,11 +707,11 @@ mod tests {
 
     #[test]
     fn generates_manifest_from_catalogue() {
-        let manifest = generate_manifest("1.0.5", "dev", None, &FixedResolver, None).unwrap();
+        let manifest = generate_manifest("1.0.5", "latest", None, &FixedResolver, None).unwrap();
         assert_eq!(manifest.schema, TOOLCHAIN_MANIFEST_SCHEMA);
         assert_eq!(manifest.toolchain, TOOLCHAIN_NAME);
         assert_eq!(manifest.version, "1.0.5");
-        assert_eq!(manifest.channel.as_deref(), Some("dev"));
+        assert_eq!(manifest.channel.as_deref(), Some("latest"));
         assert!(
             manifest
                 .packages
@@ -701,8 +733,8 @@ mod tests {
         let source = ToolchainManifest {
             schema: TOOLCHAIN_MANIFEST_SCHEMA.to_string(),
             toolchain: TOOLCHAIN_NAME.to_string(),
-            version: "dev".to_string(),
-            channel: Some("dev".to_string()),
+            version: "latest".to_string(),
+            channel: Some("latest".to_string()),
             created_at: None,
             packages: vec![ToolchainPackage {
                 crate_name: "greentic-dev".to_string(),
@@ -711,7 +743,7 @@ mod tests {
             }],
         };
         let manifest =
-            generate_manifest("1.0.5", "dev", Some(&source), &FixedResolver, None).unwrap();
+            generate_manifest("1.0.5", "latest", Some(&source), &FixedResolver, None).unwrap();
         let greentic_dev = manifest
             .packages
             .iter()
@@ -721,10 +753,44 @@ mod tests {
     }
 
     #[test]
-    fn bootstrap_source_manifest_uses_source_tag_identity() {
-        let manifest = bootstrap_source_manifest("dev", &FixedResolver, None).unwrap();
-        assert_eq!(manifest.version, "dev");
+    fn from_argument_controls_generated_channel_over_source_manifest() {
+        let source = ToolchainManifest {
+            schema: TOOLCHAIN_MANIFEST_SCHEMA.to_string(),
+            toolchain: TOOLCHAIN_NAME.to_string(),
+            version: "latest".to_string(),
+            channel: Some("stable".to_string()),
+            created_at: None,
+            packages: Vec::new(),
+        };
+        let manifest =
+            generate_manifest("1.0.16", "dev", Some(&source), &FixedResolver, None).unwrap();
         assert_eq!(manifest.channel.as_deref(), Some("dev"));
+        assert_eq!(manifest_file_name(&manifest), "gtc-dev-1.0.16.json");
+    }
+
+    #[test]
+    fn generate_from_dev_uses_dev_binary_names() {
+        let manifest = generate_manifest("1.0.16", "dev", None, &FixedResolver, None).unwrap();
+        assert!(
+            manifest
+                .packages
+                .iter()
+                .flat_map(|package| package.bins.iter())
+                .all(|bin| bin.ends_with("-dev"))
+        );
+        assert!(manifest.packages.iter().any(|package| {
+            package.crate_name == "greentic-flow" && package.bins == ["greentic-flow-dev"]
+        }));
+        assert!(manifest.packages.iter().any(|package| {
+            package.crate_name == "greentic-component" && package.bins == ["greentic-component-dev"]
+        }));
+    }
+
+    #[test]
+    fn bootstrap_source_manifest_uses_source_tag_identity() {
+        let manifest = bootstrap_source_manifest("latest", &FixedResolver, None).unwrap();
+        assert_eq!(manifest.version, "latest");
+        assert_eq!(manifest.channel.as_deref(), Some("latest"));
         assert_eq!(manifest.schema, TOOLCHAIN_MANIFEST_SCHEMA);
         assert_eq!(manifest.toolchain, TOOLCHAIN_NAME);
         assert!(
@@ -737,7 +803,8 @@ mod tests {
 
     #[test]
     fn validates_schema_and_toolchain() {
-        let mut manifest = generate_manifest("1.0.5", "dev", None, &FixedResolver, None).unwrap();
+        let mut manifest =
+            generate_manifest("1.0.5", "latest", None, &FixedResolver, None).unwrap();
         assert!(validate_manifest(&manifest).is_ok());
         manifest.schema = "wrong".to_string();
         assert!(validate_manifest(&manifest).is_err());
@@ -776,7 +843,7 @@ mod tests {
     fn publish_manifest_input_uses_local_manifest_version() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("gtc-1.0.12.json");
-        let manifest = generate_manifest("1.0.12", "dev", None, &FixedResolver, None).unwrap();
+        let manifest = generate_manifest("1.0.12", "latest", None, &FixedResolver, None).unwrap();
         fs::write(&path, serde_json::to_vec_pretty(&manifest).unwrap()).unwrap();
         let args = ReleasePublishArgs {
             release: None,
@@ -802,7 +869,7 @@ mod tests {
     fn publish_manifest_input_allows_release_override_for_local_manifest() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("gtc-1.0.13.json");
-        let manifest = generate_manifest("1.0.12", "dev", None, &FixedResolver, None).unwrap();
+        let manifest = generate_manifest("1.0.12", "latest", None, &FixedResolver, None).unwrap();
         fs::write(&path, serde_json::to_vec_pretty(&manifest).unwrap()).unwrap();
         let args = ReleasePublishArgs {
             release: Some("1.0.13".to_string()),
@@ -825,10 +892,32 @@ mod tests {
     }
 
     #[test]
-    fn latest_dev_manifest_uses_latest_versions() {
-        let manifest = latest_dev_manifest(None);
-        assert_eq!(manifest.version, "dev");
-        assert_eq!(manifest.channel.as_deref(), Some("dev"));
+    fn manifest_file_name_omits_stable_channel() {
+        let manifest = ToolchainManifest {
+            schema: TOOLCHAIN_MANIFEST_SCHEMA.to_string(),
+            toolchain: TOOLCHAIN_NAME.to_string(),
+            version: "1.0.12".to_string(),
+            channel: Some("stable".to_string()),
+            created_at: None,
+            packages: Vec::new(),
+        };
+        assert_eq!(manifest_file_name(&manifest), "gtc-1.0.12.json");
+    }
+
+    #[test]
+    fn manifest_file_name_includes_non_stable_channel() {
+        let mut manifest = generate_manifest("1.0.12", "dev", None, &FixedResolver, None).unwrap();
+        assert_eq!(manifest_file_name(&manifest), "gtc-dev-1.0.12.json");
+
+        manifest.channel = Some("customer-a".to_string());
+        assert_eq!(manifest_file_name(&manifest), "gtc-customer-a-1.0.12.json");
+    }
+
+    #[test]
+    fn latest_manifest_uses_latest_dev_bins() {
+        let manifest = latest_manifest(None);
+        assert_eq!(manifest.version, "latest");
+        assert_eq!(manifest.channel.as_deref(), Some("latest"));
         assert_eq!(manifest.schema, TOOLCHAIN_MANIFEST_SCHEMA);
         assert_eq!(manifest.toolchain, TOOLCHAIN_NAME);
         assert!(!manifest.packages.is_empty());
@@ -838,6 +927,22 @@ mod tests {
                 .iter()
                 .all(|package| package.version == "latest")
         );
+        assert!(
+            manifest
+                .packages
+                .iter()
+                .flat_map(|package| package.bins.iter())
+                .all(|bin| bin.ends_with("-dev"))
+        );
+        assert!(
+            manifest
+                .packages
+                .iter()
+                .any(|package| { package.crate_name == "gtc" && package.bins == ["gtc-dev"] })
+        );
+        assert!(manifest.packages.iter().any(|package| {
+            package.crate_name == "greentic-dev" && package.bins == ["greentic-dev-dev"]
+        }));
     }
 
     #[test]

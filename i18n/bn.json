@@ -26,7 +26,7 @@
   "cli.command.pack.about": "প্যাক পাসথ্রু (greentic-pack; pack run greentic-runner-cli ব্যবহার করে)",
   "cli.command.passthrough.args": "আর্গুমেন্টগুলো সরাসরি অন্তর্নিহিত কমান্ডে পাঠানো হয়",
   "cli.command.release.about": "Greentic টুলচেইন রিলিজ তৈরি, প্রকাশ এবং প্রমোট করুন",
-  "cli.command.release.dev.about": "সর্বশেষ প্যাকেজ সংস্করণসহ dev toolchain manifest প্রকাশ করুন",
+  "cli.command.release.latest.about": "সর্বশেষ প্যাকেজ সংস্করণসহ dev toolchain manifest প্রকাশ করুন",
   "cli.command.release.dry_run": "লেখা বা প্রকাশ না করে পরিকল্পিত রিলিজ কাজ প্রিন্ট করুন",
   "cli.command.release.force": "প্রকাশের সময় বিদ্যমান রিলিজ ট্যাগ ওভাররাইট করুন",
   "cli.command.release.from": "মেটাডেটা বা সংস্করণ সীমাবদ্ধতার জন্য ব্যবহৃত উৎস ট্যাগ",

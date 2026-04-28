@@ -26,7 +26,7 @@
   "cli.command.pack.about": "පැක් passthrough (greentic-pack; pack run විසින් greentic-runner-cli භාවිතා කරයි)",
   "cli.command.passthrough.args": "යටින් ඇති විධානයට සෘජුවම යවන arguments",
   "cli.command.release.about": "Greentic toolchain නිකුතු ජනනය, ප්‍රකාශනය, සහ ප්‍රවර්ධනය කරන්න",
-  "cli.command.release.dev.about": "නවතම පැකේජ අනුවාද සමඟ dev toolchain ප්‍රකාශනය පළ කරන්න",
+  "cli.command.release.latest.about": "නවතම පැකේජ අනුවාද සමඟ dev toolchain ප්‍රකාශනය පළ කරන්න",
   "cli.command.release.dry_run": "ලියීම හෝ ප්‍රකාශනය නොකර සැලසුම් කළ නිකුතු වැඩ මුද්‍රණය කරන්න",
   "cli.command.release.force": "ප්‍රකාශනය කරන විට පවතින නිකුතු ටැගයක් උඩින් ලියන්න",
   "cli.command.release.from": "metadata හෝ version constraints සඳහා භාවිතා කළ මූලාශ්‍ර ටැගය",

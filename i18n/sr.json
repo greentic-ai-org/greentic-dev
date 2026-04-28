@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Prosleđivanje paketa (greentic-pack; pack run koristi greentic-runner-cli)",
   "cli.command.passthrough.args": "Argumenti prosleđeni direktno osnovnoj komandi",
   "cli.command.release.about": "Generiši, objavi i promoviši izdanja Greentic lanca alata",
-  "cli.command.release.dev.about": "Objavi manifest razvojnog skupa alata sa najnovijim verzijama paketa",
+  "cli.command.release.latest.about": "Objavi manifest razvojnog skupa alata sa najnovijim verzijama paketa",
   "cli.command.release.dry_run": "Prikaži planirani rad na izdanju bez upisivanja ili objavljivanja",
   "cli.command.release.force": "Prepiši postojeću oznaku izdanja pri objavljivanju",
   "cli.command.release.from": "Izvorna oznaka korišćena za metapodatke ili ograničenja verzije",

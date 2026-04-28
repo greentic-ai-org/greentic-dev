@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Pack starpniekpārsūtīšana (greentic-pack; pack run izmanto greentic-runner-cli)",
   "cli.command.passthrough.args": "Argumenti, kas tiek tieši nodoti pamatā esošajai komandai",
   "cli.command.release.about": "Ģenerēt, publicēt un virzīt Greentic rīku ķēdes laidienus",
-  "cli.command.release.dev.about": "Publicēt izstrādes rīku ķēdes manifestu ar jaunākajām pakotņu versijām",
+  "cli.command.release.latest.about": "Publicēt izstrādes rīku ķēdes manifestu ar jaunākajām pakotņu versijām",
   "cli.command.release.dry_run": "Izdrukāt plānoto laidiena darbu bez rakstīšanas vai publicēšanas",
   "cli.command.release.force": "Publicējot pārrakstīt esošu laidiena tagu",
   "cli.command.release.from": "Avota tags, kas izmantots metadatiem vai versiju ierobežojumiem",

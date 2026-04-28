@@ -26,7 +26,7 @@
   "cli.command.pack.about": "ສົ່ງຕໍ່ Pack (greentic-pack; pack run ໃຊ້ greentic-runner-cli)",
   "cli.command.passthrough.args": "ອາກິວເມັນທີ່ສົ່ງຕໍ່ໂດຍກົງໃຫ້ຄຳສັ່ງພື້ນຖານ",
   "cli.command.release.about": "ສ້າງ, ເຜີຍແຜ່, ແລະ ສົ່ງເສີມລຸ້ນປ່ອຍຂອງຊຸດເຄື່ອງມື Greentic",
-  "cli.command.release.dev.about": "ເຜີຍແຜ່ແມນິເຟສຂອງ dev toolchain ດ້ວຍເວີຊັນແພັກເກດຫຼ້າສຸດ",
+  "cli.command.release.latest.about": "ເຜີຍແຜ່ແມນິເຟສຂອງ dev toolchain ດ້ວຍເວີຊັນແພັກເກດຫຼ້າສຸດ",
   "cli.command.release.dry_run": "ພິມວຽກປ່ອຍລຸ້ນທີ່ວາງແຜນໄວ້ໂດຍບໍ່ຂຽນ ຫຼື ເຜີຍແຜ່",
   "cli.command.release.force": "ຂຽນທັບແທັກລຸ້ນປ່ອຍທີ່ມີຢູ່ແລ້ວເມື່ອເຜີຍແຜ່",
   "cli.command.release.from": "ແທັກຕົ້ນທາງທີ່ໃຊ້ສຳລັບເມຕາດາຕາ ຫຼື ຂໍ້ຈຳກັດເວີຊັນ",

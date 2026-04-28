@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Paki läbisuunamine (greentic-pack; pack run kasutab greentic-runner-cli-d)",
   "cli.command.passthrough.args": "Argumendid, mis edastatakse otse aluseks olevale käsule",
   "cli.command.release.about": "Genereeri, avalda ja edenda Greenticu tööriistaahela väljalaskeid",
-  "cli.command.release.dev.about": "Avalda arendustööriistade manifest uusimate pakettide versioonidega",
+  "cli.command.release.latest.about": "Avalda arendustööriistade manifest uusimate pakettide versioonidega",
   "cli.command.release.dry_run": "Prindi kavandatud väljalasketööd ilma kirjutamise või avaldamiseta",
   "cli.command.release.force": "Kirjuta avaldamisel olemasolev väljalaskesilt üle",
   "cli.command.release.from": "Lähte-silt, mida kasutatakse metaandmete või versioonipiirangute jaoks",

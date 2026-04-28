@@ -204,8 +204,8 @@ pub fn localized_help_command(locale: &str) -> clap::Command {
                             arg.help(crate::i18n::t(locale, "cli.command.release.token"))
                         })
                 })
-                .mut_subcommand("dev", |sub| {
-                    sub.about(crate::i18n::t(locale, "cli.command.release.dev.about"))
+                .mut_subcommand("latest", |sub| {
+                    sub.about(crate::i18n::t(locale, "cli.command.release.latest.about"))
                         .mut_arg("repo", |arg| {
                             arg.help(crate::i18n::t(locale, "cli.command.release.repo"))
                         })
@@ -493,8 +493,8 @@ pub enum ReleaseCommand {
     Publish(ReleasePublishArgs),
     /// cli.command.release.view.about
     View(ReleaseViewArgs),
-    /// cli.command.release.dev.about
-    Dev(ReleaseDevArgs),
+    /// cli.command.release.latest.about
+    Latest(ReleaseLatestArgs),
     /// cli.command.release.promote.about
     Promote(ReleasePromoteArgs),
 }
@@ -533,7 +533,7 @@ pub struct ReleaseGenerateArgs {
     #[arg(long = "release")]
     pub release: String,
     /// cli.command.release.from
-    #[arg(long = "from", default_value = "dev")]
+    #[arg(long = "from", default_value = "latest")]
     pub from: String,
     /// cli.command.release.repo
     #[arg(
@@ -558,7 +558,7 @@ pub struct ReleasePublishArgs {
     #[arg(long = "release", required_unless_present = "manifest")]
     pub release: Option<String>,
     /// cli.command.release.from
-    #[arg(long = "from", default_value = "dev", requires = "release")]
+    #[arg(long = "from", default_value = "latest", requires = "release")]
     pub from: Option<String>,
     /// cli.command.release.tag
     #[arg(long = "tag")]
@@ -614,7 +614,7 @@ pub struct ReleaseViewArgs {
 }
 
 #[derive(Args, Debug)]
-pub struct ReleaseDevArgs {
+pub struct ReleaseLatestArgs {
     /// cli.command.release.repo
     #[arg(
         long = "repo",

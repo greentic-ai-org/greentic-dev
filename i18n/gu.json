@@ -26,7 +26,7 @@
   "cli.command.pack.about": "પેક પાસથ્રૂ (greentic-pack; pack run greentic-runner-cli નો ઉપયોગ કરે છે)",
   "cli.command.passthrough.args": "આધારભૂત command ને સીધા પાઠવેલા arguments",
   "cli.command.release.about": "Greentic ટૂલચેઇન રિલીઝ જનરેટ, પ્રકાશિત અને પ્રમોટ કરો",
-  "cli.command.release.dev.about": "નવીનતમ પેકેજ આવૃત્તિઓ સાથે dev ટૂલચેન મેનિફેસ્ટ પ્રકાશિત કરો",
+  "cli.command.release.latest.about": "નવીનતમ પેકેજ આવૃત્તિઓ સાથે dev ટૂલચેન મેનિફેસ્ટ પ્રકાશિત કરો",
   "cli.command.release.dry_run": "લખ્યા અથવા પ્રકાશિત કર્યા વિના આયોજિત રિલીઝ કાર્ય પ્રિન્ટ કરો",
   "cli.command.release.force": "પ્રકાશિત કરતી વખતે હાલના રિલીઝ ટૅગને ઓવરરાઇટ કરો",
   "cli.command.release.from": "મેટાડેટા અથવા વર્ઝન નિયંત્રણો માટે વપરાતો સોર્સ ટૅગ",

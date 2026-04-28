@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Laluan terus pack (greentic-pack; pack run menggunakan greentic-runner-cli)",
   "cli.command.passthrough.args": "Argumen dihantar terus ke arahan asas",
   "cli.command.release.about": "Jana, terbitkan dan promosikan keluaran rangkaian alat Greentic",
-  "cli.command.release.dev.about": "Terbitkan manifes rantaian alat dev dengan versi pakej terkini",
+  "cli.command.release.latest.about": "Terbitkan manifes rantaian alat dev dengan versi pakej terkini",
   "cli.command.release.dry_run": "Cetak kerja keluaran yang dirancang tanpa menulis atau menerbitkan",
   "cli.command.release.force": "Tulis ganti tag keluaran sedia ada semasa menerbitkan",
   "cli.command.release.from": "Tag sumber yang digunakan untuk metadata atau kekangan versi",

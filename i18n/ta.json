@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Pack பாஸ்த்ரூ (greentic-pack; pack run greentic-runner-cli-ஐ பயன்படுத்துகிறது)",
   "cli.command.passthrough.args": "அடிப்படை command-க்கு நேரடியாக அனுப்பப்படும் arguments",
   "cli.command.release.about": "Greentic கருவிச்சங்கிலி வெளியீடுகளை உருவாக்கு, வெளியிடு, மற்றும் மேம்படுத்து",
-  "cli.command.release.dev.about": "சமீபத்திய தொகுப்பு பதிப்புகளுடன் dev கருவிச்சங்கிலி manifest-ஐ வெளியிடு",
+  "cli.command.release.latest.about": "சமீபத்திய தொகுப்பு பதிப்புகளுடன் dev கருவிச்சங்கிலி manifest-ஐ வெளியிடு",
   "cli.command.release.dry_run": "எழுதாமல் அல்லது வெளியிடாமல் திட்டமிடப்பட்ட வெளியீட்டு பணியை அச்சிடு",
   "cli.command.release.force": "வெளியிடும்போது ஏற்கனவே உள்ள வெளியீட்டு குறிச்சொல்லை மேலெழுது",
   "cli.command.release.from": "மெட்டாடேட்டா அல்லது பதிப்பு கட்டுப்பாடுகளுக்குப் பயன்படுத்தப்படும் மூல குறிச்சொல்",
