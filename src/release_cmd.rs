@@ -350,7 +350,10 @@ fn latest_manifest(created_at: Option<String>) -> ToolchainManifest {
 
 fn latest_manifest_packages() -> Vec<ToolchainPackage> {
     std::iter::once(ToolchainPackage {
-        crate_name: TOOLCHAIN_NAME.to_string(),
+        crate_name: delegated_binary_name_for_channel(
+            TOOLCHAIN_NAME,
+            ToolchainChannel::Development,
+        ),
         bins: vec![delegated_binary_name_for_channel(
             TOOLCHAIN_NAME,
             ToolchainChannel::Development,
@@ -359,7 +362,10 @@ fn latest_manifest_packages() -> Vec<ToolchainPackage> {
     })
     .chain(GREENTIC_TOOLCHAIN_PACKAGES.iter().map(|package| {
         ToolchainPackage {
-            crate_name: package.crate_name.to_string(),
+            crate_name: delegated_binary_name_for_channel(
+                package.crate_name,
+                ToolchainChannel::Development,
+            ),
             bins: package
                 .bins
                 .iter()
@@ -392,13 +398,14 @@ pub fn generate_manifest<R: CrateVersionResolver>(
     let source_versions = source_version_map(source);
     let mut packages = Vec::new();
     for package in GREENTIC_TOOLCHAIN_PACKAGES {
-        let source_version = source_versions.get(package.crate_name);
+        let crate_in_manifest = manifest_crate_name_for_source(from, package.crate_name);
+        let source_version = source_versions.get(&crate_in_manifest);
         let version = match source_version.map(String::as_str) {
             Some(version) if version != "latest" => version.to_string(),
-            _ => resolver.resolve_latest(package.crate_name)?,
+            _ => resolver.resolve_latest(&crate_in_manifest)?,
         };
         packages.push(ToolchainPackage {
-            crate_name: package.crate_name.to_string(),
+            crate_name: crate_in_manifest,
             bins: manifest_bins_for_source(from, package.bins),
             version,
         });
@@ -420,6 +427,21 @@ fn manifest_bins_for_source(from: &str, bins: &[&str]) -> Vec<String> {
             .collect()
     } else {
         bins.iter().map(|bin| (*bin).to_string()).collect()
+    }
+}
+
+/// Apply the dev-channel `-dev` suffix to a crate name when the manifest
+/// channel is `"dev"`. The dev-publish lane mirrors every binary crate as
+/// `<crate>-dev` (binary bifurcation); the toolchain manifest must pin the
+/// mirrored crate so `cargo binstall` resolves the dev artifact instead of
+/// the stable one. Reuses `delegated_binary_name_for_channel` because the
+/// rule is identical for crates and binaries (`-dev` suffix, with the
+/// special carve-out that `greentic-dev` itself becomes `greentic-dev-dev`).
+fn manifest_crate_name_for_source(from: &str, crate_name: &str) -> String {
+    if from == "dev" {
+        delegated_binary_name_for_channel(crate_name, ToolchainChannel::Development)
+    } else {
+        crate_name.to_string()
     }
 }
 
@@ -769,7 +791,7 @@ mod tests {
     }
 
     #[test]
-    fn generate_from_dev_uses_dev_binary_names() {
+    fn generate_from_dev_uses_dev_crate_and_binary_names() {
         let manifest = generate_manifest("1.0.16", "dev", None, &FixedResolver, None).unwrap();
         assert!(
             manifest
@@ -778,11 +800,22 @@ mod tests {
                 .flat_map(|package| package.bins.iter())
                 .all(|bin| bin.ends_with("-dev"))
         );
+        assert!(
+            manifest
+                .packages
+                .iter()
+                .all(|package| package.crate_name.ends_with("-dev")),
+            "dev manifest must pin -dev crate names so binstall resolves the dev mirror"
+        );
         assert!(manifest.packages.iter().any(|package| {
-            package.crate_name == "greentic-flow" && package.bins == ["greentic-flow-dev"]
+            package.crate_name == "greentic-flow-dev" && package.bins == ["greentic-flow-dev"]
         }));
         assert!(manifest.packages.iter().any(|package| {
-            package.crate_name == "greentic-component" && package.bins == ["greentic-component-dev"]
+            package.crate_name == "greentic-component-dev"
+                && package.bins == ["greentic-component-dev"]
+        }));
+        assert!(manifest.packages.iter().any(|package| {
+            package.crate_name == "greentic-dev-dev" && package.bins == ["greentic-dev-dev"]
         }));
     }
 
@@ -938,10 +971,17 @@ mod tests {
             manifest
                 .packages
                 .iter()
-                .any(|package| { package.crate_name == "gtc" && package.bins == ["gtc-dev"] })
+                .all(|package| package.crate_name.ends_with("-dev")),
+            "latest-channel manifest mirrors dev binaries, so crate names must be -dev too"
+        );
+        assert!(
+            manifest
+                .packages
+                .iter()
+                .any(|package| { package.crate_name == "gtc-dev" && package.bins == ["gtc-dev"] })
         );
         assert!(manifest.packages.iter().any(|package| {
-            package.crate_name == "greentic-dev" && package.bins == ["greentic-dev-dev"]
+            package.crate_name == "greentic-dev-dev" && package.bins == ["greentic-dev-dev"]
         }));
     }
 
