@@ -69,6 +69,7 @@ fn build_flow() -> Result<Flow> {
         },
         input: InputMapping { mapping: json!({}) },
         output: OutputMapping { mapping: json!({}) },
+        err_map: None,
         routing: Routing::Next {
             node_id: secret_id.clone(),
         },
@@ -83,6 +84,7 @@ fn build_flow() -> Result<Flow> {
         },
         input: InputMapping { mapping: json!({}) },
         output: OutputMapping { mapping: json!({}) },
+        err_map: None,
         routing: Routing::Branch {
             on_status: [("error".to_string(), err_id.clone())]
                 .into_iter()
@@ -102,6 +104,7 @@ fn build_flow() -> Result<Flow> {
             mapping: json!({ "url": "https://example.com/resource" }),
         },
         output: OutputMapping { mapping: json!({}) },
+        err_map: None,
         routing: Routing::Branch {
             on_status: [("error".to_string(), err_id.clone())]
                 .into_iter()
@@ -119,6 +122,7 @@ fn build_flow() -> Result<Flow> {
         },
         input: InputMapping { mapping: json!({}) },
         output: OutputMapping { mapping: json!({}) },
+        err_map: None,
         routing: Routing::End,
         telemetry: Default::default(),
     };
@@ -131,6 +135,7 @@ fn build_flow() -> Result<Flow> {
         },
         input: InputMapping { mapping: json!({}) },
         output: OutputMapping { mapping: json!({}) },
+        err_map: None,
         routing: Routing::End,
         telemetry: Default::default(),
     };

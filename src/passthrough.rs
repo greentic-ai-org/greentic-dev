@@ -5,10 +5,75 @@ use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitStatus, Stdio};
 
+use crate::toolchain_catalogue::GREENTIC_TOOLCHAIN_PACKAGES;
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ToolchainChannel {
+    Stable,
+    Development,
+}
+
+impl ToolchainChannel {
+    pub fn from_executable_name(name: &str) -> Self {
+        let stem = name.strip_suffix(".exe").unwrap_or(name);
+        if stem == "greentic-dev-dev" {
+            Self::Development
+        } else {
+            Self::Stable
+        }
+    }
+}
+
+pub fn current_toolchain_channel() -> ToolchainChannel {
+    let executable_name = env::args_os()
+        .next()
+        .and_then(|arg| PathBuf::from(arg).file_name().map(|name| name.to_owned()))
+        .or_else(|| {
+            env::current_exe()
+                .ok()
+                .and_then(|path| path.file_name().map(|name| name.to_owned()))
+        });
+    executable_name
+        .as_deref()
+        .and_then(|name| name.to_str())
+        .map(ToolchainChannel::from_executable_name)
+        .unwrap_or(ToolchainChannel::Stable)
+}
+
+pub fn delegated_binary_name(name: &str) -> String {
+    delegated_binary_name_for_channel(name, current_toolchain_channel())
+}
+
+pub fn delegated_binary_name_for_channel(name: &str, channel: ToolchainChannel) -> String {
+    match channel {
+        ToolchainChannel::Stable => name.to_string(),
+        ToolchainChannel::Development => development_binary_name(name),
+    }
+}
+
+fn development_binary_name(name: &str) -> String {
+    if name == "greentic-dev" {
+        return "greentic-dev-dev".to_string();
+    }
+    if name.ends_with("-dev") {
+        name.to_string()
+    } else {
+        format!("{name}-dev")
+    }
+}
+
 /// Resolve a binary by name using env override, then PATH.
 pub fn resolve_binary(name: &str) -> Result<PathBuf> {
+    resolve_binary_for_channel(name, current_toolchain_channel())
+}
+
+pub fn resolve_binary_for_channel(name: &str, channel: ToolchainChannel) -> Result<PathBuf> {
     let locale = crate::i18n::select_locale(None);
-    let env_key = format!("GREENTIC_DEV_BIN_{}", name.replace('-', "_").to_uppercase());
+    let resolved_name = delegated_binary_name_for_channel(name, channel);
+    let env_key = format!(
+        "GREENTIC_DEV_BIN_{}",
+        resolved_name.replace('-', "_").to_uppercase()
+    );
     if let Ok(path) = env::var(&env_key) {
         let pb = PathBuf::from(path);
         if pb.exists() {
@@ -27,7 +92,7 @@ pub fn resolve_binary(name: &str) -> Result<PathBuf> {
         );
     }
 
-    if let Ok(path) = which::which(name) {
+    if let Ok(path) = which::which(&resolved_name) {
         return Ok(path);
     }
 
@@ -36,7 +101,7 @@ pub fn resolve_binary(name: &str) -> Result<PathBuf> {
         crate::i18n::tf(
             &locale,
             "runtime.passthrough.error.binary_not_found",
-            &[("name", name.to_string()), ("env_key", env_key)],
+            &[("name", resolved_name), ("env_key", env_key)],
         )
     )
 }
@@ -77,78 +142,42 @@ pub fn run_passthrough(bin: &Path, args: &[OsString], verbose: bool) -> Result<E
         })
 }
 
-#[derive(Clone, Copy)]
-struct InstallSpec {
-    crate_name: &'static str,
-    bin_name: &'static str,
-}
-
-const DELEGATED_INSTALL_SPECS: [InstallSpec; 8] = [
-    InstallSpec {
-        crate_name: "greentic-component",
-        bin_name: "greentic-component",
-    },
-    InstallSpec {
-        crate_name: "greentic-flow",
-        bin_name: "greentic-flow",
-    },
-    InstallSpec {
-        crate_name: "greentic-pack",
-        bin_name: "greentic-pack",
-    },
-    InstallSpec {
-        crate_name: "greentic-runner",
-        bin_name: "greentic-runner",
-    },
-    InstallSpec {
-        crate_name: "greentic-runner",
-        bin_name: "greentic-runner-cli",
-    },
-    InstallSpec {
-        crate_name: "greentic-gui",
-        bin_name: "greentic-gui",
-    },
-    InstallSpec {
-        crate_name: "greentic-secrets",
-        bin_name: "greentic-secrets",
-    },
-    InstallSpec {
-        crate_name: "greentic-mcp",
-        bin_name: "greentic-mcp",
-    },
-];
-
 pub fn install_all_delegated_tools(latest: bool, locale: &str) -> Result<()> {
     ensure_cargo_binstall()?;
-    for spec in DELEGATED_INSTALL_SPECS {
-        install_with_binstall(spec, latest, locale)?;
+    let channel = current_toolchain_channel();
+    for package in GREENTIC_TOOLCHAIN_PACKAGES {
+        for bin_name in package.bins {
+            install_with_binstall(
+                package.crate_name,
+                &delegated_binary_name_for_channel(bin_name, channel),
+                latest,
+                locale,
+            )?;
+        }
     }
     Ok(())
 }
 
-fn install_with_binstall(spec: InstallSpec, force_latest: bool, locale: &str) -> Result<()> {
+fn install_with_binstall(
+    crate_name: &str,
+    bin_name: &str,
+    force_latest: bool,
+    locale: &str,
+) -> Result<()> {
     eprintln!(
         "{}",
         crate::i18n::tf(
             locale,
             "runtime.tools.install.installing",
             &[
-                ("bin_name", spec.bin_name.to_string()),
-                ("crate_name", spec.crate_name.to_string()),
+                ("bin_name", bin_name.to_string()),
+                ("crate_name", crate_name.to_string()),
             ],
         )
     );
 
     let mut cmd = Command::new("cargo");
-    cmd.arg("binstall")
-        .arg("-y")
-        .arg("--locked")
-        .arg(spec.crate_name)
-        .arg("--bin")
-        .arg(spec.bin_name);
-    if force_latest {
-        cmd.arg("--force");
-    }
+    cmd.args(binstall_args(crate_name, bin_name, force_latest));
 
     let status = cmd
         .stdin(Stdio::inherit())
@@ -166,13 +195,28 @@ fn install_with_binstall(spec: InstallSpec, force_latest: bool, locale: &str) ->
                 locale,
                 "runtime.tools.install.error.binstall_failed",
                 &[
-                    ("bin_name", spec.bin_name.to_string()),
-                    ("crate_name", spec.crate_name.to_string()),
+                    ("bin_name", bin_name.to_string()),
+                    ("crate_name", crate_name.to_string()),
                     ("exit_code", format!("{:?}", status.code())),
                 ],
             )
         );
     }
+}
+
+fn binstall_args(crate_name: &str, bin_name: &str, force_latest: bool) -> Vec<String> {
+    let mut args = vec![
+        "binstall".to_string(),
+        "-y".to_string(),
+        "--locked".to_string(),
+        crate_name.to_string(),
+        "--bin".to_string(),
+        bin_name.to_string(),
+    ];
+    if force_latest {
+        args.push("--force".to_string());
+    }
+    args
 }
 
 fn ensure_cargo_binstall() -> Result<()> {
@@ -325,16 +369,76 @@ fn parse_latest_cargo_binstall_version(stdout: &str) -> Result<Version> {
 #[cfg(test)]
 mod tests {
     use super::{
-        DELEGATED_INSTALL_SPECS, parse_installed_cargo_binstall_version,
-        parse_latest_cargo_binstall_version,
+        ToolchainChannel, binstall_args, delegated_binary_name_for_channel,
+        parse_installed_cargo_binstall_version, parse_latest_cargo_binstall_version,
     };
+    use crate::toolchain_catalogue::GREENTIC_TOOLCHAIN_PACKAGES;
 
     #[test]
-    fn delegated_install_specs_include_runner_cli() {
-        let found = DELEGATED_INSTALL_SPECS.iter().any(|spec| {
-            spec.bin_name == "greentic-runner-cli" && spec.crate_name == "greentic-runner"
+    fn delegated_install_catalogue_includes_runner() {
+        let found = GREENTIC_TOOLCHAIN_PACKAGES.iter().any(|package| {
+            package.crate_name == "greentic-runner" && package.bins.contains(&"greentic-runner")
         });
         assert!(found);
+    }
+
+    #[test]
+    fn binstall_args_include_force_only_when_latest_requested() {
+        assert_eq!(
+            binstall_args("greentic-runner", "greentic-runner", false),
+            vec![
+                "binstall",
+                "-y",
+                "--locked",
+                "greentic-runner",
+                "--bin",
+                "greentic-runner"
+            ]
+        );
+        assert_eq!(
+            binstall_args("greentic-runner", "greentic-runner", true),
+            vec![
+                "binstall",
+                "-y",
+                "--locked",
+                "greentic-runner",
+                "--bin",
+                "greentic-runner",
+                "--force"
+            ]
+        );
+    }
+
+    #[test]
+    fn executable_name_selects_toolchain_channel() {
+        assert_eq!(
+            ToolchainChannel::from_executable_name("greentic-dev"),
+            ToolchainChannel::Stable
+        );
+        assert_eq!(
+            ToolchainChannel::from_executable_name("greentic-dev-dev"),
+            ToolchainChannel::Development
+        );
+        assert_eq!(
+            ToolchainChannel::from_executable_name("greentic-dev-dev.exe"),
+            ToolchainChannel::Development
+        );
+    }
+
+    #[test]
+    fn development_channel_uses_dev_binary_names() {
+        assert_eq!(
+            delegated_binary_name_for_channel("greentic-pack", ToolchainChannel::Development),
+            "greentic-pack-dev"
+        );
+        assert_eq!(
+            delegated_binary_name_for_channel("greentic-runner-cli", ToolchainChannel::Development),
+            "greentic-runner-cli-dev"
+        );
+        assert_eq!(
+            delegated_binary_name_for_channel("greentic-pack-dev", ToolchainChannel::Development),
+            "greentic-pack-dev"
+        );
     }
 
     #[test]

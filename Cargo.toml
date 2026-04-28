@@ -4,7 +4,7 @@ bench = [
 
 [package]
 name = "greentic-dev"
-version = "0.5.0-dev.0"
+version = "0.6.0-dev.0"
 edition = "2024"
 description = "Developer CLI and local tooling for Greentic flows, packs, and components"
 license = "MIT"
@@ -70,12 +70,12 @@ toml = "1"
 toml_edit = "0.25"
 semver = "1"
 sha2 = "0.11"
-wit-component = "0.246"
-wit-parser = "0.246"
+wit-component = "0.247"
+wit-parser = "0.247"
 base64 = "0.22"
-greentic-flow = ">=0.5.0-dev, <0.6.0-0"
-greentic-pack-lib = ">=0.5.0-dev, <0.6.0-0"
-jsonschema = "0.45"
+greentic-flow = ">=0.6.0-dev, <0.7.0-0"
+greentic-pack-lib = ">=0.6.0-dev, <0.7.0-0"
+jsonschema = "0.46"
 tempfile = "3"
 dirs = "6"
 which = "8"
@@ -112,20 +112,20 @@ features = [
 ]
 
 [dependencies.greentic-interfaces]
-version = ">=0.5.0-dev, <0.6.0-0"
+version = ">=0.6.0-dev, <0.7.0-0"
 default-features = false
 features = [
     "describe-v1",
 ]
 
 [dependencies.greentic-types]
-version = ">=0.5.0-dev, <0.6.0-0"
+version = ">=0.6.0-dev, <0.7.0-0"
 features = [
     "serde",
 ]
 
 [dependencies.greentic-component]
-version = ">=0.5.0-dev, <0.6.0-0"
+version = ">=0.6.0-dev, <0.7.0-0"
 features = [
     "prepare",
     "describe",
@@ -156,7 +156,7 @@ features = [
 ]
 
 [dependencies.greentic-distributor-client]
-version = ">=0.5.0-dev, <0.6.0-0"
+version = ">=0.6.0-dev, <0.7.0-0"
 features = [
     "http-runtime",
     "pack-fetch",

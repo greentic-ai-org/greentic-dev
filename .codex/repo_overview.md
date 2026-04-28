@@ -39,6 +39,10 @@
   **Role:** Glue/passthrough and helper functions for CLI subcommands (pack scaffolding via `packc`, component passthrough, config set command, etc.).  
   **Key functionality:** Thin wrappers around external tools and internal helpers. Delegated tools are resolved from PATH (or explicit env override) and are installed explicitly via `greentic-dev tools install` / `greentic-dev install tools` (no auto-install fallback).
 
+- **Path:** `src/toolchain_catalogue.rs`, `src/release_cmd.rs`
+  **Role:** Canonical public toolchain catalogue plus GHCR release manifest workflows.
+  **Key functionality:** `GREENTIC_TOOLCHAIN_PACKAGES` is shared by development/bootstrap installation and release manifest generation. `greentic-dev release generate/publish/promote` creates pinned `gtc` toolchain manifests, pushes them as OCI artifacts, and moves generic GHCR tags without installing local tools.
+
 - **Path:** `crates/dev-viewer/`  
   **Role:** Standalone CLI to render flow transcripts.  
   **Key functionality:** Loads YAML transcripts into `FlowTranscript`, annotates resolved configs with default/override markers from run logs, and prints them with structural formatting. Uses shared types from `greentic_dev::dev_runner`.
