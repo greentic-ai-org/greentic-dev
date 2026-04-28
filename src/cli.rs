@@ -53,6 +53,7 @@ pub fn localized_help_command(locale: &str) -> clap::Command {
         ("secrets", "cli.command.secrets.about"),
         ("tools", "cli.command.tools.about"),
         ("install", "cli.command.install.about"),
+        ("release", "cli.command.release.about"),
         ("cbor", "cli.command.cbor.about"),
         ("wizard", "cli.command.wizard.about"),
     ] {
@@ -133,6 +134,108 @@ pub fn localized_help_command(locale: &str) -> clap::Command {
                 })
                 .mut_arg("locale", |arg| {
                     arg.help(crate::i18n::t(locale, "cli.command.install.locale"))
+                })
+        })
+        .mut_subcommand("release", |sub| {
+            sub.about(crate::i18n::t(locale, "cli.command.release.about"))
+                .mut_subcommand("generate", |sub| {
+                    sub.about(crate::i18n::t(locale, "cli.command.release.generate.about"))
+                        .mut_arg("release", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.release"))
+                        })
+                        .mut_arg("from", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.from"))
+                        })
+                        .mut_arg("repo", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.repo"))
+                        })
+                        .mut_arg("token", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.token"))
+                        })
+                        .mut_arg("out", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.out"))
+                        })
+                        .mut_arg("dry_run", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.dry_run"))
+                        })
+                })
+                .mut_subcommand("publish", |sub| {
+                    sub.about(crate::i18n::t(locale, "cli.command.release.publish.about"))
+                        .mut_arg("release", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.release"))
+                        })
+                        .mut_arg("from", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.from"))
+                        })
+                        .mut_arg("tag", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.tag"))
+                        })
+                        .mut_arg("manifest", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.manifest"))
+                        })
+                        .mut_arg("repo", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.repo"))
+                        })
+                        .mut_arg("token", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.token"))
+                        })
+                        .mut_arg("out", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.out"))
+                        })
+                        .mut_arg("dry_run", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.dry_run"))
+                        })
+                        .mut_arg("force", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.force"))
+                        })
+                })
+                .mut_subcommand("view", |sub| {
+                    sub.about(crate::i18n::t(locale, "cli.command.release.view.about"))
+                        .mut_arg("release", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.release"))
+                        })
+                        .mut_arg("tag", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.tag"))
+                        })
+                        .mut_arg("repo", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.repo"))
+                        })
+                        .mut_arg("token", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.token"))
+                        })
+                })
+                .mut_subcommand("dev", |sub| {
+                    sub.about(crate::i18n::t(locale, "cli.command.release.dev.about"))
+                        .mut_arg("repo", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.repo"))
+                        })
+                        .mut_arg("token", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.token"))
+                        })
+                        .mut_arg("dry_run", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.dry_run"))
+                        })
+                        .mut_arg("force", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.force"))
+                        })
+                })
+                .mut_subcommand("promote", |sub| {
+                    sub.about(crate::i18n::t(locale, "cli.command.release.promote.about"))
+                        .mut_arg("release", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.release"))
+                        })
+                        .mut_arg("tag", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.tag"))
+                        })
+                        .mut_arg("repo", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.repo"))
+                        })
+                        .mut_arg("token", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.token"))
+                        })
+                        .mut_arg("dry_run", |arg| {
+                            arg.help(crate::i18n::t(locale, "cli.command.release.dry_run"))
+                        })
                 })
         })
         .mut_subcommand("cbor", |sub| {
@@ -328,6 +431,9 @@ pub enum Command {
     Tools(ToolsCommand),
     /// cli.command.install.about
     Install(InstallArgs),
+    /// cli.command.release.about
+    #[command(subcommand)]
+    Release(ReleaseCommand),
     /// cli.command.cbor.about
     Cbor(CborArgs),
     /// cli.command.wizard.about
@@ -379,6 +485,20 @@ pub enum InstallSubcommand {
     Tools(ToolsInstallArgs),
 }
 
+#[derive(Subcommand, Debug)]
+pub enum ReleaseCommand {
+    /// cli.command.release.generate.about
+    Generate(ReleaseGenerateArgs),
+    /// cli.command.release.publish.about
+    Publish(ReleasePublishArgs),
+    /// cli.command.release.view.about
+    View(ReleaseViewArgs),
+    /// cli.command.release.dev.about
+    Dev(ReleaseDevArgs),
+    /// cli.command.release.promote.about
+    Promote(ReleasePromoteArgs),
+}
+
 #[derive(Args, Debug)]
 pub struct InstallArgs {
     #[command(subcommand)]
@@ -405,6 +525,133 @@ pub struct ToolsInstallArgs {
     /// cli.command.tools.install.latest
     #[arg(long = "latest")]
     pub latest: bool,
+}
+
+#[derive(Args, Debug)]
+pub struct ReleaseGenerateArgs {
+    /// cli.command.release.release
+    #[arg(long = "release")]
+    pub release: String,
+    /// cli.command.release.from
+    #[arg(long = "from", default_value = "dev")]
+    pub from: String,
+    /// cli.command.release.repo
+    #[arg(
+        long = "repo",
+        default_value = "ghcr.io/greenticai/greentic-versions/gtc"
+    )]
+    pub repo: String,
+    /// cli.command.release.token
+    #[arg(long = "token")]
+    pub token: Option<String>,
+    /// cli.command.release.out
+    #[arg(long = "out", default_value = "dist/toolchains")]
+    pub out: PathBuf,
+    /// cli.command.release.dry_run
+    #[arg(long = "dry-run")]
+    pub dry_run: bool,
+}
+
+#[derive(Args, Debug)]
+pub struct ReleasePublishArgs {
+    /// cli.command.release.release
+    #[arg(long = "release", required_unless_present = "manifest")]
+    pub release: Option<String>,
+    /// cli.command.release.from
+    #[arg(long = "from", default_value = "dev", requires = "release")]
+    pub from: Option<String>,
+    /// cli.command.release.tag
+    #[arg(long = "tag")]
+    pub tag: Option<String>,
+    /// cli.command.release.manifest
+    #[arg(long = "manifest", required_unless_present = "release")]
+    pub manifest: Option<PathBuf>,
+    /// cli.command.release.repo
+    #[arg(
+        long = "repo",
+        default_value = "ghcr.io/greenticai/greentic-versions/gtc"
+    )]
+    pub repo: String,
+    /// cli.command.release.token
+    #[arg(long = "token")]
+    pub token: Option<String>,
+    /// cli.command.release.out
+    #[arg(long = "out", default_value = "dist/toolchains")]
+    pub out: PathBuf,
+    /// cli.command.release.dry_run
+    #[arg(long = "dry-run")]
+    pub dry_run: bool,
+    /// cli.command.release.force
+    #[arg(long = "force")]
+    pub force: bool,
+}
+
+#[derive(Args, Debug)]
+pub struct ReleaseViewArgs {
+    /// cli.command.release.release
+    #[arg(
+        long = "release",
+        conflicts_with = "tag",
+        required_unless_present = "tag"
+    )]
+    pub release: Option<String>,
+    /// cli.command.release.tag
+    #[arg(
+        long = "tag",
+        conflicts_with = "release",
+        required_unless_present = "release"
+    )]
+    pub tag: Option<String>,
+    /// cli.command.release.repo
+    #[arg(
+        long = "repo",
+        default_value = "ghcr.io/greenticai/greentic-versions/gtc"
+    )]
+    pub repo: String,
+    /// cli.command.release.token
+    #[arg(long = "token")]
+    pub token: Option<String>,
+}
+
+#[derive(Args, Debug)]
+pub struct ReleaseDevArgs {
+    /// cli.command.release.repo
+    #[arg(
+        long = "repo",
+        default_value = "ghcr.io/greenticai/greentic-versions/gtc"
+    )]
+    pub repo: String,
+    /// cli.command.release.token
+    #[arg(long = "token")]
+    pub token: Option<String>,
+    /// cli.command.release.dry_run
+    #[arg(long = "dry-run")]
+    pub dry_run: bool,
+    /// cli.command.release.force
+    #[arg(long = "force")]
+    pub force: bool,
+}
+
+#[derive(Args, Debug)]
+pub struct ReleasePromoteArgs {
+    /// cli.command.release.release
+    #[arg(long = "release")]
+    pub release: String,
+    /// cli.command.release.tag
+    #[arg(long = "tag")]
+    pub tag: String,
+    /// cli.command.release.repo
+    #[arg(
+        long = "repo",
+        default_value = "ghcr.io/greenticai/greentic-versions/gtc"
+    )]
+    pub repo: String,
+    /// cli.command.release.token
+    #[arg(long = "token")]
+    pub token: Option<String>,
+    /// cli.command.release.dry_run
+    #[arg(long = "dry-run")]
+    pub dry_run: bool,
 }
 
 #[derive(Args, Debug)]

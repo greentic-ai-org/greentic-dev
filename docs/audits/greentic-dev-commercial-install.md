@@ -4,25 +4,19 @@ Date: 2026-03-08
 
 ## Summary
 
-`greentic-dev` does not currently have a general install/catalog workflow.
+`greentic-dev` has separate install paths for public tool bootstrap and tenant assets.
 
-Today, `greentic-dev install` only supports one subcommand:
+The public bootstrap subcommand is:
 
 - `greentic-dev install tools`
 
-That path is a thin wrapper around `cargo binstall` for a fixed open source tool list. There is no current concept of:
+That path installs Greentic development/bootstrap tools from the canonical public tool catalogue. Tenant-aware installation is handled by the bare `greentic-dev install --tenant <tenant>` path, which consumes customer manifests, binaries, and docs directly.
 
-- installable commercial tools
-- tenant-gated manifests
-- documentation guide installation
-- token validation in the install path
+The recommended separation is:
 
-The closest existing tenant-aware code is the distributor profile/client used by `component add` and `pack init`. That code already carries `tenant_id` and `token` in config, but it is not wired into the install workflow.
-
-This audit recommends keeping the current delegated OSS tool install path intact while adding a separate manifest-driven install layer that can merge:
-
-- built-in open source install specs
-- tenant-resolved commercial specs from `greentic-biz`
+- `greentic-dev install tools` bootstraps public development tools from the canonical catalogue.
+- `greentic-dev install --tenant <tenant>` installs tenant-resolved commercial artifacts and docs from `greentic-biz`.
+- `gtc install` owns customer-approved pinned public toolchain releases.
 
 Licensing and token validation should stay outside `greentic-dev`, with the CLI acting as a manifest consumer rather than an entitlement engine.
 
@@ -43,18 +37,24 @@ Observed behavior:
    - `tools install`
    - `install tools`
 2. `src/main.rs` maps both to `tools::install(args.latest)`.
-3. `src/cmd/tools.rs` immediately calls `install_all_delegated_tools`.
-4. `src/passthrough.rs` installs a fixed list of seven binaries via `cargo binstall`.
+3. `src/cmd/tools.rs` calls `install_all_delegated_tools`.
+4. `src/passthrough.rs` installs catalogue entries via `cargo binstall`.
 
-Current delegated install set:
+Current public bootstrap catalogue:
 
+- `greentic-dev`
+- `greentic-operator`
+- `greentic-bundle`
+- `greentic-setup`
+- `greentic-start`
+- `greentic-deployer`
 - `greentic-component`
 - `greentic-flow`
 - `greentic-pack`
 - `greentic-runner`
-- `greentic-runner-cli`
 - `greentic-gui`
 - `greentic-secrets`
+- `greentic-mcp`
 
 This means the current install pipeline is:
 
@@ -65,13 +65,13 @@ greentic-dev install tools [--latest]
 ensure cargo-binstall exists
         |
         v
-for each hard-coded InstallSpec
+for each package/bin in GREENTIC_TOOLCHAIN_PACKAGES
         |
         v
 run cargo binstall --locked <crate> --bin <bin>
 ```
 
-There is no resolver, manifest fetch, remote catalog merge, or doc install step in this flow.
+Tenant asset and doc installation live in `greentic-dev install --tenant`, not in `install tools`.
 
 ## Existing tenant/token support
 
@@ -540,8 +540,8 @@ Scope:
 
 Recommended decisions from this audit:
 
-1. Keep the current `install tools` path unchanged.
-2. Add a new manifest-driven bare `install` flow instead of mutating the legacy tool installer.
+1. Keep `install tools` as the supported public development/bootstrap installer.
+2. Keep tenant artifact/doc installation in the bare `install --tenant` flow.
 3. Reuse existing config/profile/token conventions where possible.
 4. Keep token validation outside `greentic-dev`.
 5. Use `greentic-biz` as the entitlement data source, but not as the enforcement layer by itself.

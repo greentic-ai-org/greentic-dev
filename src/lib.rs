@@ -17,7 +17,9 @@ pub mod pack_init;
 pub mod pack_verify;
 pub mod passthrough;
 pub mod path_safety;
+pub mod release_cmd;
 pub mod secrets_cli;
+pub mod toolchain_catalogue;
 pub mod util;
 pub mod wizard;
 

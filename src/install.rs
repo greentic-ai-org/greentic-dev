@@ -24,16 +24,23 @@ use crate::cmd::tools;
 use crate::i18n;
 
 const CUSTOMERS_TOOLS_REPO: &str = "ghcr.io/greentic-biz/customers-tools";
+const CUSTOMERS_TOOLS_GITHUB_OWNER: &str = "greentic-biz";
+const CUSTOMERS_TOOLS_GITHUB_REPO: &str = "customers-tools";
+const CUSTOMERS_TOOLS_GITHUB_RELEASE_TAG: &str = "latest";
 const OCI_LAYER_JSON_MEDIA_TYPE: &str = "application/json";
 const OAUTH_USER: &str = "oauth2";
 
 pub fn run(args: InstallArgs) -> Result<()> {
     let locale = i18n::select_locale(args.locale.as_deref());
-    tools::install(false, &locale)?;
 
     let Some(tenant) = args.tenant else {
+        println!("Use `greentic-dev install tools` for development/bootstrap tools.");
+        println!("Use `gtc install` for customer-approved pinned releases.");
+        println!("Pass `--tenant` to install tenant artifacts and docs.");
         return Ok(());
     };
+
+    tools::install(false, &locale)?;
 
     let token = resolve_token(args.token, &locale)
         .context(i18n::t(&locale, "cli.install.error.tenant_requires_token"))?;
@@ -626,7 +633,7 @@ where
     }
 }
 
-fn block_on_maybe_runtime<F, T>(future: F) -> Result<T>
+pub(crate) fn block_on_maybe_runtime<F, T>(future: F) -> Result<T>
 where
     F: Future<Output = Result<T>>,
 {
@@ -1207,6 +1214,65 @@ struct RealTenantManifestSource;
 #[async_trait]
 impl TenantManifestSource for RealTenantManifestSource {
     async fn fetch_manifest(&self, tenant: &str, token: &str) -> Result<Vec<u8>> {
+        if let Some(bytes) = self.fetch_github_release_manifest(tenant, token).await? {
+            return Ok(bytes);
+        }
+        self.fetch_oci_manifest(tenant, token).await
+    }
+}
+
+impl RealTenantManifestSource {
+    async fn fetch_github_release_manifest(
+        &self,
+        tenant: &str,
+        token: &str,
+    ) -> Result<Option<Vec<u8>>> {
+        let client = reqwest::Client::builder()
+            .user_agent(format!("greentic-dev/{}", env!("CARGO_PKG_VERSION")))
+            .build()
+            .context("failed to build GitHub HTTP client")?;
+        let release_url = github_latest_release_api_url();
+        let response = client
+            .get(&release_url)
+            .bearer_auth(token)
+            .header(reqwest::header::ACCEPT, "application/vnd.github+json")
+            .send()
+            .await
+            .with_context(|| format!("failed to resolve GitHub release `{release_url}`"))?;
+        if response.status() == reqwest::StatusCode::NOT_FOUND {
+            return Ok(None);
+        }
+        let release = response
+            .error_for_status()
+            .with_context(|| format!("failed to resolve GitHub release `{release_url}`"))?
+            .json::<GithubRelease>()
+            .await
+            .with_context(|| format!("failed to parse GitHub release `{release_url}`"))?;
+        let asset_name = tenant_manifest_asset_name(tenant);
+        let Some(asset) = release
+            .assets
+            .into_iter()
+            .find(|asset| asset.name == asset_name)
+        else {
+            return Ok(None);
+        };
+        let response = client
+            .get(&asset.url)
+            .bearer_auth(token)
+            .header(reqwest::header::ACCEPT, "application/octet-stream")
+            .send()
+            .await
+            .with_context(|| format!("failed to download tenant manifest asset `{asset_name}`"))?
+            .error_for_status()
+            .with_context(|| format!("failed to download tenant manifest asset `{asset_name}`"))?;
+        let bytes = response
+            .bytes()
+            .await
+            .with_context(|| format!("failed to read tenant manifest asset `{asset_name}`"))?;
+        Ok(Some(bytes.to_vec()))
+    }
+
+    async fn fetch_oci_manifest(&self, tenant: &str, token: &str) -> Result<Vec<u8>> {
         let opts = PackFetchOptions {
             allow_tags: true,
             accepted_manifest_types: vec![
@@ -1246,6 +1312,16 @@ impl TenantManifestSource for RealTenantManifestSource {
             )
         })
     }
+}
+
+fn github_latest_release_api_url() -> String {
+    format!(
+        "https://api.github.com/repos/{CUSTOMERS_TOOLS_GITHUB_OWNER}/{CUSTOMERS_TOOLS_GITHUB_REPO}/releases/tags/{CUSTOMERS_TOOLS_GITHUB_RELEASE_TAG}"
+    )
+}
+
+fn tenant_manifest_asset_name(tenant: &str) -> String {
+    format!("{tenant}.json")
 }
 
 #[cfg(test)]
@@ -1422,6 +1498,15 @@ mod tests {
     fn resolve_token_errors_when_missing_in_non_interactive_mode() {
         let err = resolve_token_with(None, false, || Ok("unused".to_string()), "en").unwrap_err();
         assert!(format!("{err}").contains("no interactive terminal"));
+    }
+
+    #[test]
+    fn tenant_manifest_asset_name_uses_tenant_json() {
+        assert_eq!(tenant_manifest_asset_name("3point"), "3point.json");
+        assert_eq!(
+            github_latest_release_api_url(),
+            "https://api.github.com/repos/greentic-biz/customers-tools/releases/tags/latest"
+        );
     }
 
     #[test]

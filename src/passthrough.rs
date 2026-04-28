@@ -5,6 +5,8 @@ use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitStatus, Stdio};
 
+use crate::toolchain_catalogue::GREENTIC_TOOLCHAIN_PACKAGES;
+
 /// Resolve a binary by name using env override, then PATH.
 pub fn resolve_binary(name: &str) -> Result<PathBuf> {
     let locale = crate::i18n::select_locale(None);
@@ -77,78 +79,36 @@ pub fn run_passthrough(bin: &Path, args: &[OsString], verbose: bool) -> Result<E
         })
 }
 
-#[derive(Clone, Copy)]
-struct InstallSpec {
-    crate_name: &'static str,
-    bin_name: &'static str,
-}
-
-const DELEGATED_INSTALL_SPECS: [InstallSpec; 8] = [
-    InstallSpec {
-        crate_name: "greentic-component",
-        bin_name: "greentic-component",
-    },
-    InstallSpec {
-        crate_name: "greentic-flow",
-        bin_name: "greentic-flow",
-    },
-    InstallSpec {
-        crate_name: "greentic-pack",
-        bin_name: "greentic-pack",
-    },
-    InstallSpec {
-        crate_name: "greentic-runner",
-        bin_name: "greentic-runner",
-    },
-    InstallSpec {
-        crate_name: "greentic-runner",
-        bin_name: "greentic-runner-cli",
-    },
-    InstallSpec {
-        crate_name: "greentic-gui",
-        bin_name: "greentic-gui",
-    },
-    InstallSpec {
-        crate_name: "greentic-secrets",
-        bin_name: "greentic-secrets",
-    },
-    InstallSpec {
-        crate_name: "greentic-mcp",
-        bin_name: "greentic-mcp",
-    },
-];
-
 pub fn install_all_delegated_tools(latest: bool, locale: &str) -> Result<()> {
     ensure_cargo_binstall()?;
-    for spec in DELEGATED_INSTALL_SPECS {
-        install_with_binstall(spec, latest, locale)?;
+    for package in GREENTIC_TOOLCHAIN_PACKAGES {
+        for bin_name in package.bins {
+            install_with_binstall(package.crate_name, bin_name, latest, locale)?;
+        }
     }
     Ok(())
 }
 
-fn install_with_binstall(spec: InstallSpec, force_latest: bool, locale: &str) -> Result<()> {
+fn install_with_binstall(
+    crate_name: &'static str,
+    bin_name: &'static str,
+    force_latest: bool,
+    locale: &str,
+) -> Result<()> {
     eprintln!(
         "{}",
         crate::i18n::tf(
             locale,
             "runtime.tools.install.installing",
             &[
-                ("bin_name", spec.bin_name.to_string()),
-                ("crate_name", spec.crate_name.to_string()),
+                ("bin_name", bin_name.to_string()),
+                ("crate_name", crate_name.to_string()),
             ],
         )
     );
 
     let mut cmd = Command::new("cargo");
-    cmd.arg("binstall")
-        .arg("-y")
-        .arg("--locked")
-        .arg(spec.crate_name)
-        .arg("--bin")
-        .arg(spec.bin_name);
-    if force_latest {
-        cmd.arg("--force");
-    }
+    cmd.args(binstall_args(crate_name, bin_name, force_latest));
 
     let status = cmd
         .stdin(Stdio::inherit())
@@ -166,13 +126,25 @@ fn install_with_binstall(spec: InstallSpec, force_latest: bool, locale: &str) ->
                 locale,
                 "runtime.tools.install.error.binstall_failed",
                 &[
-                    ("bin_name", spec.bin_name.to_string()),
-                    ("crate_name", spec.crate_name.to_string()),
+                    ("bin_name", bin_name.to_string()),
+                    ("crate_name", crate_name.to_string()),
                     ("exit_code", format!("{:?}", status.code())),
                 ],
             )
         );
     }
+}
+
+fn binstall_args(
+    crate_name: &'static str,
+    bin_name: &'static str,
+    force_latest: bool,
+) -> Vec<&'static str> {
+    let mut args = vec!["binstall", "-y", "--locked", crate_name, "--bin", bin_name];
+    if force_latest {
+        args.push("--force");
+    }
+    args
 }
 
 fn ensure_cargo_binstall() -> Result<()> {
@@ -325,16 +297,43 @@ fn parse_latest_cargo_binstall_version(stdout: &str) -> Result<Version> {
 #[cfg(test)]
 mod tests {
     use super::{
-        DELEGATED_INSTALL_SPECS, parse_installed_cargo_binstall_version,
-        parse_latest_cargo_binstall_version,
+        binstall_args, parse_installed_cargo_binstall_version, parse_latest_cargo_binstall_version,
     };
+    use crate::toolchain_catalogue::GREENTIC_TOOLCHAIN_PACKAGES;
 
     #[test]
-    fn delegated_install_specs_include_runner_cli() {
-        let found = DELEGATED_INSTALL_SPECS.iter().any(|spec| {
-            spec.bin_name == "greentic-runner-cli" && spec.crate_name == "greentic-runner"
+    fn delegated_install_catalogue_includes_runner() {
+        let found = GREENTIC_TOOLCHAIN_PACKAGES.iter().any(|package| {
+            package.crate_name == "greentic-runner" && package.bins.contains(&"greentic-runner")
         });
         assert!(found);
+    }
+
+    #[test]
+    fn binstall_args_include_force_only_when_latest_requested() {
+        assert_eq!(
+            binstall_args("greentic-runner", "greentic-runner", false),
+            vec![
+                "binstall",
+                "-y",
+                "--locked",
+                "greentic-runner",
+                "--bin",
+                "greentic-runner"
+            ]
+        );
+        assert_eq!(
+            binstall_args("greentic-runner", "greentic-runner", true),
+            vec![
+                "binstall",
+                "-y",
+                "--locked",
+                "greentic-runner",
+                "--bin",
+                "greentic-runner",
+                "--force"
+            ]
+        );
     }
 
     #[test]
