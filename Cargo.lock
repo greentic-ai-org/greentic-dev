@@ -1872,7 +1872,7 @@ dependencies = [
 
 [[package]]
 name = "greentic-dev"
-version = "0.5.0-dev.0"
+version = "0.6.0-dev.0"
 dependencies = [
  "anyhow",
  "assert_cmd",
