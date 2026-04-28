@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Chuyển tiếp pack (greentic-pack; pack run sử dụng greentic-runner-cli)",
   "cli.command.passthrough.args": "Các đối số được truyền trực tiếp đến lệnh nền",
   "cli.command.release.about": "Tạo, phát hành và quảng bá các bản phát hành chuỗi công cụ Greentic",
-  "cli.command.release.dev.about": "Xuất bản manifest chuỗi công cụ dev với các phiên bản gói mới nhất",
+  "cli.command.release.latest.about": "Xuất bản manifest chuỗi công cụ dev với các phiên bản gói mới nhất",
   "cli.command.release.dry_run": "In công việc phát hành dự kiến mà không ghi hoặc phát hành",
   "cli.command.release.force": "Ghi đè thẻ phát hành hiện có khi phát hành",
   "cli.command.release.from": "Thẻ nguồn dùng cho siêu dữ liệu hoặc ràng buộc phiên bản",

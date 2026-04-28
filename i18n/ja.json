@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Pack のパススルー（greentic-pack。pack run は greentic-runner-cli を使用）",
   "cli.command.passthrough.args": "基盤となるコマンドに直接渡される引数",
   "cli.command.release.about": "Greentic ツールチェーンリリースを生成、公開、昇格",
-  "cli.command.release.dev.about": "最新のパッケージバージョンで開発ツールチェーンのマニフェストを公開する",
+  "cli.command.release.latest.about": "最新のパッケージバージョンで開発ツールチェーンのマニフェストを公開する",
   "cli.command.release.dry_run": "書き込みや公開を行わず、予定されているリリース作業を出力",
   "cli.command.release.force": "公開時に既存のリリースタグを上書き",
   "cli.command.release.from": "メタデータまたはバージョン制約に使用するソースタグ",

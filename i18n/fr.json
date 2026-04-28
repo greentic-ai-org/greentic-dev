@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Transparence de pack (greentic-pack; pack run utilise greentic-runner-cli)",
   "cli.command.passthrough.args": "Arguments transmis directement à la commande sous-jacente",
   "cli.command.release.about": "Générer, publier et promouvoir les versions de la chaîne d’outils Greentic",
-  "cli.command.release.dev.about": "Publier le manifeste de la chaîne d’outils de développement avec les dernières versions des paquets",
+  "cli.command.release.latest.about": "Publier le manifeste de la chaîne d’outils de développement avec les dernières versions des paquets",
   "cli.command.release.dry_run": "Afficher les tâches de publication prévues sans écrire ni publier",
   "cli.command.release.force": "Remplacer une balise de version existante lors de la publication",
   "cli.command.release.from": "Balise source utilisée pour les métadonnées ou les contraintes de version",

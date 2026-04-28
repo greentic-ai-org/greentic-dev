@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Przekazanie pakietu (greentic-pack; uruchomienie pakietu używa greentic-runner-cli)",
   "cli.command.passthrough.args": "Argumenty przekazywane bezpośrednio do bazowego polecenia",
   "cli.command.release.about": "Generuj, publikuj i promuj wydania zestawu narzędzi Greentic",
-  "cli.command.release.dev.about": "Opublikuj manifest zestawu narzędzi deweloperskich z najnowszymi wersjami pakietów",
+  "cli.command.release.latest.about": "Opublikuj manifest zestawu narzędzi deweloperskich z najnowszymi wersjami pakietów",
   "cli.command.release.dry_run": "Wyświetl planowane prace nad wydaniem bez zapisywania ani publikowania",
   "cli.command.release.force": "Nadpisz istniejący tag wydania podczas publikowania",
   "cli.command.release.from": "Tag źródłowy używany do metadanych lub ograniczeń wersji",

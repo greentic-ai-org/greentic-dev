@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Panoltiliztli de pack (greentic-pack; pack run quipia greentic-runner-cli)",
   "cli.command.passthrough.args": "Argumentos tlen yawi directamente campa in comando tlen moneltoca",
   "cli.command.release.about": "Xikchihua, xikinpanolti, ihuan xikyolchikahua Greentic toolchain releases",
-  "cli.command.release.dev.about": "Xikpanoa in dev toolchain manifest ika yankuik package versions",
+  "cli.command.release.latest.about": "Xikpanoa in dev toolchain manifest ika yankuik package versions",
   "cli.command.release.dry_run": "Xikixnexti in release tekitl tlen moyejyekoa, amo ijkuilos noso panoltis",
   "cli.command.release.force": "Xikpatla se release tag tlen ya onka ijkuak panoltis",
   "cli.command.release.from": "Source tag tlen motequiuia ika metadata noso version constraints",

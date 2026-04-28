@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Pack passthrough (greentic-pack; pack run uses greentic-runner-cli)",
   "cli.command.passthrough.args": "Arguments passed directly to the underlying command",
   "cli.command.release.about": "Generate, publish, and promote Greentic toolchain releases",
-  "cli.command.release.dev.about": "Publish the dev toolchain manifest with latest package versions",
+  "cli.command.release.latest.about": "Publish the latest toolchain manifest with development binaries",
   "cli.command.release.dry_run": "Print planned release work without writing or publishing",
   "cli.command.release.force": "Overwrite an existing release tag when publishing",
   "cli.command.release.from": "Source tag used for metadata or version constraints",

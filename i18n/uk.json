@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Наскрізна передача pack (greentic-pack; pack run використовує greentic-runner-cli)",
   "cli.command.passthrough.args": "Аргументи, передані безпосередньо базовій команді",
   "cli.command.release.about": "Генерувати, публікувати та просувати випуски інструментарію Greentic",
-  "cli.command.release.dev.about": "Опублікувати маніфест інструментарію розробки з найновішими версіями пакетів",
+  "cli.command.release.latest.about": "Опублікувати маніфест інструментарію розробки з найновішими версіями пакетів",
   "cli.command.release.dry_run": "Вивести заплановані роботи з випуску без запису чи публікації",
   "cli.command.release.force": "Перезаписати наявний тег випуску під час публікації",
   "cli.command.release.from": "Вихідний тег, що використовується для метаданих або обмежень версії",

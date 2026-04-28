@@ -31,7 +31,7 @@
   "cli.command.release.generate.about": "Generate a pinned Greentic toolchain manifest",
   "cli.command.release.publish.about": "Generate and publish a Greentic toolchain release manifest",
   "cli.command.release.view.about": "Download and print a Greentic toolchain manifest",
-  "cli.command.release.dev.about": "Publish the dev toolchain manifest with latest package versions",
+  "cli.command.release.latest.about": "Publish the latest toolchain manifest with development binaries",
   "cli.command.release.promote.about": "Move a GHCR tag to an existing Greentic toolchain release",
   "cli.command.release.release": "Release version to generate, publish, or promote",
   "cli.command.release.from": "Source tag used for metadata or version constraints",

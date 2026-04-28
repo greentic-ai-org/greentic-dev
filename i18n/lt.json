@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Paketo persiuntimas (greentic-pack; pack run naudoja greentic-runner-cli)",
   "cli.command.passthrough.args": "Argumentai, perduodami tiesiogiai pagrindinei komandai",
   "cli.command.release.about": "Generuoti, publikuoti ir paaukštinti Greentic įrankių grandinės leidimus",
-  "cli.command.release.dev.about": "Paskelbti kūrimo įrankių grandinės manifestą su naujausiomis paketų versijomis",
+  "cli.command.release.latest.about": "Paskelbti kūrimo įrankių grandinės manifestą su naujausiomis paketų versijomis",
   "cli.command.release.dry_run": "Išspausdinti suplanuotus leidimo darbus nerašant ir nepublikuojant",
   "cli.command.release.force": "Publikuojant perrašyti esamą leidimo žymą",
   "cli.command.release.from": "Šaltinio žyma, naudojama metaduomenims arba versijos apribojimams",

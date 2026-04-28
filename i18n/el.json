@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Διέλευση pack (greentic-pack· το pack run χρησιμοποιεί το greentic-runner-cli)",
   "cli.command.passthrough.args": "Ορίσματα που περνούν απευθείας στην υποκείμενη εντολή",
   "cli.command.release.about": "Δημιουργία, δημοσίευση και προώθηση εκδόσεων της αλυσίδας εργαλείων Greentic",
-  "cli.command.release.dev.about": "Δημοσίευση του manifest της αλυσίδας εργαλείων dev με τις πιο πρόσφατες εκδόσεις πακέτων",
+  "cli.command.release.latest.about": "Δημοσίευση του manifest της αλυσίδας εργαλείων dev με τις πιο πρόσφατες εκδόσεις πακέτων",
   "cli.command.release.dry_run": "Εμφάνιση της προγραμματισμένης εργασίας έκδοσης χωρίς εγγραφή ή δημοσίευση",
   "cli.command.release.force": "Αντικατάσταση υπάρχουσας ετικέτας έκδοσης κατά τη δημοσίευση",
   "cli.command.release.from": "Ετικέτα πηγής που χρησιμοποιείται για μεταδεδομένα ή περιορισμούς έκδοσης",

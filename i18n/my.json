@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Pack passthrough (greentic-pack; pack run သည် greentic-runner-cli ကို အသုံးပြုသည်)",
   "cli.command.passthrough.args": "အခြေခံ command သို့ တိုက်ရိုက်ပို့မည့် arguments များ",
   "cli.command.release.about": "Greentic toolchain ထုတ်ဝေမှုများကို ဖန်တီး၊ ထုတ်ဝေပြီး မြှင့်တင်ပါ",
-  "cli.command.release.dev.about": "နောက်ဆုံးပေါ် package ဗားရှင်းများဖြင့် dev toolchain manifest ကို ထုတ်ဝေပါ",
+  "cli.command.release.latest.about": "နောက်ဆုံးပေါ် package ဗားရှင်းများဖြင့် dev toolchain manifest ကို ထုတ်ဝေပါ",
   "cli.command.release.dry_run": "ရေးသားခြင်း သို့မဟုတ် ထုတ်ဝေခြင်းမပြုဘဲ စီစဉ်ထားသော ထုတ်ဝေမှုလုပ်ငန်းကို ပုံနှိပ်ပြပါ",
   "cli.command.release.force": "ထုတ်ဝေရာတွင် ရှိပြီးသား release tag ကို အစားထိုးရေးပါ",
   "cli.command.release.from": "metadata သို့မဟုတ် version constraint များအတွက် အသုံးပြုသော source tag",

@@ -26,7 +26,7 @@
   "cli.command.pack.about": "ప్యాక్ పాస్‌త్రూ (greentic-pack; pack run greentic-runner-cli ను ఉపయోగిస్తుంది)",
   "cli.command.passthrough.args": "అడుగుబడి command కు నేరుగా పంపబడిన arguments",
   "cli.command.release.about": "Greentic టూల్‌చెయిన్ విడుదలలను సృష్టించండి, ప్రచురించండి, మరియు ప్రమోట్ చేయండి",
-  "cli.command.release.dev.about": "తాజా ప్యాకేజ్ వెర్షన్‌లతో dev టూల్‌చైన్ మానిఫెస్ట్‌ను ప్రచురించండి",
+  "cli.command.release.latest.about": "తాజా ప్యాకేజ్ వెర్షన్‌లతో dev టూల్‌చైన్ మానిఫెస్ట్‌ను ప్రచురించండి",
   "cli.command.release.dry_run": "వ్రాయకుండా లేదా ప్రచురించకుండా ప్రణాళికాబద్ధమైన విడుదల పనిని ముద్రించండి",
   "cli.command.release.force": "ప్రచురించేటప్పుడు ఇప్పటికే ఉన్న విడుదల ట్యాగ్‌ను ఓవర్‌రైట్ చేయండి",
   "cli.command.release.from": "మెటాడేటా లేదా వెర్షన్ పరిమితుల కోసం ఉపయోగించే మూల ట్యాగ్",

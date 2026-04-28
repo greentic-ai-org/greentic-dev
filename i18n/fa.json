@@ -26,7 +26,7 @@
   "cli.command.pack.about": "عبور مستقیم بسته‌بندی (greentic-pack؛ pack run از greentic-runner-cli استفاده می‌کند)",
   "cli.command.passthrough.args": "آرگومان‌هایی که مستقیماً به فرمان زیربنایی ارسال می‌شوند",
   "cli.command.release.about": "تولید، انتشار و ترویج انتشارهای زنجیره‌ابزار Greentic",
-  "cli.command.release.dev.about": "انتشار مانیفست زنجیره‌ابزار توسعه با آخرین نسخه‌های بسته",
+  "cli.command.release.latest.about": "انتشار مانیفست زنجیره‌ابزار توسعه با آخرین نسخه‌های بسته",
   "cli.command.release.dry_run": "چاپ کارهای برنامه‌ریزی‌شده انتشار بدون نوشتن یا انتشار",
   "cli.command.release.force": "بازنویسی برچسب انتشار موجود هنگام انتشار",
   "cli.command.release.from": "برچسب مبدأ استفاده‌شده برای فراداده یا محدودیت‌های نسخه",

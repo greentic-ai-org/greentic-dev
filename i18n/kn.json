@@ -26,7 +26,7 @@
   "cli.command.pack.about": "ಪ್ಯಾಕ್ ಪಾಸ್‌ಥ್ರೂ (greentic-pack; pack run greentic-runner-cli ಅನ್ನು ಬಳಸುತ್ತದೆ)",
   "cli.command.passthrough.args": "ಆಧಾರಿತ command ಗೆ ನೇರವಾಗಿ ಕಳುಹಿಸಲಾದ arguments",
   "cli.command.release.about": "Greentic ಟೂಲ್‌ಚೈನ್ ಬಿಡುಗಡೆಗಳನ್ನು ರಚಿಸಿ, ಪ್ರಕಟಿಸಿ ಮತ್ತು ಉತ್ತೇಜಿಸಿ",
-  "cli.command.release.dev.about": "ಇತ್ತೀಚಿನ ಪ್ಯಾಕೇಜ್ ಆವೃತ್ತಿಗಳೊಂದಿಗೆ dev toolchain ಮ್ಯಾನಿಫೆಸ್ಟ್ ಅನ್ನು ಪ್ರಕಟಿಸಿ",
+  "cli.command.release.latest.about": "ಇತ್ತೀಚಿನ ಪ್ಯಾಕೇಜ್ ಆವೃತ್ತಿಗಳೊಂದಿಗೆ dev toolchain ಮ್ಯಾನಿಫೆಸ್ಟ್ ಅನ್ನು ಪ್ರಕಟಿಸಿ",
   "cli.command.release.dry_run": "ಬರೆಯದೆ ಅಥವಾ ಪ್ರಕಟಿಸದೆ ಯೋಜಿತ ಬಿಡುಗಡೆ ಕೆಲಸವನ್ನು ಮುದ್ರಿಸಿ",
   "cli.command.release.force": "ಪ್ರಕಟಿಸುವಾಗ ಅಸ್ತಿತ್ವದಲ್ಲಿರುವ ಬಿಡುಗಡೆ ಟ್ಯಾಗ್ ಅನ್ನು ಮೇಲ್ಬರೆಯಿರಿ",
   "cli.command.release.from": "ಮೆಟಾಡೇಟಾ ಅಥವಾ ಆವೃತ್ತಿ ನಿರ್ಬಂಧಗಳಿಗೆ ಬಳಸಿದ ಮೂಲ ಟ್ಯಾಗ್",

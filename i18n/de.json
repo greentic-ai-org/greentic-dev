@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Pack-Durchleitung (greentic-pack; pack run verwendet greentic-runner-cli)",
   "cli.command.passthrough.args": "Argumente, die direkt an den zugrunde liegenden Befehl übergeben werden",
   "cli.command.release.about": "Greentic-Toolchain-Releases generieren, veröffentlichen und promoten",
-  "cli.command.release.dev.about": "Das Manifest der Dev-Toolchain mit den neuesten Paketversionen veröffentlichen",
+  "cli.command.release.latest.about": "Das Manifest der Dev-Toolchain mit den neuesten Paketversionen veröffentlichen",
   "cli.command.release.dry_run": "Geplante Release-Arbeiten ausgeben, ohne zu schreiben oder zu veröffentlichen",
   "cli.command.release.force": "Ein vorhandenes Release-Tag beim Veröffentlichen überschreiben",
   "cli.command.release.from": "Quell-Tag für Metadaten oder Versionseinschränkungen",

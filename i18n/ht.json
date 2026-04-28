@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Passthrough pack (greentic-pack; pack run itilize greentic-runner-cli)",
   "cli.command.passthrough.args": "Agiman yo pase dirèkteman bay kòmand ki anba a",
   "cli.command.release.about": "Jenere, pibliye, epi pwomouvwa vèsyon toolchain Greentic yo",
-  "cli.command.release.dev.about": "Pibliye manifest chèn zouti dev la ak dènye vèsyon pakè yo",
+  "cli.command.release.latest.about": "Pibliye manifest chèn zouti dev la ak dènye vèsyon pakè yo",
   "cli.command.release.dry_run": "Afiche travay lage ki planifye san ekri oswa pibliye",
   "cli.command.release.force": "Ranplase yon tag lage ki deja egziste lè w ap pibliye",
   "cli.command.release.from": "Tag sous yo itilize pou metadone oswa kontrent vèsyon",

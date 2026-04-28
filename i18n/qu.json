@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Pack passthrough (greentic-pack; pack runqa greentic-runner-cli nisqata llamk'achin)",
   "cli.command.passthrough.args": "Uray kaq kamachiman chiqanta pasanapaq argumentos",
   "cli.command.release.about": "Greentic toolchain lluqsichiykunata ruwachiy, uyachiy, hinallataq ñawpaqman apay",
-  "cli.command.release.dev.about": "Dev llamk'anapaq toolchain manifest-ta musuq paquete versiyunkunawan lluqsichiy",
+  "cli.command.release.latest.about": "Dev llamk'anapaq toolchain manifest-ta musuq paquete versiyunkunawan lluqsichiy",
   "cli.command.release.dry_run": "Qillqaspa utaq uyachispa mana, yuyasqa release llamk'ayta rikuchiy",
   "cli.command.release.force": "Uyachispa kachkaptin, kaq release tagta musuqmanta qillqay",
   "cli.command.release.from": "Metadata utaq version constraintspaq llamk'achisqa source tag",

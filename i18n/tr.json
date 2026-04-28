@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Paket aktarma (greentic-pack; pack run, greentic-runner-cli kullanır)",
   "cli.command.passthrough.args": "Doğrudan temel komuta geçirilen argümanlar",
   "cli.command.release.about": "Greentic araç zinciri sürümlerini oluştur, yayımla ve yükselt",
-  "cli.command.release.dev.about": "Geliştirme araç zinciri manifestini en son paket sürümleriyle yayımla",
+  "cli.command.release.latest.about": "Geliştirme araç zinciri manifestini en son paket sürümleriyle yayımla",
   "cli.command.release.dry_run": "Yazmadan veya yayımlamadan planlanan sürüm çalışmasını yazdır",
   "cli.command.release.force": "Yayımlarken mevcut bir sürüm etiketinin üzerine yaz",
   "cli.command.release.from": "Meta veriler veya sürüm kısıtlamaları için kullanılan kaynak etiketi",

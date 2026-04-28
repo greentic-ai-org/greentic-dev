@@ -26,7 +26,7 @@
   "cli.command.pack.about": "បញ្ជូនបន្ត Pack (greentic-pack; pack run ប្រើ greentic-runner-cli)",
   "cli.command.passthrough.args": "អាគុយម៉ង់ដែលបញ្ជូនដោយផ្ទាល់ទៅពាក្យបញ្ជាមូលដ្ឋាន",
   "cli.command.release.about": "បង្កើត បោះពុម្ពផ្សាយ និងលើកកម្ពស់ការចេញផ្សាយ toolchain របស់ Greentic",
-  "cli.command.release.dev.about": "បោះផ្សាយ manifest របស់ toolchain សម្រាប់ dev ជាមួយកំណែកញ្ចប់ចុងក្រោយបំផុត",
+  "cli.command.release.latest.about": "បោះផ្សាយ manifest របស់ toolchain សម្រាប់ dev ជាមួយកំណែកញ្ចប់ចុងក្រោយបំផុត",
   "cli.command.release.dry_run": "បង្ហាញការងារចេញផ្សាយដែលបានគ្រោងទុក ដោយមិនសរសេរ ឬបោះពុម្ពផ្សាយ",
   "cli.command.release.force": "សរសេរជាន់លើស្លាកចេញផ្សាយដែលមានស្រាប់ នៅពេលបោះពុម្ពផ្សាយ",
   "cli.command.release.from": "ស្លាកប្រភពដែលប្រើសម្រាប់ទិន្នន័យមេតា ឬកម្រិតកំណត់កំណែ",

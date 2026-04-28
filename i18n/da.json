@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Pack-passthrough (greentic-pack; pack run bruger greentic-runner-cli)",
   "cli.command.passthrough.args": "Argumenter sendt direkte til den underliggende kommando",
   "cli.command.release.about": "Generer, udgiv og promover Greentic-værktøjskædeudgivelser",
-  "cli.command.release.dev.about": "Udgiv dev-værktøjskædens manifest med de nyeste pakkeversioner",
+  "cli.command.release.latest.about": "Udgiv dev-værktøjskædens manifest med de nyeste pakkeversioner",
   "cli.command.release.dry_run": "Udskriv planlagt udgivelsesarbejde uden at skrive eller udgive",
   "cli.command.release.force": "Overskriv et eksisterende udgivelsestag ved udgivelse",
   "cli.command.release.from": "Kildetag brugt til metadata eller versionsbegrænsninger",

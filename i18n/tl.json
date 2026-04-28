@@ -26,7 +26,7 @@
   "cli.command.pack.about": "Passthrough ng pack (greentic-pack; gumagamit ang pack run ng greentic-runner-cli)",
   "cli.command.passthrough.args": "Mga argumentong direktang ipinapasa sa pinagbabatayang command",
   "cli.command.release.about": "Bumuo, mag-publish, at mag-promote ng mga release ng Greentic toolchain",
-  "cli.command.release.dev.about": "I-publish ang dev toolchain manifest gamit ang pinakabagong mga bersyon ng package",
+  "cli.command.release.latest.about": "I-publish ang dev toolchain manifest gamit ang pinakabagong mga bersyon ng package",
   "cli.command.release.dry_run": "I-print ang planadong gawain sa release nang hindi nagsusulat o nagpa-publish",
   "cli.command.release.force": "I-overwrite ang umiiral na release tag kapag nagpa-publish",
   "cli.command.release.from": "Source tag na ginamit para sa metadata o mga constraint ng bersyon",

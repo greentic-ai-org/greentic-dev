@@ -26,7 +26,7 @@
   "cli.command.pack.about": "تمرير الحزم كما هو (greentic-pack; يستخدم pack run ‏greentic-runner-cli)",
   "cli.command.passthrough.args": "المعاملات التي تُمرَّر مباشرةً إلى الأمر الأساسي",
   "cli.command.release.about": "أنشئ وانشر وروّج لإصدارات سلسلة أدوات Greentic",
-  "cli.command.release.dev.about": "نشر بيان سلسلة أدوات التطوير بأحدث إصدارات الحزم",
+  "cli.command.release.latest.about": "نشر بيان سلسلة أدوات التطوير بأحدث إصدارات الحزم",
   "cli.command.release.dry_run": "اطبع أعمال الإصدار المخططة دون كتابة أو نشر",
   "cli.command.release.force": "استبدل وسم إصدار موجود عند النشر",
   "cli.command.release.from": "وسم المصدر المستخدم للبيانات الوصفية أو قيود الإصدار",

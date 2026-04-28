@@ -26,7 +26,7 @@
   "cli.command.pack.about": "पैक पासथ्रू (greentic-pack; pack run greentic-runner-cli का उपयोग करता है)",
   "cli.command.passthrough.args": "arguments जो सीधे underlying command को पास किए जाते हैं",
   "cli.command.release.about": "Greentic टूलचेन रिलीज़ जनरेट, प्रकाशित और प्रमोट करें",
-  "cli.command.release.dev.about": "नवीनतम पैकेज संस्करणों के साथ dev toolchain manifest प्रकाशित करें",
+  "cli.command.release.latest.about": "नवीनतम पैकेज संस्करणों के साथ dev toolchain manifest प्रकाशित करें",
   "cli.command.release.dry_run": "लिखे या प्रकाशित किए बिना नियोजित रिलीज़ कार्य प्रिंट करें",
   "cli.command.release.force": "प्रकाशित करते समय मौजूदा रिलीज़ टैग को ओवरराइट करें",
   "cli.command.release.from": "मेटाडेटा या संस्करण बाधाओं के लिए उपयोग किया गया स्रोत टैग",
