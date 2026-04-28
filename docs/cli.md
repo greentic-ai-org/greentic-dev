@@ -54,17 +54,20 @@ Behavior:
 
 Behavior:
 
-- bare `install` always runs the OSS delegated tool installer first
-- when `--tenant` is omitted, the command stops after the OSS install step
+- bare `install` prints guidance for bootstrap, customer-approved, and tenant install paths
+- `install tools` installs development/bootstrap tools from the canonical Greentic tool catalogue
+- `install tools --latest` force-refreshes development/bootstrap tools
 - when `--tenant` is present, the command prompts for a hidden token if `--token` is omitted in an interactive terminal
 - when `--tenant` is present in a non-interactive context, `--token` is required
+- when `--tenant` is present, `greentic-dev` may bootstrap public Greentic tools first
 - when a tenant token is available, the command also installs tenant-authorized binaries and docs
 - `--locale` selects translated manifest/doc values when available; exact locale is preferred, then language-only fallback (`nl-NL` -> `nl`)
-- `install tools` remains the legacy OSS-only `cargo binstall` path
+- customer-approved pinned toolchain releases are installed with `gtc install`
 
 Commercial install contract:
 
-- tenant manifests are pulled from `oci://ghcr.io/greentic-biz/customers-tools/<tenant>:latest`
+- tenant manifests are first resolved from the `greentic-biz/customers-tools` GitHub release tagged `latest`, using the asset `<tenant>.json`
+- if no matching GitHub release asset is available, tenant manifests fall back to `oci://ghcr.io/greentic-biz/customers-tools/<tenant>:latest`
 - tenant manifests may include expanded tool/doc entries or GitHub-hosted manifest references
 - tenant manifests may also use the simple OCI payload shape:
   - tools: `{ id, targets }`
@@ -98,6 +101,44 @@ Default install locations:
 - binaries: `$CARGO_HOME/bin` or `~/.cargo/bin`
 - docs: `~/.greentic/install/docs`
 - state: `~/.greentic/install/state.json`
+
+## Release
+
+- `greentic-dev release generate --release 1.0.5 --from dev`
+- `greentic-dev release generate --release 1.0.5 --token env:GHCR_TOKEN`
+- `greentic-dev release publish --release 1.0.5 --from dev`
+- `greentic-dev release publish --manifest dist/toolchains/gtc-1.0.5.json --tag stable`
+- `greentic-dev release publish --release 1.0.5 --from dev --tag rc`
+- `greentic-dev release publish --release 1.0.5 --from dev --force`
+- `greentic-dev release view --release 1.0.5`
+- `greentic-dev release view --tag stable`
+- `greentic-dev release dev --token env:GHCR_TOKEN --force`
+- `greentic-dev release promote --release 1.0.5 --tag stable`
+
+Behavior:
+
+- `release generate` creates a pinned `dist/toolchains/gtc-<release>.json` manifest from the canonical Greentic tool catalogue
+- `--from` resolves a source manifest/tag for metadata or version constraints; the package/bin list still comes from the canonical catalogue
+- if the source manifest does not exist yet, `release generate` bootstraps it at `<repo>:<from>` when GHCR credentials are available
+- `release generate --dry-run` shows the generated release manifest and reports the bootstrap it would perform without pushing
+- `release publish` generates the pinned manifest and pushes it as `ghcr.io/greenticai/greentic-versions/gtc:<release>`
+- `release publish --manifest <FILE>` publishes that local manifest as `gtc:<manifest.version>` without regenerating it
+- `release publish --manifest <FILE> --release <release>` publishes the local manifest under the explicit release and uses that value in the pushed manifest
+- publishing an existing release tag fails unless `--force` is set
+- `release publish --tag <tag>` also moves that tag to the published release manifest
+- `release view --release <release>` or `release view --tag <tag>` downloads the selected manifest and prints it as pretty JSON
+- `release dev` publishes `gtc:dev` with every catalogue package set to `"version": "latest"`
+- `release promote --release <release> --tag <tag>` moves a tag to an existing release without regenerating the manifest
+- `--token <TOKEN>` and `--token env:<VAR>` authenticate GHCR operations; when omitted, release commands use `GHCR_TOKEN`, then `GITHUB_TOKEN`
+- rollback is represented by promoting an older release to the desired tag
+- tag names are not restricted; examples include `stable`, `rc`, `demo`, and customer-specific channel names
+- release commands do not install local tools
+
+OCI contract:
+
+- toolchain manifests are pushed as OCI artifacts with one JSON layer
+- layer media type: `application/vnd.greentic.toolchain.manifest.v1+json`
+- default repository: `ghcr.io/greenticai/greentic-versions/gtc`
 
 ## Wizard (Launcher-Only)
 
@@ -133,7 +174,7 @@ Other non-launcher IDs are rejected by `validate` / `apply`.
 
 ## Tips
 
-- Missing delegated tools are not auto-installed. Use `greentic-dev install tools` (or `--latest`).
+- Missing delegated tools are not auto-installed during passthrough commands. Use `greentic-dev install tools` to bootstrap development tools from the canonical catalogue, or `--latest` to force-refresh.
 - Environment overrides:
   - `GREENTIC_DEV_BIN_GREENTIC_FLOW`
   - `GREENTIC_DEV_BIN_GREENTIC_COMPONENT`
