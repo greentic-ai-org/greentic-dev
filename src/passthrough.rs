@@ -146,9 +146,10 @@ pub fn install_all_delegated_tools(latest: bool, locale: &str) -> Result<()> {
     ensure_cargo_binstall()?;
     let channel = current_toolchain_channel();
     for package in GREENTIC_TOOLCHAIN_PACKAGES {
+        let crate_name = delegated_binary_name_for_channel(package.crate_name, channel);
         for bin_name in package.bins {
             install_with_binstall(
-                package.crate_name,
+                &crate_name,
                 &delegated_binary_name_for_channel(bin_name, channel),
                 latest,
                 locale,
