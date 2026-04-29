@@ -49,7 +49,7 @@ toml_edit = "0.25"
 semver = "1"
 sha2 = "0.11"
 time = { version = "0.3", features = ["macros", "formatting"] }
-wit-component = "0.247"
+wit-component = "0.248"
 wit-parser = "0.247"
 base64 = "0.22"
 greentic-interfaces = { version = "0.5", default-features = false, features = ["describe-v1"] }
