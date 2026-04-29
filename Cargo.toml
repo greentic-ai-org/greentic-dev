@@ -50,7 +50,7 @@ semver = "1"
 sha2 = "0.11"
 time = { version = "0.3", features = ["macros", "formatting"] }
 wit-component = "0.247"
-wit-parser = "0.247"
+wit-parser = "0.248"
 base64 = "0.22"
 greentic-interfaces = { version = "0.5", default-features = false, features = ["describe-v1"] }
 greentic-types = { version = "0.5", features = ["serde"] }
