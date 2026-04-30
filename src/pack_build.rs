@@ -547,3 +547,245 @@ struct ImportToml {
     pack_id: String,
     version_req: String,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use greentic_flow::flow_bundle::load_and_validate_bundle;
+    use once_cell::sync::Lazy;
+    use serde_json::json;
+    use std::sync::Mutex;
+
+    static ENV_LOCK: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
+
+    fn fixture_component_dir() -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("fixtures/components")
+    }
+
+    fn fixture_bundle() -> greentic_flow::flow_bundle::FlowBundle {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures/hello-pack/hello-flow.ygtc");
+        let yaml = fs::read_to_string(&path).unwrap();
+        load_and_validate_bundle(&yaml, Some(path.as_path())).unwrap()
+    }
+
+    fn fixture_component() -> Arc<ResolvedComponent> {
+        let mut resolver = ComponentResolver::new(Some(fixture_component_dir()));
+        resolver
+            .resolve_component("dev.greentic.echo", &VersionReq::parse("*").unwrap())
+            .unwrap()
+    }
+
+    fn fixture_resolved_node(node_id: &str) -> ResolvedNode {
+        ResolvedNode {
+            node_id: node_id.to_string(),
+            component: fixture_component(),
+            pointer: format!("/nodes/{node_id}/dev.greentic.echo"),
+            config: json!({}),
+        }
+    }
+
+    #[test]
+    fn builtin_component_detection_matches_exec_and_emit_variants() {
+        assert!(is_builtin_component("component.exec"));
+        assert!(is_builtin_component("flow.call"));
+        assert!(is_builtin_component("session.wait"));
+        assert!(is_builtin_component("emit.result"));
+        assert!(!is_builtin_component("dev.greentic.echo"));
+    }
+
+    #[test]
+    fn parse_component_ref_accepts_default_and_explicit_versions() {
+        let (name, version_req) = parse_component_ref("dev.greentic.echo").unwrap();
+        assert_eq!(name, "dev.greentic.echo");
+        assert!(version_req.matches(&Version::parse("1.0.0").unwrap()));
+
+        let (name, version_req) = parse_component_ref("dev.greentic.echo @ ^1.2").unwrap();
+        assert_eq!(name, "dev.greentic.echo");
+        assert!(version_req.matches(&Version::parse("1.2.3").unwrap()));
+    }
+
+    #[test]
+    fn parse_component_ref_rejects_invalid_versions() {
+        let err = parse_component_ref("dev.greentic.echo@not-a-range").unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("invalid version requirement `not-a-range`")
+        );
+    }
+
+    #[test]
+    fn default_operation_uses_first_manifest_operation() {
+        let component = fixture_component();
+        assert_eq!(
+            default_operation(&component).unwrap().as_deref(),
+            Some("echo")
+        );
+    }
+
+    #[test]
+    fn ensure_node_operations_backfills_missing_operation_fields() {
+        let mut flow_doc = json!({
+            "nodes": {
+                "n1": {
+                    "dev.greentic.echo": {
+                        "input": { "message": "hello" }
+                    }
+                }
+            }
+        });
+
+        ensure_node_operations(&mut flow_doc, &[fixture_resolved_node("n1")]).unwrap();
+
+        let config = &flow_doc["nodes"]["n1"]["dev.greentic.echo"];
+        assert_eq!(config["operation"], "echo");
+        assert_eq!(config["op"], "echo");
+    }
+
+    #[test]
+    fn ensure_node_operations_preserves_existing_operation_alias() {
+        let mut flow_doc = json!({
+            "nodes": {
+                "n1": {
+                    "dev.greentic.echo": {
+                        "op": "already-set"
+                    }
+                }
+            }
+        });
+
+        ensure_node_operations(&mut flow_doc, &[fixture_resolved_node("n1")]).unwrap();
+
+        let config = &flow_doc["nodes"]["n1"]["dev.greentic.echo"];
+        assert_eq!(config["op"], "already-set");
+        assert!(config.get("operation").is_none());
+    }
+
+    #[test]
+    fn collect_component_artifacts_deduplicates_by_name_and_version() {
+        let node_a = fixture_resolved_node("n1");
+        let node_b = fixture_resolved_node("n2");
+
+        let artifacts = collect_component_artifacts(&[node_a, node_b]);
+        assert_eq!(artifacts.len(), 1);
+        assert_eq!(artifacts[0].name, "dev.greentic.echo");
+        assert_eq!(
+            artifacts[0].hash_blake3.as_deref(),
+            Some("68ac29289794823124c368d9c1b6c765552d69dca8108e7d6325c965a16b891e")
+        );
+    }
+
+    #[test]
+    fn report_schema_errors_formats_each_issue() {
+        let err = report_schema_errors(&[
+            NodeSchemaError {
+                node_id: "n1".to_string(),
+                component: "dev.greentic.echo".to_string(),
+                pointer: "/nodes/n1/dev.greentic.echo".to_string(),
+                message: "first issue".to_string(),
+            },
+            NodeSchemaError {
+                node_id: "n2".to_string(),
+                component: "dev.greentic.echo".to_string(),
+                pointer: "/nodes/n2/dev.greentic.echo/message".to_string(),
+                message: "second issue".to_string(),
+            },
+        ])
+        .unwrap_err();
+
+        let message = err.to_string();
+        assert!(message.contains("component schema validation failed"));
+        assert!(
+            message.contains(
+                "- node `n1` (dev.greentic.echo) /nodes/n1/dev.greentic.echo: first issue"
+            )
+        );
+        assert!(message.contains(
+            "- node `n2` (dev.greentic.echo) /nodes/n2/dev.greentic.echo/message: second issue"
+        ));
+    }
+
+    #[test]
+    fn load_pack_meta_uses_defaults_from_bundle() {
+        let bundle = fixture_bundle();
+        let meta = load_pack_meta(None, &bundle).unwrap();
+
+        assert_eq!(meta.pack_id, "dev.local.hello-flow");
+        assert_eq!(meta.name, "hello-flow");
+        assert_eq!(meta.version, Version::parse("0.1.0").unwrap());
+        assert_eq!(meta.entry_flows, vec!["hello-flow".to_string()]);
+        assert!(meta.annotations.is_empty());
+    }
+
+    #[test]
+    fn load_pack_meta_reads_imports_and_annotations() {
+        let bundle = fixture_bundle();
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("pack.toml");
+        fs::write(
+            &path,
+            r#"
+pack_id = "dev.local.custom"
+version = "1.2.3"
+name = "custom-pack"
+entry_flows = ["hello-flow", "backup-flow"]
+
+[annotations]
+team = "core"
+retries = 3
+
+[[imports]]
+pack_id = "dev.local.base"
+version_req = "^1"
+"#,
+        )
+        .unwrap();
+
+        let meta = load_pack_meta(Some(path.as_path()), &bundle).unwrap();
+        assert_eq!(meta.pack_id, "dev.local.custom");
+        assert_eq!(meta.version, Version::parse("1.2.3").unwrap());
+        assert_eq!(
+            meta.entry_flows,
+            vec!["hello-flow".to_string(), "backup-flow".to_string()]
+        );
+        assert_eq!(meta.annotations["team"], "core");
+        assert_eq!(meta.annotations["retries"], 3);
+        assert_eq!(meta.imports.len(), 1);
+        assert_eq!(meta.imports[0].pack_id, "dev.local.base");
+        assert_eq!(meta.imports[0].version_req, "^1");
+    }
+
+    #[test]
+    fn load_pack_meta_rejects_invalid_versions() {
+        let bundle = fixture_bundle();
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("pack.toml");
+        fs::write(
+            &path,
+            r#"
+version = "not-a-semver"
+"#,
+        )
+        .unwrap();
+
+        let err = load_pack_meta(Some(path.as_path()), &bundle).unwrap_err();
+        assert!(err.to_string().contains("invalid pack version in metadata"));
+    }
+
+    #[test]
+    fn strict_mode_enabled_reads_truthy_values() {
+        let _guard = ENV_LOCK.lock().unwrap();
+        let previous = std::env::var("LOCAL_CHECK_STRICT").ok();
+
+        unsafe { std::env::set_var("LOCAL_CHECK_STRICT", "true") };
+        assert!(strict_mode_enabled());
+
+        unsafe { std::env::set_var("LOCAL_CHECK_STRICT", "0") };
+        assert!(!strict_mode_enabled());
+
+        match previous {
+            Some(value) => unsafe { std::env::set_var("LOCAL_CHECK_STRICT", value) },
+            None => unsafe { std::env::remove_var("LOCAL_CHECK_STRICT") },
+        }
+    }
+}
