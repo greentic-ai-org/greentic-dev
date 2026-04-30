@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "Локален JSON файл с манифест на инструменталната верига за публикуване",
   "cli.command.release.out": "Директория за генерираните манифести на инструменталната верига",
   "cli.command.release.promote.about": "Преместване на GHCR етикет към съществуващо издание на инструменталната верига на Greentic",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Генериране и публикуване на манифест на издание на инструменталната верига на Greentic",
   "cli.command.release.release": "Версия на изданието за генериране, публикуване или промотиране",
   "cli.command.release.repo": "Хранилище за манифеста на инструменталната верига в GHCR",

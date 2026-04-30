@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "ملف JSON متاع بيان سلسلة الأدوات المحلية للنشر",
   "cli.command.release.out": "المجلد لبيانات سلسلة الأدوات المولّدة",
   "cli.command.release.promote.about": "انقل وسم GHCR إلى إصدار سلسلة أدوات Greentic موجود",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "ولّد وانشر بيان إصدار سلسلة أدوات Greentic",
   "cli.command.release.release": "نسخة الإصدار للتوليد، النشر، أو الترويج",
   "cli.command.release.repo": "مستودع بيان سلسلة الأدوات GHCR",

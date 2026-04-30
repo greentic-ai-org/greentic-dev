@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "প্রকাশ করার জন্য স্থানীয় টুলচেইন ম্যানিফেস্ট JSON ফাইল",
   "cli.command.release.out": "তৈরি করা টুলচেইন ম্যানিফেস্টের জন্য ডিরেক্টরি",
   "cli.command.release.promote.about": "একটি GHCR ট্যাগকে বিদ্যমান Greentic টুলচেইন রিলিজে সরান",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "একটি Greentic টুলচেইন রিলিজ ম্যানিফেস্ট তৈরি ও প্রকাশ করুন",
   "cli.command.release.release": "তৈরি, প্রকাশ বা প্রমোট করার জন্য রিলিজ সংস্করণ",
   "cli.command.release.repo": "GHCR টুলচেইন ম্যানিফেস্ট রিপোজিটরি",

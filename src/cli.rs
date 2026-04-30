@@ -497,6 +497,8 @@ pub enum ReleaseCommand {
     Latest(ReleaseLatestArgs),
     /// cli.command.release.promote.about
     Promote(ReleasePromoteArgs),
+    /// cli.command.release.snapshot.about
+    Snapshot(ReleaseSnapshotArgs),
 }
 
 #[derive(Args, Debug)]
@@ -652,6 +654,37 @@ pub struct ReleasePromoteArgs {
     /// cli.command.release.dry_run
     #[arg(long = "dry-run")]
     pub dry_run: bool,
+}
+
+#[derive(Args, Debug)]
+pub struct ReleaseSnapshotArgs {
+    /// cli.command.release.release
+    #[arg(long = "release")]
+    pub release: String,
+    /// cli.command.release.snapshot.channel
+    #[arg(long = "channel", default_value = "dev")]
+    pub channel: String,
+    /// cli.command.release.tag
+    #[arg(long = "tag")]
+    pub tag: Option<String>,
+    /// cli.command.release.repo
+    #[arg(
+        long = "repo",
+        default_value = "ghcr.io/greenticai/greentic-versions/gtc"
+    )]
+    pub repo: String,
+    /// cli.command.release.token
+    #[arg(long = "token")]
+    pub token: Option<String>,
+    /// cli.command.release.out
+    #[arg(long = "out", default_value = "dist/toolchains")]
+    pub out: PathBuf,
+    /// cli.command.release.dry_run
+    #[arg(long = "dry-run")]
+    pub dry_run: bool,
+    /// cli.command.release.force
+    #[arg(long = "force")]
+    pub force: bool,
 }
 
 #[derive(Args, Debug)]

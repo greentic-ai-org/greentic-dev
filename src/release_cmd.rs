@@ -1,7 +1,6 @@
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use std::str::FromStr;
 
 use anyhow::{Context, Result, anyhow, bail};
@@ -15,7 +14,8 @@ use time::OffsetDateTime;
 use time::format_description::well_known::Rfc3339;
 
 use crate::cli::{
-    ReleaseGenerateArgs, ReleaseLatestArgs, ReleasePromoteArgs, ReleasePublishArgs, ReleaseViewArgs,
+    ReleaseGenerateArgs, ReleaseLatestArgs, ReleasePromoteArgs, ReleasePublishArgs,
+    ReleaseSnapshotArgs, ReleaseViewArgs,
 };
 use crate::install::block_on_maybe_runtime;
 use crate::passthrough::{ToolchainChannel, delegated_binary_name_for_channel};
@@ -48,7 +48,7 @@ pub struct ToolchainPackage {
 }
 
 pub fn generate(args: ReleaseGenerateArgs) -> Result<()> {
-    let resolver = CargoSearchVersionResolver;
+    let resolver = default_resolver();
     let source = block_on_maybe_runtime(load_source_manifest(
         &args.repo,
         &args.from,
@@ -209,7 +209,7 @@ fn publish_manifest_input(
         .as_deref()
         .context("pass --release or --manifest")?;
     let from = args.from.as_deref().unwrap_or("latest");
-    let resolver = CargoSearchVersionResolver;
+    let resolver = default_resolver();
     let source = block_on_maybe_runtime(load_source_manifest(
         &args.repo,
         from,
@@ -221,6 +221,18 @@ fn publish_manifest_input(
             toolchain_ref(&args.repo, from)
         )
     })?;
+    if let Some(source_manifest) = source.as_ref()
+        && source_manifest_has_concrete_pins(source_manifest)
+    {
+        eprintln!(
+            "warning: `release publish --from {from}` reuses the pinned versions in `{}` instead \
+             of querying crates.io. To refresh a channel from the latest crates.io versions, use \
+             `release snapshot --channel <dev|stable>`. To copy an existing release tag without \
+             re-resolving, use `release promote`. The conflated `--from` semantics will be \
+             removed in a future release.",
+            toolchain_ref(&args.repo, from),
+        );
+    }
     let manifest = generate_manifest(
         release,
         from,
@@ -237,6 +249,17 @@ fn publish_manifest_input(
         )?))
     };
     Ok((release.to_string(), manifest, path))
+}
+
+/// True when the source manifest has at least one package pinned to a concrete
+/// (non-`"latest"`) version. Used to detect the case where `release publish
+/// --from <X>` would silently copy old pins instead of re-resolving — see the
+/// deprecation warning emitted from `publish_manifest_input`.
+fn source_manifest_has_concrete_pins(manifest: &ToolchainManifest) -> bool {
+    manifest
+        .packages
+        .iter()
+        .any(|package| package.version != "latest")
 }
 
 fn read_manifest_file(path: &Path) -> Result<ToolchainManifest> {
@@ -285,6 +308,110 @@ pub fn promote(args: ReleasePromoteArgs) -> Result<()> {
         toolchain_ref(&args.repo, &args.tag)
     );
     Ok(())
+}
+
+/// Snapshot the current crates.io state into a new toolchain manifest.
+///
+/// Unlike `publish --from <X>`, snapshot **never** reads an existing manifest
+/// and **always** queries the resolver. That makes it safe to call repeatedly
+/// to refresh a channel — `:dev` after each nightly publish, `:stable` after
+/// a weekly release — without the promote-vs-snapshot conflation that bit
+/// callers of `publish --from dev`.
+pub fn snapshot(args: ReleaseSnapshotArgs) -> Result<()> {
+    let channel = parse_channel(&args.channel)?;
+    let resolver = CratesIoApiVersionResolver::default();
+    let manifest = snapshot_manifest(&args.release, channel, &resolver, Some(created_at_now()?))?;
+
+    if args.dry_run {
+        println!("{}", serde_json::to_string_pretty(&manifest)?);
+        println!(
+            "Dry run: would publish {}",
+            toolchain_ref(&args.repo, &args.release)
+        );
+        if let Some(tag) = &args.tag {
+            println!(
+                "Dry run: would tag {} as {}",
+                toolchain_ref(&args.repo, &args.release),
+                toolchain_ref(&args.repo, tag)
+            );
+        }
+        return Ok(());
+    }
+
+    let path = write_manifest(&args.out, &manifest)?;
+    println!("Wrote {}", path.display());
+
+    let auth = registry_auth(args.token.as_deref())?;
+    block_on_maybe_runtime(async {
+        let client = oci_client();
+        let release_ref = parse_reference(&args.repo, &args.release)?;
+        if !args.force && manifest_exists(&client, &release_ref, &auth).await? {
+            bail!(
+                "release tag `{}` already exists; pass --force to overwrite it",
+                toolchain_ref(&args.repo, &args.release)
+            );
+        }
+        push_manifest_layer(&client, &release_ref, &auth, &manifest).await?;
+        if let Some(tag) = &args.tag {
+            let tag_ref = parse_reference(&args.repo, tag)?;
+            push_manifest_layer(&client, &tag_ref, &auth, &manifest).await?;
+        }
+        Ok(())
+    })?;
+    println!("Published {}", toolchain_ref(&args.repo, &args.release));
+    if let Some(tag) = &args.tag {
+        println!("Updated {}", toolchain_ref(&args.repo, tag));
+    }
+    Ok(())
+}
+
+fn parse_channel(channel: &str) -> Result<ToolchainChannel> {
+    match channel {
+        "dev" | "development" => Ok(ToolchainChannel::Development),
+        "stable" => Ok(ToolchainChannel::Stable),
+        other => bail!(
+            "unknown channel `{other}` (expected `dev` or `stable`); pass --channel dev for the \
+             dev lane or --channel stable for the stable lane"
+        ),
+    }
+}
+
+fn channel_tag(channel: ToolchainChannel) -> &'static str {
+    match channel {
+        ToolchainChannel::Stable => "stable",
+        ToolchainChannel::Development => "dev",
+    }
+}
+
+pub fn snapshot_manifest<R: CrateVersionResolver>(
+    release: &str,
+    channel: ToolchainChannel,
+    resolver: &R,
+    created_at: Option<String>,
+) -> Result<ToolchainManifest> {
+    let from = channel_tag(channel);
+    let mut packages = Vec::new();
+    for package in GREENTIC_TOOLCHAIN_PACKAGES {
+        let crate_in_manifest = manifest_crate_name_for_source(from, package.crate_name);
+        let version = resolver
+            .resolve_latest(&crate_in_manifest)
+            .with_context(|| {
+                format!("failed to resolve latest version for `{crate_in_manifest}`")
+            })?;
+        packages.push(ToolchainPackage {
+            crate_name: crate_in_manifest,
+            bins: manifest_bins_for_source(from, package.bins),
+            version,
+        });
+    }
+    Ok(ToolchainManifest {
+        schema: TOOLCHAIN_MANIFEST_SCHEMA.to_string(),
+        toolchain: TOOLCHAIN_NAME.to_string(),
+        version: release.to_string(),
+        channel: Some(from.to_string()),
+        created_at,
+        packages,
+    })
 }
 
 pub fn view(args: ReleaseViewArgs) -> Result<()> {
@@ -498,52 +625,89 @@ pub trait CrateVersionResolver {
     fn resolve_latest(&self, crate_name: &str) -> Result<String>;
 }
 
-struct CargoSearchVersionResolver;
+/// Default resolver used by `generate`, `publish`, and `snapshot`. Hits the
+/// crates.io HTTP API directly — see `CratesIoApiVersionResolver` for why
+/// this is preferred over shelling out to `cargo search`.
+fn default_resolver() -> CratesIoApiVersionResolver {
+    CratesIoApiVersionResolver::default()
+}
 
-impl CrateVersionResolver for CargoSearchVersionResolver {
-    fn resolve_latest(&self, crate_name: &str) -> Result<String> {
-        let output = Command::new("cargo")
-            .arg("search")
-            .arg(crate_name)
-            .arg("--limit")
-            .arg("1")
-            .output()
-            .with_context(|| format!("failed to execute `cargo search {crate_name} --limit 1`"))?;
-        if !output.status.success() {
-            bail!(
-                "`cargo search {crate_name} --limit 1` failed with exit code {:?}",
-                output.status.code()
-            );
-        }
-        let stdout = String::from_utf8(output.stdout).with_context(|| {
-            format!("`cargo search {crate_name} --limit 1` returned non-UTF8 output")
-        })?;
-        parse_cargo_search_version(crate_name, &stdout)
+const CRATES_IO_API_BASE: &str = "https://crates.io/api/v1/crates";
+const CRATES_IO_USER_AGENT: &str = concat!(
+    "greentic-dev/",
+    env!("CARGO_PKG_VERSION"),
+    " (https://github.com/greenticai/greentic-dev)"
+);
+
+/// Resolve the latest published version of a crate by hitting the crates.io
+/// HTTP API directly. Returns `max_stable_version` when present, falling back
+/// to `newest_version` and then `max_version`. Replaces an earlier
+/// `cargo search`-based resolver that ranked results by relevance and parsed
+/// stdout heuristically — both brittle for `<name>-dev` aliases that share
+/// prefixes with their stable parents.
+pub struct CratesIoApiVersionResolver {
+    base_url: String,
+    client: reqwest::blocking::Client,
+}
+
+impl Default for CratesIoApiVersionResolver {
+    fn default() -> Self {
+        Self::new(CRATES_IO_API_BASE)
     }
 }
 
-fn parse_cargo_search_version(crate_name: &str, stdout: &str) -> Result<String> {
-    let first_line = stdout
-        .lines()
-        .find(|line| !line.trim().is_empty())
-        .ok_or_else(|| anyhow!("`cargo search {crate_name} --limit 1` returned no results"))?;
-    let Some((found_name, rhs)) = first_line.split_once('=') else {
-        bail!("unexpected cargo search output: {first_line}");
-    };
-    if found_name.trim() != crate_name {
-        bail!(
-            "`cargo search {crate_name} --limit 1` returned `{}` first",
-            found_name.trim()
-        );
+impl CratesIoApiVersionResolver {
+    pub fn new(base_url: impl Into<String>) -> Self {
+        let client = reqwest::blocking::Client::builder()
+            .user_agent(CRATES_IO_USER_AGENT)
+            .build()
+            .expect("failed to build crates.io API client");
+        Self {
+            base_url: base_url.into(),
+            client,
+        }
     }
-    let quoted = rhs
-        .split('#')
-        .next()
-        .map(str::trim)
-        .ok_or_else(|| anyhow!("unexpected cargo search output: {first_line}"))?;
-    let version = quoted.trim_matches('"');
-    Version::parse(version)
-        .with_context(|| format!("failed to parse crate version from `{first_line}`"))?;
+}
+
+impl CrateVersionResolver for CratesIoApiVersionResolver {
+    fn resolve_latest(&self, crate_name: &str) -> Result<String> {
+        let url = format!("{}/{}", self.base_url.trim_end_matches('/'), crate_name);
+        let response = self
+            .client
+            .get(&url)
+            .send()
+            .with_context(|| format!("failed to GET {url}"))?;
+        let status = response.status();
+        let body = response
+            .text()
+            .with_context(|| format!("failed to read body of {url}"))?;
+        if !status.is_success() {
+            bail!("crates.io API GET {url} returned {status}: {body}");
+        }
+        parse_crates_io_version(crate_name, &body)
+    }
+}
+
+fn parse_crates_io_version(crate_name: &str, body: &str) -> Result<String> {
+    let payload: serde_json::Value = serde_json::from_str(body)
+        .with_context(|| format!("crates.io API for `{crate_name}` returned invalid JSON"))?;
+    let crate_obj = payload.get("crate").ok_or_else(|| {
+        anyhow!("crates.io API for `{crate_name}` is missing the top-level `crate` object")
+    })?;
+    let version = crate_obj
+        .get("max_stable_version")
+        .and_then(|v| v.as_str())
+        .or_else(|| crate_obj.get("newest_version").and_then(|v| v.as_str()))
+        .or_else(|| crate_obj.get("max_version").and_then(|v| v.as_str()))
+        .ok_or_else(|| {
+            anyhow!(
+                "crates.io API for `{crate_name}` does not expose max_stable_version, \
+                 newest_version, or max_version"
+            )
+        })?;
+    Version::parse(version).with_context(|| {
+        format!("crates.io returned an unparseable version `{version}` for `{crate_name}`")
+    })?;
     Ok(version.to_string())
 }
 
@@ -722,33 +886,51 @@ mod tests {
     }
 
     #[test]
-    fn parses_cargo_search_version() {
-        let version = parse_cargo_search_version(
-            "greentic-dev",
-            r#"greentic-dev = "0.5.1"    # Developer CLI"#,
-        )
-        .unwrap();
-        assert_eq!(version, "0.5.1");
+    fn parses_crates_io_max_stable_version() {
+        let body = r#"{"crate":{"id":"greentic-operator-dev","max_stable_version":"0.5.123"}}"#;
+        let version = parse_crates_io_version("greentic-operator-dev", body).unwrap();
+        assert_eq!(version, "0.5.123");
     }
 
     #[test]
-    fn rejects_empty_cargo_search_results() {
-        let err = parse_cargo_search_version("greentic-dev", "\n\n").unwrap_err();
-        assert!(err.to_string().contains("returned no results"));
+    fn parses_crates_io_falls_back_to_newest_version() {
+        let body = r#"{"crate":{"id":"greentic-flow-dev","newest_version":"0.6.7"}}"#;
+        let version = parse_crates_io_version("greentic-flow-dev", body).unwrap();
+        assert_eq!(version, "0.6.7");
     }
 
     #[test]
-    fn rejects_wrong_first_cargo_search_result() {
-        let err =
-            parse_cargo_search_version("greentic-dev", r#"greentic-runner = "0.5.1""#).unwrap_err();
-        assert!(err.to_string().contains("returned `greentic-runner` first"));
+    fn parses_crates_io_falls_back_to_max_version() {
+        let body = r#"{"crate":{"id":"greentic-runner-dev","max_version":"0.4.99"}}"#;
+        let version = parse_crates_io_version("greentic-runner-dev", body).unwrap();
+        assert_eq!(version, "0.4.99");
     }
 
     #[test]
-    fn rejects_invalid_cargo_search_version() {
-        let err = parse_cargo_search_version("greentic-dev", r#"greentic-dev = "not-a-version""#)
-            .unwrap_err();
-        assert!(err.to_string().contains("failed to parse crate version"));
+    fn rejects_crates_io_payload_without_versions() {
+        let body = r#"{"crate":{"id":"greentic-dev"}}"#;
+        let err = parse_crates_io_version("greentic-dev", body).unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("does not expose max_stable_version")
+        );
+    }
+
+    #[test]
+    fn rejects_crates_io_payload_with_unparseable_version() {
+        let body = r#"{"crate":{"max_stable_version":"not-a-version"}}"#;
+        let err = parse_crates_io_version("greentic-dev", body).unwrap_err();
+        assert!(err.to_string().contains("unparseable version"));
+    }
+
+    #[test]
+    fn rejects_crates_io_payload_without_crate_object() {
+        let body = r#"{"errors":[{"detail":"not found"}]}"#;
+        let err = parse_crates_io_version("greentic-dev", body).unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("missing the top-level `crate` object")
+        );
     }
 
     #[test]
@@ -841,6 +1023,115 @@ mod tests {
         assert!(manifest.packages.iter().any(|package| {
             package.crate_name == "greentic-dev-dev" && package.bins == ["greentic-dev-dev"]
         }));
+    }
+
+    #[test]
+    fn snapshot_manifest_dev_channel_resolves_dev_aliases() {
+        let manifest =
+            snapshot_manifest("1.1.5", ToolchainChannel::Development, &FixedResolver, None)
+                .unwrap();
+        assert_eq!(manifest.version, "1.1.5");
+        assert_eq!(manifest.channel.as_deref(), Some("dev"));
+        for package in &manifest.packages {
+            assert!(
+                package.crate_name.ends_with("-dev"),
+                "dev snapshot must pin -dev crate names; got {}",
+                package.crate_name
+            );
+            assert!(
+                package.bins.iter().all(|bin| bin.ends_with("-dev")),
+                "dev snapshot must pin -dev bin names; got {:?}",
+                package.bins
+            );
+            assert_ne!(
+                package.version, "latest",
+                "snapshot must always resolve concrete versions"
+            );
+        }
+        assert!(
+            manifest
+                .packages
+                .iter()
+                .any(|package| package.crate_name == "greentic-operator-dev")
+        );
+    }
+
+    #[test]
+    fn snapshot_manifest_stable_channel_keeps_plain_names() {
+        let manifest =
+            snapshot_manifest("1.0.20", ToolchainChannel::Stable, &FixedResolver, None).unwrap();
+        assert_eq!(manifest.channel.as_deref(), Some("stable"));
+        // The stable channel must NOT apply the `-dev` suffix transform.
+        // Cross-check against the catalogue: every stable package must match
+        // a catalogue entry by exact name (no transform applied).
+        let catalogue_names: std::collections::BTreeSet<_> = GREENTIC_TOOLCHAIN_PACKAGES
+            .iter()
+            .map(|spec| spec.crate_name)
+            .collect();
+        for package in &manifest.packages {
+            assert!(
+                catalogue_names.contains(package.crate_name.as_str()),
+                "stable snapshot crate `{}` was transformed; expected a verbatim catalogue entry",
+                package.crate_name
+            );
+        }
+    }
+
+    #[test]
+    fn snapshot_manifest_resolves_via_resolver() {
+        let manifest =
+            snapshot_manifest("1.1.6", ToolchainChannel::Development, &FixedResolver, None)
+                .unwrap();
+        // FixedResolver returns 1.2.3 for everything except `greentic-runner`.
+        // The dev channel queries `greentic-runner-dev`, not `greentic-runner`,
+        // so the special case in FixedResolver does not apply and every
+        // package should land on the default 1.2.3 — proving the resolver was
+        // hit (rather than versions copied from somewhere).
+        for package in &manifest.packages {
+            assert_eq!(
+                package.version, "1.2.3",
+                "resolver must be hit for {}",
+                package.crate_name
+            );
+        }
+    }
+
+    #[test]
+    fn parses_dev_channel_argument() {
+        assert_eq!(parse_channel("dev").unwrap(), ToolchainChannel::Development);
+        assert_eq!(
+            parse_channel("development").unwrap(),
+            ToolchainChannel::Development
+        );
+        assert_eq!(parse_channel("stable").unwrap(), ToolchainChannel::Stable);
+        assert!(parse_channel("rc").is_err());
+    }
+
+    #[test]
+    fn detects_concrete_pins_for_publish_deprecation_warning() {
+        let with_pins = ToolchainManifest {
+            schema: TOOLCHAIN_MANIFEST_SCHEMA.to_string(),
+            toolchain: TOOLCHAIN_NAME.to_string(),
+            version: "0.0.1".to_string(),
+            channel: Some("dev".to_string()),
+            created_at: None,
+            packages: vec![ToolchainPackage {
+                crate_name: "greentic-operator-dev".to_string(),
+                bins: vec!["greentic-operator-dev".to_string()],
+                version: "0.5.123".to_string(),
+            }],
+        };
+        assert!(source_manifest_has_concrete_pins(&with_pins));
+
+        let only_latest = ToolchainManifest {
+            packages: vec![ToolchainPackage {
+                crate_name: "greentic-operator".to_string(),
+                bins: vec!["greentic-operator".to_string()],
+                version: "latest".to_string(),
+            }],
+            ..with_pins
+        };
+        assert!(!source_manifest_has_concrete_pins(&only_latest));
     }
 
     #[test]

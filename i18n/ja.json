@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "公開するローカルツールチェーンのマニフェストJSONファイル",
   "cli.command.release.out": "生成されたツールチェーンマニフェスト用ディレクトリ",
   "cli.command.release.promote.about": "GHCR タグを既存の Greentic ツールチェーンリリースに移動",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Greentic ツールチェーンリリースマニフェストを生成して公開",
   "cli.command.release.release": "生成、公開、または昇格するリリースバージョン",
   "cli.command.release.repo": "GHCR ツールチェーンマニフェストリポジトリ",

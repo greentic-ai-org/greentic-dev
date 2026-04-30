@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "Yayımlanacak yerel araç zinciri manifest JSON dosyası",
   "cli.command.release.out": "Oluşturulan araç zinciri manifestleri için dizin",
   "cli.command.release.promote.about": "Bir GHCR etiketini mevcut bir Greentic araç zinciri sürümüne taşı",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Bir Greentic araç zinciri sürüm manifesti oluştur ve yayımla",
   "cli.command.release.release": "Oluşturulacak, yayımlanacak veya yükseltilecek sürüm versiyonu",
   "cli.command.release.repo": "GHCR araç zinciri manifest deposu",

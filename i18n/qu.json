@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "Llaqta toolchain manifest JSON willañiqita lluqsichinapaq",
   "cli.command.release.out": "Ruwasqa toolchain manifestkunapaq directory",
   "cli.command.release.promote.about": "GHCR tagta kaq Greentic toolchain releaseman kuyuchiy",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Greentic toolchain release manifestta ruwachiy hinaspa uyachiy",
   "cli.command.release.release": "Ruwachinapaq, uyachinapaq, utaq ñawpaqman apanapaq release version",
   "cli.command.release.repo": "GHCR toolchain manifest repository",

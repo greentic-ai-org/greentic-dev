@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "Lokal na toolchain manifest JSON file na ipa-publish",
   "cli.command.release.out": "Direktoryo para sa mga nabuong manifest ng toolchain",
   "cli.command.release.promote.about": "Ilipat ang GHCR tag sa isang umiiral na release ng Greentic toolchain",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Bumuo at mag-publish ng release manifest ng Greentic toolchain",
   "cli.command.release.release": "Bersyon ng release na bubuuin, ipa-publish, o ipo-promote",
   "cli.command.release.repo": "Repository ng GHCR toolchain manifest",
