@@ -4,7 +4,7 @@ bench = [
 
 [package]
 name = "greentic-dev"
-version = "0.6.0-dev.0"
+version = "0.6.0-dev.1"
 edition = "2024"
 description = "Developer CLI and local tooling for Greentic flows, packs, and components"
 license = "MIT"
