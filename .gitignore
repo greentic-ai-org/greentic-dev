@@ -1,6 +1,7 @@
 /target
 /.greentic
-/dist
+/dist/docs
+/dist/rustdocs
 /.target-local
 /.tmp
 
