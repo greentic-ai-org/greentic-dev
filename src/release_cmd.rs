@@ -704,6 +704,10 @@ async fn push_manifest_layer(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use once_cell::sync::Lazy;
+    use std::sync::Mutex;
+
+    static ENV_LOCK: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
 
     struct FixedResolver;
 
@@ -725,6 +729,26 @@ mod tests {
         )
         .unwrap();
         assert_eq!(version, "0.5.1");
+    }
+
+    #[test]
+    fn rejects_empty_cargo_search_results() {
+        let err = parse_cargo_search_version("greentic-dev", "\n\n").unwrap_err();
+        assert!(err.to_string().contains("returned no results"));
+    }
+
+    #[test]
+    fn rejects_wrong_first_cargo_search_result() {
+        let err =
+            parse_cargo_search_version("greentic-dev", r#"greentic-runner = "0.5.1""#).unwrap_err();
+        assert!(err.to_string().contains("returned `greentic-runner` first"));
+    }
+
+    #[test]
+    fn rejects_invalid_cargo_search_version() {
+        let err = parse_cargo_search_version("greentic-dev", r#"greentic-dev = "not-a-version""#)
+            .unwrap_err();
+        assert!(err.to_string().contains("failed to parse crate version"));
     }
 
     #[test]
@@ -841,6 +865,9 @@ mod tests {
         assert!(validate_manifest(&manifest).is_ok());
         manifest.schema = "wrong".to_string();
         assert!(validate_manifest(&manifest).is_err());
+        manifest.schema = TOOLCHAIN_MANIFEST_SCHEMA.to_string();
+        manifest.toolchain = "other".to_string();
+        assert!(validate_manifest(&manifest).is_err());
     }
 
     #[test]
@@ -851,6 +878,84 @@ mod tests {
                 .as_deref(),
             Some("secret-token")
         );
+    }
+
+    #[test]
+    fn resolves_registry_token_from_environment_reference() {
+        let _guard = ENV_LOCK.lock().unwrap();
+        let previous = std::env::var("RELEASE_CMD_TEST_TOKEN").ok();
+        unsafe { std::env::set_var("RELEASE_CMD_TEST_TOKEN", "env-secret") };
+
+        let resolved = resolve_registry_token(Some("env:RELEASE_CMD_TEST_TOKEN")).unwrap();
+        assert_eq!(resolved.as_deref(), Some("env-secret"));
+
+        match previous {
+            Some(value) => unsafe { std::env::set_var("RELEASE_CMD_TEST_TOKEN", value) },
+            None => unsafe { std::env::remove_var("RELEASE_CMD_TEST_TOKEN") },
+        }
+    }
+
+    #[test]
+    fn rejects_empty_registry_token_from_environment_reference() {
+        let _guard = ENV_LOCK.lock().unwrap();
+        let previous = std::env::var("RELEASE_CMD_TEST_TOKEN").ok();
+        unsafe { std::env::set_var("RELEASE_CMD_TEST_TOKEN", "   ") };
+
+        let err = resolve_registry_token(Some("env:RELEASE_CMD_TEST_TOKEN")).unwrap_err();
+        assert!(err.to_string().contains("resolved to an empty token"));
+
+        match previous {
+            Some(value) => unsafe { std::env::set_var("RELEASE_CMD_TEST_TOKEN", value) },
+            None => unsafe { std::env::remove_var("RELEASE_CMD_TEST_TOKEN") },
+        }
+    }
+
+    #[test]
+    fn registry_auth_uses_environment_fallbacks() {
+        let _guard = ENV_LOCK.lock().unwrap();
+        let previous_ghcr = std::env::var("GHCR_TOKEN").ok();
+        let previous_github = std::env::var("GITHUB_TOKEN").ok();
+        unsafe { std::env::set_var("GHCR_TOKEN", "ghcr-secret") };
+        unsafe { std::env::remove_var("GITHUB_TOKEN") };
+
+        let auth = registry_auth(None).unwrap();
+        match auth {
+            RegistryAuth::Basic(user, token) => {
+                assert_eq!(user, DEFAULT_OAUTH_USER);
+                assert_eq!(token, "ghcr-secret");
+            }
+            _ => panic!("expected basic auth"),
+        }
+
+        match previous_ghcr {
+            Some(value) => unsafe { std::env::set_var("GHCR_TOKEN", value) },
+            None => unsafe { std::env::remove_var("GHCR_TOKEN") },
+        }
+        match previous_github {
+            Some(value) => unsafe { std::env::set_var("GITHUB_TOKEN", value) },
+            None => unsafe { std::env::remove_var("GITHUB_TOKEN") },
+        }
+    }
+
+    #[test]
+    fn optional_registry_auth_allows_missing_implicit_token() {
+        let _guard = ENV_LOCK.lock().unwrap();
+        let previous_ghcr = std::env::var("GHCR_TOKEN").ok();
+        let previous_github = std::env::var("GITHUB_TOKEN").ok();
+        unsafe { std::env::remove_var("GHCR_TOKEN") };
+        unsafe { std::env::remove_var("GITHUB_TOKEN") };
+
+        let auth = optional_registry_auth(None).unwrap();
+        assert!(matches!(auth, RegistryAuth::Anonymous));
+
+        match previous_ghcr {
+            Some(value) => unsafe { std::env::set_var("GHCR_TOKEN", value) },
+            None => unsafe { std::env::remove_var("GHCR_TOKEN") },
+        }
+        match previous_github {
+            Some(value) => unsafe { std::env::set_var("GITHUB_TOKEN", value) },
+            None => unsafe { std::env::remove_var("GITHUB_TOKEN") },
+        }
     }
 
     #[test]
@@ -870,6 +975,33 @@ mod tests {
             token: None,
         };
         assert_eq!(release_view_tag(&args).unwrap(), "stable");
+    }
+
+    #[test]
+    fn release_view_tag_rejects_invalid_argument_combinations() {
+        let err = release_view_tag(&ReleaseViewArgs {
+            release: Some("1.0.5".to_string()),
+            tag: Some("stable".to_string()),
+            repo: "ghcr.io/greenticai/greentic-versions/gtc".to_string(),
+            token: None,
+        })
+        .unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("pass exactly one of --release or --tag")
+        );
+
+        let err = release_view_tag(&ReleaseViewArgs {
+            release: None,
+            tag: None,
+            repo: "ghcr.io/greenticai/greentic-versions/gtc".to_string(),
+            token: None,
+        })
+        .unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("pass exactly one of --release or --tag")
+        );
     }
 
     #[test]
@@ -947,6 +1079,65 @@ mod tests {
     }
 
     #[test]
+    fn manifest_helpers_only_apply_dev_suffix_for_dev_channel() {
+        assert_eq!(
+            manifest_bins_for_source("latest", &["greentic-dev", "greentic-runner"]),
+            vec!["greentic-dev".to_string(), "greentic-runner".to_string()]
+        );
+        assert_eq!(
+            manifest_bins_for_source("dev", &["greentic-dev"]),
+            vec!["greentic-dev-dev".to_string()]
+        );
+        assert_eq!(
+            manifest_crate_name_for_source("latest", "greentic-runner"),
+            "greentic-runner"
+        );
+        assert_eq!(
+            manifest_crate_name_for_source("dev", "greentic-runner"),
+            "greentic-runner-dev"
+        );
+    }
+
+    #[test]
+    fn source_version_map_handles_missing_and_present_sources() {
+        assert!(source_version_map(None).is_empty());
+
+        let source = ToolchainManifest {
+            schema: TOOLCHAIN_MANIFEST_SCHEMA.to_string(),
+            toolchain: TOOLCHAIN_NAME.to_string(),
+            version: "latest".to_string(),
+            channel: Some("latest".to_string()),
+            created_at: None,
+            packages: vec![ToolchainPackage {
+                crate_name: "greentic-dev".to_string(),
+                bins: vec!["greentic-dev".to_string()],
+                version: "0.6.0".to_string(),
+            }],
+        };
+
+        let versions = source_version_map(Some(&source));
+        assert_eq!(
+            versions.get("greentic-dev").map(String::as_str),
+            Some("0.6.0")
+        );
+    }
+
+    #[test]
+    fn write_manifest_persists_json_to_expected_file_name() {
+        let dir = tempfile::tempdir().unwrap();
+        let manifest = generate_manifest("1.0.12", "dev", None, &FixedResolver, None).unwrap();
+
+        let path = write_manifest(dir.path(), &manifest).unwrap();
+        assert_eq!(
+            path.file_name().and_then(|name| name.to_str()),
+            Some("gtc-dev-1.0.12.json")
+        );
+
+        let roundtrip = read_manifest_file(&path).unwrap();
+        assert_eq!(roundtrip, manifest);
+    }
+
+    #[test]
     fn latest_manifest_uses_latest_dev_bins() {
         let manifest = latest_manifest(None);
         assert_eq!(manifest.version, "latest");
@@ -983,6 +1174,50 @@ mod tests {
         assert!(manifest.packages.iter().any(|package| {
             package.crate_name == "greentic-dev-dev" && package.bins == ["greentic-dev-dev"]
         }));
+    }
+
+    #[test]
+    fn publish_dry_run_with_local_manifest_succeeds() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("gtc-1.0.12.json");
+        let manifest = generate_manifest("1.0.12", "latest", None, &FixedResolver, None).unwrap();
+        fs::write(&path, serde_json::to_vec_pretty(&manifest).unwrap()).unwrap();
+
+        publish(ReleasePublishArgs {
+            release: None,
+            from: None,
+            tag: Some("stable".to_string()),
+            manifest: Some(path),
+            repo: "ghcr.io/greenticai/greentic-versions/gtc".to_string(),
+            token: None,
+            out: dir.path().to_path_buf(),
+            dry_run: true,
+            force: false,
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn latest_dry_run_succeeds() {
+        latest(ReleaseLatestArgs {
+            repo: "ghcr.io/greenticai/greentic-versions/gtc".to_string(),
+            token: None,
+            dry_run: true,
+            force: false,
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn promote_dry_run_succeeds() {
+        promote(ReleasePromoteArgs {
+            release: "1.0.12".to_string(),
+            tag: "stable".to_string(),
+            repo: "ghcr.io/greenticai/greentic-versions/gtc".to_string(),
+            token: None,
+            dry_run: true,
+        })
+        .unwrap();
     }
 
     #[test]

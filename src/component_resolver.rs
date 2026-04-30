@@ -347,7 +347,12 @@ pub fn inspect(target: &str, compact_json: bool) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::{component_target, extract_node_payload, parse_version_req};
+    use super::{
+        choose_latest_version, component_target, extract_node_payload, parse_version_req,
+        select_schema,
+    };
+    use greentic_component::describe::{DescribePayload, DescribeVersion};
+    use semver::Version;
     use serde_json::json;
     use tempfile::tempdir;
 
@@ -360,6 +365,12 @@ mod tests {
     #[test]
     fn invalid_version_requirement_is_rejected() {
         assert!(parse_version_req("not-a-semver").is_err());
+    }
+
+    #[test]
+    fn whitespace_version_requirement_defaults_to_any() {
+        let req = parse_version_req("   ").unwrap();
+        assert!(req.matches(&Version::parse("9.9.9").unwrap()));
     }
 
     #[test]
@@ -376,6 +387,14 @@ mod tests {
     }
 
     #[test]
+    fn component_target_uses_direct_name_without_root() {
+        match component_target("ai.greentic.hello-world", None) {
+            super::ComponentTarget::Direct(id) => assert_eq!(id, "ai.greentic.hello-world"),
+            _ => panic!("expected direct target"),
+        }
+    }
+
+    #[test]
     fn extract_node_payload_reads_component_payload() {
         let document = json!({
             "nodes": {
@@ -387,5 +406,92 @@ mod tests {
 
         let payload = extract_node_payload(&document, "n1", "demo.component").unwrap();
         assert_eq!(payload["enabled"], true);
+    }
+
+    #[test]
+    fn extract_node_payload_requires_node_entry() {
+        let document = json!({
+            "nodes": {
+                "n1": {}
+            }
+        });
+
+        let err = extract_node_payload(&document, "missing", "demo.component").unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("flow document missing node `missing`")
+        );
+    }
+
+    #[test]
+    fn extract_node_payload_requires_component_payload() {
+        let document = json!({
+            "nodes": {
+                "n1": {}
+            }
+        });
+
+        let err = extract_node_payload(&document, "n1", "demo.component").unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("node `n1` missing component payload `demo.component`")
+        );
+    }
+
+    #[test]
+    fn choose_latest_version_prefers_highest_semver() {
+        let latest = choose_latest_version(&[
+            DescribeVersion {
+                version: Version::parse("0.9.0").unwrap(),
+                schema: json!({ "type": "object", "title": "old" }),
+                defaults: None,
+            },
+            DescribeVersion {
+                version: Version::parse("1.2.0").unwrap(),
+                schema: json!({ "type": "object", "title": "new" }),
+                defaults: None,
+            },
+        ])
+        .unwrap();
+
+        assert_eq!(latest.version, Version::parse("1.2.0").unwrap());
+        assert_eq!(latest.schema["title"], "new");
+    }
+
+    #[test]
+    fn select_schema_returns_none_when_no_versions_exist() {
+        let describe = DescribePayload {
+            name: "demo.component".to_string(),
+            versions: Vec::new(),
+            schema_id: None,
+        };
+
+        assert_eq!(select_schema(&describe), None);
+    }
+
+    #[test]
+    fn select_schema_serializes_latest_schema() {
+        let describe = DescribePayload {
+            name: "demo.component".to_string(),
+            versions: vec![
+                DescribeVersion {
+                    version: Version::parse("0.9.0").unwrap(),
+                    schema: json!({ "type": "object", "title": "old" }),
+                    defaults: None,
+                },
+                DescribeVersion {
+                    version: Version::parse("1.0.0").unwrap(),
+                    schema: json!({ "type": "object", "title": "new" }),
+                    defaults: None,
+                },
+            ],
+            schema_id: Some("demo.schema".to_string()),
+        };
+
+        let schema = select_schema(&describe).unwrap();
+        assert_eq!(
+            serde_json::from_str::<serde_json::Value>(&schema).unwrap()["title"],
+            "new"
+        );
     }
 }
