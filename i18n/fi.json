@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "Julkaistava paikallisen työkaluketjun manifestin JSON-tiedosto",
   "cli.command.release.out": "Hakemisto luoduille työkaluketjun manifesteille",
   "cli.command.release.promote.about": "Siirrä GHCR-tagi olemassa olevaan Greentic-työkaluketjun julkaisuun",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Luo ja julkaise Greentic-työkaluketjun julkaisumanifesti",
   "cli.command.release.release": "Julkaisuversio, joka luodaan, julkaistaan tai edistetään",
   "cli.command.release.repo": "GHCR-työkaluketjun manifestivarasto",

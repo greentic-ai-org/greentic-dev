@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "प्रकाशित गर्नका लागि स्थानीय टुलचेन म्यानिफेस्ट JSON फाइल",
   "cli.command.release.out": "उत्पन्न टुलचेन manifest हरूका लागि डाइरेक्टरी",
   "cli.command.release.promote.about": "GHCR ट्यागलाई अवस्थित Greentic टुलचेन रिलीजमा सार्नुहोस्",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Greentic टुलचेन रिलीज manifest उत्पन्न गरी प्रकाशित गर्नुहोस्",
   "cli.command.release.release": "उत्पन्न, प्रकाशित, वा प्रवर्द्धन गर्नुपर्ने रिलीज संस्करण",
   "cli.command.release.repo": "GHCR टुलचेन manifest रिपोजिटरी",

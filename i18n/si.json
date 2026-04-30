@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "ප්‍රකාශයට පත් කිරීමට දේශීය toolchain manifest JSON ගොනුව",
   "cli.command.release.out": "ජනනය කළ toolchain manifests සඳහා නාමාවලිය",
   "cli.command.release.promote.about": "GHCR ටැගයක් පවතින Greentic toolchain නිකුතුවකට මාරු කරන්න",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Greentic toolchain release manifest එකක් ජනනය කර ප්‍රකාශනය කරන්න",
   "cli.command.release.release": "ජනනය, ප්‍රකාශනය, හෝ ප්‍රවර්ධනය කළ යුතු නිකුතු අනුවාදය",
   "cli.command.release.repo": "GHCR toolchain manifest repository",

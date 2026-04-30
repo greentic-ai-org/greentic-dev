@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "شائع کرنے کے لیے مقامی ٹول چین مینی فیسٹ JSON فائل",
   "cli.command.release.out": "بنائے گئے ٹول چین مینی فیسٹس کے لیے ڈائریکٹری",
   "cli.command.release.promote.about": "GHCR ٹیگ کو موجودہ Greentic ٹول چین ریلیز پر منتقل کریں",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Greentic ٹول چین ریلیز مینی فیسٹ بنائیں اور شائع کریں",
   "cli.command.release.release": "بنانے، شائع کرنے، یا فروغ دینے کے لیے ریلیز ورژن",
   "cli.command.release.repo": "GHCR ٹول چین مینی فیسٹ ریپوزٹری",

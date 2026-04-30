@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "فایل JSON مانیفست زنجیره ابزار محلی برای انتشار",
   "cli.command.release.out": "پوشه مانیفست‌های تولیدشده زنجیره‌ابزار",
   "cli.command.release.promote.about": "انتقال یک برچسب GHCR به یک انتشار موجود زنجیره‌ابزار Greentic",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "تولید و انتشار مانیفست انتشار زنجیره‌ابزار Greentic",
   "cli.command.release.release": "نسخه انتشار برای تولید، انتشار یا ترویج",
   "cli.command.release.repo": "مخزن مانیفست زنجیره‌ابزار GHCR",

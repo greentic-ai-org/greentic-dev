@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "Közzéteendő helyi eszközlánc-manifeszt JSON-fájl",
   "cli.command.release.out": "Könyvtár a generált eszközlánc-manifesztumokhoz",
   "cli.command.release.promote.about": "GHCR-címke áthelyezése egy meglévő Greentic eszközlánc-kiadásra",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Greentic eszközlánc-kiadási manifeszt generálása és közzététele",
   "cli.command.release.release": "Generálandó, közzéteendő vagy előléptetendő kiadási verzió",
   "cli.command.release.repo": "GHCR eszközlánc-manifeszt tároló",

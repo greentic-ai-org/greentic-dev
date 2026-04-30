@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "Lokaal JSON-manifestbestand van de toolchain om te publiceren",
   "cli.command.release.out": "Map voor gegenereerde toolchain-manifesten",
   "cli.command.release.promote.about": "Verplaats een GHCR-tag naar een bestaande Greentic-toolchain-release",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Genereer en publiceer een Greentic-toolchain-release-manifest",
   "cli.command.release.release": "Releaseversie om te genereren, publiceren of promoten",
   "cli.command.release.repo": "GHCR-toolchain-manifestrepository",

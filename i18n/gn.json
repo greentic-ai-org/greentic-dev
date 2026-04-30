@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "Marandurenda JSON manifest tembiporu atyguáva oñemyasãi hag̃ua",
   "cli.command.release.out": "Marandurenda ryru toolchain manifest ojejapóva pegua",
   "cli.command.release.promote.about": "Emongu'e peteĩ GHCR tag peteĩ Greentic toolchain release oĩmavape",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Ejapo ha emoherakuã peteĩ Greentic toolchain release manifest",
   "cli.command.release.release": "Release version ojejapo, oñemoherakuã térã oñemotenonde hag̃ua",
   "cli.command.release.repo": "GHCR toolchain manifest repository",

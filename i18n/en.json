@@ -33,6 +33,8 @@
   "cli.command.release.view.about": "Download and print a Greentic toolchain manifest",
   "cli.command.release.latest.about": "Publish the latest toolchain manifest with development binaries",
   "cli.command.release.promote.about": "Move a GHCR tag to an existing Greentic toolchain release",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.release": "Release version to generate, publish, or promote",
   "cli.command.release.from": "Source tag used for metadata or version constraints",
   "cli.command.release.tag": "GHCR tag to move to the release",

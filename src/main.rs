@@ -93,6 +93,7 @@ fn main() -> Result<()> {
             ReleaseCommand::View(args) => release_cmd::view(args),
             ReleaseCommand::Latest(args) => release_cmd::latest(args),
             ReleaseCommand::Promote(args) => release_cmd::promote(args),
+            ReleaseCommand::Snapshot(args) => release_cmd::snapshot(args),
         },
         Command::Wizard(args) => match args.command {
             Some(WizardSubcommand::Validate(sub)) => wizard::validate(sub),

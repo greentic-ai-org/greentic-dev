@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "Místní soubor JSON manifestu nástrojového řetězce k publikování",
   "cli.command.release.out": "Adresář pro vygenerované manifesty nástrojového řetězce",
   "cli.command.release.promote.about": "Přesunout značku GHCR na existující vydání nástrojového řetězce Greentic",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Generovat a publikovat manifest vydání nástrojového řetězce Greentic",
   "cli.command.release.release": "Verze vydání ke generování, publikování nebo propagaci",
   "cli.command.release.repo": "Repozitář manifestu nástrojového řetězce GHCR",
