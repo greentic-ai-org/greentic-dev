@@ -11,6 +11,7 @@ use crate::toolchain_catalogue::GREENTIC_TOOLCHAIN_PACKAGES;
 pub enum ToolchainChannel {
     Stable,
     Development,
+    Rnd,
 }
 
 impl ToolchainChannel {
@@ -18,6 +19,8 @@ impl ToolchainChannel {
         let stem = name.strip_suffix(".exe").unwrap_or(name);
         if stem == "greentic-dev-dev" {
             Self::Development
+        } else if stem == "greentic-dev-rnd" {
+            Self::Rnd
         } else {
             Self::Stable
         }
@@ -47,18 +50,20 @@ pub fn delegated_binary_name(name: &str) -> String {
 pub fn delegated_binary_name_for_channel(name: &str, channel: ToolchainChannel) -> String {
     match channel {
         ToolchainChannel::Stable => name.to_string(),
-        ToolchainChannel::Development => development_binary_name(name),
+        ToolchainChannel::Development => suffixed_binary_name(name, "dev"),
+        ToolchainChannel::Rnd => suffixed_binary_name(name, "rnd"),
     }
 }
 
-fn development_binary_name(name: &str) -> String {
+fn suffixed_binary_name(name: &str, suffix: &str) -> String {
     if name == "greentic-dev" {
-        return "greentic-dev-dev".to_string();
+        return format!("greentic-dev-{suffix}");
     }
-    if name.ends_with("-dev") {
+    let suffix = format!("-{suffix}");
+    if name.ends_with(&suffix) {
         name.to_string()
     } else {
-        format!("{name}-dev")
+        format!("{name}{suffix}")
     }
 }
 
@@ -423,6 +428,14 @@ mod tests {
             ToolchainChannel::from_executable_name("greentic-dev-dev.exe"),
             ToolchainChannel::Development
         );
+        assert_eq!(
+            ToolchainChannel::from_executable_name("greentic-dev-rnd"),
+            ToolchainChannel::Rnd
+        );
+        assert_eq!(
+            ToolchainChannel::from_executable_name("greentic-dev-rnd.exe"),
+            ToolchainChannel::Rnd
+        );
     }
 
     #[test]
@@ -438,6 +451,22 @@ mod tests {
         assert_eq!(
             delegated_binary_name_for_channel("greentic-pack-dev", ToolchainChannel::Development),
             "greentic-pack-dev"
+        );
+    }
+
+    #[test]
+    fn rnd_channel_uses_rnd_binary_names() {
+        assert_eq!(
+            delegated_binary_name_for_channel("greentic-pack", ToolchainChannel::Rnd),
+            "greentic-pack-rnd"
+        );
+        assert_eq!(
+            delegated_binary_name_for_channel("greentic-runner-cli", ToolchainChannel::Rnd),
+            "greentic-runner-cli-rnd"
+        );
+        assert_eq!(
+            delegated_binary_name_for_channel("greentic-pack-rnd", ToolchainChannel::Rnd),
+            "greentic-pack-rnd"
         );
     }
 

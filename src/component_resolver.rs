@@ -30,7 +30,7 @@ pub struct ResolvedComponent {
     pub world: String,
     pub wasm_hash: String,
     #[allow(dead_code)]
-    describe: DescribePayload,
+    pub(crate) describe: DescribePayload,
 }
 
 #[derive(Debug, Clone)]
@@ -347,8 +347,15 @@ pub fn inspect(target: &str, compact_json: bool) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::{component_target, extract_node_payload, parse_version_req};
+    use super::{
+        ComponentResolver, ResolvedComponent, ResolvedNode, choose_latest_version,
+        component_target, extract_node_payload, parse_version_req, select_schema,
+    };
+    use greentic_component::describe::{DescribePayload, DescribeVersion};
+    use semver::Version;
     use serde_json::json;
+    use std::path::PathBuf;
+    use std::sync::Arc;
     use tempfile::tempdir;
 
     #[test]
@@ -387,5 +394,150 @@ mod tests {
 
         let payload = extract_node_payload(&document, "n1", "demo.component").unwrap();
         assert_eq!(payload["enabled"], true);
+    }
+
+    #[test]
+    fn extract_node_payload_reports_missing_shapes() {
+        assert!(
+            extract_node_payload(&json!({}), "n1", "demo.component")
+                .unwrap_err()
+                .to_string()
+                .contains("missing `nodes` object")
+        );
+        assert!(
+            extract_node_payload(&json!({ "nodes": {} }), "n1", "demo.component")
+                .unwrap_err()
+                .to_string()
+                .contains("missing node `n1`")
+        );
+        assert!(
+            extract_node_payload(&json!({ "nodes": { "n1": {} } }), "n1", "demo.component")
+                .unwrap_err()
+                .to_string()
+                .contains("missing component payload")
+        );
+    }
+
+    #[test]
+    fn select_schema_uses_highest_described_version() {
+        let describe = describe_payload(vec![
+            ("0.1.0", json!({ "type": "object" })),
+            (
+                "0.2.0",
+                json!({
+                    "type": "object",
+                    "required": ["name"],
+                    "properties": { "name": { "type": "string" } }
+                }),
+            ),
+        ]);
+
+        let schema = select_schema(&describe).unwrap();
+        assert!(schema.contains("\"name\""));
+        assert_eq!(
+            choose_latest_version(&describe.versions).unwrap().version,
+            Version::parse("0.2.0").unwrap()
+        );
+    }
+
+    #[test]
+    fn validate_node_returns_empty_without_schema() {
+        let component = resolved_component("demo.component", None);
+        let node = ResolvedNode {
+            node_id: "n1".to_string(),
+            component,
+            pointer: "/nodes/n1/demo.component".to_string(),
+            config: json!({ "anything": true }),
+        };
+        let mut resolver = ComponentResolver::new(None);
+
+        assert!(resolver.validate_node(&node).unwrap().is_empty());
+    }
+
+    #[test]
+    fn validate_node_reports_schema_errors_with_node_pointer() {
+        let schema = json!({
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+                "name": { "type": "string" },
+                "count": { "type": "integer" }
+            }
+        })
+        .to_string();
+        let component = resolved_component("demo.component", Some(schema));
+        let node = ResolvedNode {
+            node_id: "n1".to_string(),
+            component,
+            pointer: "/nodes/n1/demo.component".to_string(),
+            config: json!({ "count": "many" }),
+        };
+        let mut resolver = ComponentResolver::new(None);
+
+        let issues = resolver.validate_node(&node).unwrap();
+
+        assert!(issues.iter().any(|issue| issue.node_id == "n1"));
+        assert!(
+            issues
+                .iter()
+                .any(|issue| issue.component == "demo.component")
+        );
+        assert!(issues.iter().any(|issue| issue.pointer.contains("/count")));
+        assert!(
+            issues
+                .iter()
+                .any(|issue| issue.message.contains("required"))
+        );
+    }
+
+    #[test]
+    fn validate_node_rejects_invalid_schema_json() {
+        let component = resolved_component("demo.component", Some("{not json".to_string()));
+        let node = ResolvedNode {
+            node_id: "n1".to_string(),
+            component,
+            pointer: "/nodes/n1/demo.component".to_string(),
+            config: json!({}),
+        };
+        let mut resolver = ComponentResolver::new(None);
+
+        assert!(
+            resolver
+                .validate_node(&node)
+                .unwrap_err()
+                .to_string()
+                .contains("invalid schema JSON")
+        );
+    }
+
+    fn describe_payload(entries: Vec<(&str, serde_json::Value)>) -> DescribePayload {
+        DescribePayload {
+            name: "demo.component".to_string(),
+            versions: entries
+                .into_iter()
+                .map(|(version, schema)| DescribeVersion {
+                    version: Version::parse(version).unwrap(),
+                    schema,
+                    defaults: None,
+                })
+                .collect(),
+            schema_id: None,
+        }
+    }
+
+    fn resolved_component(name: &str, schema_json: Option<String>) -> Arc<ResolvedComponent> {
+        Arc::new(ResolvedComponent {
+            name: name.to_string(),
+            version: Version::parse("1.0.0").unwrap(),
+            wasm_path: PathBuf::from("component.wasm"),
+            manifest_path: PathBuf::from("manifest.json"),
+            schema_json,
+            manifest_json: Some(json!({ "id": name, "version": "1.0.0" }).to_string()),
+            capabilities_json: Some(json!({})),
+            limits_json: None,
+            world: "greentic:component/component@0.4.0".to_string(),
+            wasm_hash: "abc123".to_string(),
+            describe: describe_payload(Vec::new()),
+        })
     }
 }
