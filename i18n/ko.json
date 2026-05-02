@@ -153,5 +153,14 @@
   "runtime.wizard.executor.error.destructive": "계획이 파괴적 작업을 요청했습니다. --allow-destructive와 함께 다시 실행하세요",
   "runtime.wizard.executor.error.replay_pin_mismatch": "{program}의 replay pin 불일치: 예상값 {expected}, 실제값 {actual}",
   "runtime.wizard.executor.error.step_failed": "wizard 단계 명령 실패: {program} {args} (종료 코드 {exit_code})",
-  "runtime.wizard.executor.error.unsafe_args": "명령 `{program}`에 차단된 셸 유사 인수가 포함되어 있어 실행을 거부합니다"
+  "runtime.wizard.executor.error.unsafe_args": "명령 `{program}`에 차단된 셸 유사 인수가 포함되어 있어 실행을 거부합니다",
+  "cli.command.security.about": "Inspect GitHub security and quality alerts",
+  "cli.command.security.format": "Output format: markdown or json",
+  "cli.command.security.prompt": "Emit a coding-agent-ready Markdown prompt",
+  "cli.command.security.no_errors": "Return success even when blocking security policy findings are present",
+  "cli.command.security.severity": "Comma-separated code scanning rule severity filter, such as error,warning,note",
+  "cli.command.security.security_severity": "Comma-separated security severity filter, such as critical,high,medium,low",
+  "cli.command.security.state": "Comma-separated GitHub alert state filter: open,dismissed,fixed,resolved,auto_dismissed",
+  "cli.command.security.repo": "GitHub repository as OWNER/REPO; defaults to origin",
+  "cli.command.security.branch": "Git branch name for code scanning alerts; defaults to the current branch"
 }

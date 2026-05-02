@@ -41,7 +41,7 @@
 
 - **Path:** `src/toolchain_catalogue.rs`, `src/release_cmd.rs`
   **Role:** Canonical public toolchain catalogue plus GHCR release manifest workflows.
-  **Key functionality:** `GREENTIC_TOOLCHAIN_PACKAGES` is shared by development/bootstrap installation and release manifest generation. `greentic-dev release generate/publish/promote` creates pinned `gtc` toolchain manifests, pushes them as OCI artifacts, and moves generic GHCR tags without installing local tools.
+  **Key functionality:** `GREENTIC_TOOLCHAIN_PACKAGES` is shared by development/bootstrap installation and release manifest generation. `GREENTIC_EXTENSION_PACK_PACKAGES` and `GREENTIC_COMPONENT_PACKAGES` track published GHCR pack/component package names for manifest/release orchestration. `greentic-dev release generate/publish/promote` creates pinned `gtc` toolchain manifests, pushes them as OCI artifacts, and moves generic GHCR tags without installing local tools. Toolchain manifests carry human-editable `extension_packs` and `components` version refs generated from those catalogues; release generation preserves source manifest pins when present, otherwise resolves pack/component versions from the highest semver tag on GHCR, with no embedded digests or canonical OCI refs.
 
 - **Path:** `crates/dev-viewer/`  
   **Role:** Standalone CLI to render flow transcripts.  

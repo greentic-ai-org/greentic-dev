@@ -10,7 +10,7 @@
       "bins": [
         "greentic-dev"
       ],
-      "version": "0.5.2"
+      "version": "0.5.4"
     },
     {
       "crate": "greentic-operator",
@@ -24,14 +24,14 @@
       "bins": [
         "greentic-bundle"
       ],
-      "version": "0.5.2"
+      "version": "0.5.5"
     },
     {
       "crate": "greentic-setup",
       "bins": [
         "greentic-setup"
       ],
-      "version": "0.5.6"
+      "version": "0.5.7"
     },
     {
       "crate": "greentic-start",
@@ -45,7 +45,7 @@
       "bins": [
         "greentic-deployer"
       ],
-      "version": "0.4.52"
+      "version": "0.4.59"
     },
     {
       "crate": "greentic-component",
