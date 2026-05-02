@@ -125,6 +125,8 @@ pub fn run_passthrough(bin: &Path, args: &[OsString], verbose: bool) -> Result<E
                 ],
             )
         );
+        // Accepted risk: delegated Greentic tool path is resolved from fixed tool names or explicit local override; no shell is invoked.
+        // foxguard: ignore[rs/no-command-injection]
         let _ = Command::new(bin)
             .arg("--version")
             .stdout(Stdio::inherit())
@@ -132,6 +134,8 @@ pub fn run_passthrough(bin: &Path, args: &[OsString], verbose: bool) -> Result<E
             .status();
     }
 
+    // Accepted risk: passthrough intentionally executes a resolved Greentic tool binary with argv, never through a shell.
+    // foxguard: ignore[rs/no-command-injection]
     Command::new(bin)
         .args(args)
         .stdin(Stdio::inherit())

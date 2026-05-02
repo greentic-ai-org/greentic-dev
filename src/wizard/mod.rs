@@ -157,6 +157,8 @@ fn run_interactive_delegate(
 
     let bin = resolve_binary(program)?;
     let delegated_emit = delegated_emit_capture(emit_answers)?;
+    // Accepted risk: launcher delegates only to greentic-pack or greentic-bundle selected above; no shell is invoked.
+    // foxguard: ignore[rs/no-command-injection]
     let mut command = Command::new(&bin);
     command
         .args(interactive_delegate_args(
@@ -330,6 +332,8 @@ fn launcher_answer_schema(schema_version: &str, locale: &str) -> Result<Value> {
 
 fn capture_delegate_schema_json(program: &str, args: &[&str], locale: &str) -> Result<Value> {
     let bin = resolve_binary(program)?;
+    // Accepted risk: schema capture delegates to resolved Greentic tool binaries with fixed argv and no shell.
+    // foxguard: ignore[rs/no-command-injection]
     let output = Command::new(&bin)
         .args(args)
         .env("LANG", locale)

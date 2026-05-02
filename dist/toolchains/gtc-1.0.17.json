@@ -10,7 +10,7 @@
       "bins": [
         "greentic-dev"
       ],
-      "version": "0.5.2"
+      "version": "0.5.4"
     },
     {
       "crate": "greentic-operator",
@@ -24,28 +24,28 @@
       "bins": [
         "greentic-bundle"
       ],
-      "version": "0.5.2"
+      "version": "0.5.5"
     },
     {
       "crate": "greentic-setup",
       "bins": [
         "greentic-setup"
       ],
-      "version": "0.5.2"
+      "version": "0.5.7"
     },
     {
       "crate": "greentic-start",
       "bins": [
         "greentic-start"
       ],
-      "version": "0.5.7"
+      "version": "0.5.15"
     },
     {
       "crate": "greentic-deployer",
       "bins": [
         "greentic-deployer"
       ],
-      "version": "0.4.52"
+      "version": "0.4.59"
     },
     {
       "crate": "greentic-component",
@@ -216,31 +216,55 @@
     },
     {
       "id": "packs/deployer/greentic.fixture.helm.gtpack",
-      "version": "0.4.57"
+      "version": "0.4.59"
     },
     {
       "id": "packs/deployer/greentic.fixture.juju.k8s.gtpack",
-      "version": "0.4.57"
+      "version": "0.4.59"
     },
     {
       "id": "packs/deployer/greentic.fixture.juju.machine.gtpack",
-      "version": "0.4.57"
+      "version": "0.4.59"
     },
     {
       "id": "packs/deployer/greentic.fixture.k8s.raw.gtpack",
-      "version": "0.4.57"
+      "version": "0.4.59"
     },
     {
       "id": "packs/deployer/greentic.fixture.serverless.gtpack",
-      "version": "0.4.57"
+      "version": "0.4.59"
     },
     {
       "id": "packs/deployer/greentic.fixture.snap.gtpack",
-      "version": "0.4.57"
+      "version": "0.4.59"
     },
     {
       "id": "packs/deployer/greentic.fixture.terraform.gtpack",
-      "version": "0.4.57"
+      "version": "0.4.59"
+    },
+    {
+      "id": "packs/deployer/greentic.fixture.gcp.gtpack",
+      "version": "0.4.58"
+    },
+    {
+      "id": "packs/deployer/greentic.fixture.azure.gtpack",
+      "version": "0.4.58"
+    },
+    {
+      "id": "packs/deployer/greentic.fixture.aws.gtpack",
+      "version": "0.4.58"
+    },
+    {
+      "id": "packs/deployer/greentic.deploy.gcp",
+      "version": "0.4.59"
+    },
+    {
+      "id": "packs/deployer/greentic.deploy.azure",
+      "version": "0.4.59"
+    },
+    {
+      "id": "packs/deployer/greentic.deploy.aws",
+      "version": "0.4.59"
     },
     {
       "id": "packs/dw/context/compressor-pack",

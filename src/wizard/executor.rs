@@ -67,6 +67,8 @@ pub fn execute(
             append_exec_log(exec_log_path, &cmd.program, &cmd.args)?;
 
             let resolved_program = resolve_binary(&cmd.program)?;
+            // Accepted risk: wizard execution is restricted to allowlisted Greentic binaries and passes argv directly without a shell.
+            // foxguard: ignore[rs/no-command-injection]
             let status = Command::new(&resolved_program)
                 .args(&cmd.args)
                 .stdin(Stdio::inherit())
@@ -125,6 +127,8 @@ fn validate_version_pin(plan: &WizardPlan, program: &str, actual_version: &str) 
 
 fn resolve_program_version(program: &str) -> Result<Option<String>> {
     let resolved_program = resolve_binary(program)?;
+    // Accepted risk: version probing uses the same allowlisted Greentic binary resolution as wizard execution.
+    // foxguard: ignore[rs/no-command-injection]
     let output: process::Output = Command::new(resolved_program)
         .arg("--version")
         .stdin(Stdio::null())
