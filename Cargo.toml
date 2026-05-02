@@ -91,9 +91,6 @@ targets = [
 [workspace.metadata.dist.package.greentic-dev]
 all-features = false
 
-[patch.crates-io]
-greentic-distributor-client = { path = "../greentic-distributor-client" }
-
 [dev-dependencies]
 httpmock = "0.8"
 walkdir = "2"

@@ -98,15 +98,17 @@ fn run_inner(runner: &dyn Runner, args: SecurityArgs) -> Result<RunOutcome, Oper
         .collect::<Vec<_>>();
     let foxguard_report_path = write_foxguard_report(runner, &alerts)?;
     let report = Report::new(
-        repository.to_string(),
-        branch,
-        commit,
-        options.states.clone(),
-        options.severities.clone(),
-        options.security_severities.clone(),
+        ReportMetadata {
+            repository: repository.to_string(),
+            branch,
+            commit,
+            state_filter: options.states.clone(),
+            severity_filter: options.severities.clone(),
+            security_severity_filter: options.security_severities.clone(),
+            warnings,
+            foxguard_report_path,
+        },
         alerts,
-        warnings,
-        foxguard_report_path,
     );
     let output = if args.prompt {
         render_prompt(&report)
@@ -521,7 +523,7 @@ fn merge_rule_list(mapping: &mut YamlMapping, rules: &[&str]) -> Result<bool, Op
 
 fn yaml_string<'a>(mapping: &'a YamlMapping, key: &str) -> Option<&'a str> {
     mapping
-        .get(&yaml_string_value(key))
+        .get(yaml_string_value(key))
         .and_then(YamlValue::as_str)
 }
 
@@ -1188,29 +1190,30 @@ struct Report {
     policy: PolicySummary,
 }
 
+struct ReportMetadata {
+    repository: String,
+    branch: String,
+    commit: String,
+    state_filter: Vec<String>,
+    severity_filter: Vec<String>,
+    security_severity_filter: Vec<String>,
+    warnings: Vec<String>,
+    foxguard_report_path: Option<String>,
+}
+
 impl Report {
-    fn new(
-        repository: String,
-        branch: String,
-        commit: String,
-        state_filter: Vec<String>,
-        severity_filter: Vec<String>,
-        security_severity_filter: Vec<String>,
-        alerts: Vec<Alert>,
-        warnings: Vec<String>,
-        foxguard_report_path: Option<String>,
-    ) -> Self {
+    fn new(metadata: ReportMetadata, alerts: Vec<Alert>) -> Self {
         let summary = Summary::from_alerts(&alerts);
         let policy = PolicySummary::from_alerts(&alerts);
         Self {
-            repository,
-            branch,
-            commit,
-            state_filter,
-            severity_filter,
-            security_severity_filter,
-            warnings,
-            foxguard_report_path,
+            repository: metadata.repository,
+            branch: metadata.branch,
+            commit: metadata.commit,
+            state_filter: metadata.state_filter,
+            severity_filter: metadata.severity_filter,
+            security_severity_filter: metadata.security_severity_filter,
+            warnings: metadata.warnings,
+            foxguard_report_path: metadata.foxguard_report_path,
             alerts,
             summary,
             policy,
@@ -1665,7 +1668,7 @@ fn suggested_foxguard_config(report: &Report) -> Option<String> {
 
 fn non_distributed_foxguard_path(path: &str) -> Option<&'static str> {
     let path = path.strip_prefix("./").unwrap_or(path);
-    for prefix in [
+    [
         "tests/",
         "benches/",
         "docs/",
@@ -1673,12 +1676,9 @@ fn non_distributed_foxguard_path(path: &str) -> Option<&'static str> {
         "fixtures/",
         "testdata/",
         "generated/",
-    ] {
-        if path.starts_with(prefix) {
-            return Some(prefix);
-        }
-    }
-    None
+    ]
+    .into_iter()
+    .find(|prefix| path.starts_with(prefix))
 }
 
 fn display_filter(values: &[String]) -> String {
@@ -1906,15 +1906,14 @@ mod tests {
     #[test]
     fn renders_empty_alert_list() {
         let report = Report::new(
-            "greenticai/greentic-dev".to_string(),
-            "main".to_string(),
-            "abc123".to_string(),
-            vec!["open".to_string()],
+            report_metadata(
+                "greenticai/greentic-dev",
+                "main",
+                "abc123",
+                vec!["open".to_string()],
+                None,
+            ),
             Vec::new(),
-            Vec::new(),
-            Vec::new(),
-            Vec::new(),
-            None,
         );
         let markdown = render_markdown(&report);
         assert!(markdown.contains("Found 0 security alerts."));
@@ -2037,15 +2036,14 @@ mod tests {
         let alerts =
             parse_foxguard_findings(foxguard_high_investigation_findings(), "scan").unwrap();
         let report = Report::new(
-            "greenticai/greentic-dev".to_string(),
-            "feature/foo".to_string(),
-            "abc123".to_string(),
-            vec!["open".to_string()],
-            Vec::new(),
-            Vec::new(),
+            report_metadata(
+                "greenticai/greentic-dev",
+                "feature/foo",
+                "abc123",
+                vec!["open".to_string()],
+                Some(FOXGUARD_REPORT_PATH.to_string()),
+            ),
             alerts,
-            Vec::new(),
-            Some(FOXGUARD_REPORT_PATH.to_string()),
         );
         assert!(report.policy.has_blocking_issues);
         assert_eq!(report.policy.high_foxguard_needs_investigation_count, 1);
@@ -2055,16 +2053,19 @@ mod tests {
 
     #[test]
     fn operational_error_for_git_failures() {
-        let mut runner = MockRunner::default();
-        runner.git_error = Some("git failed".to_string());
+        let runner = MockRunner {
+            git_error: Some("git failed".to_string()),
+            ..Default::default()
+        };
         assert!(run_inner(&runner, args()).is_err());
     }
 
     #[test]
     fn unavailable_code_scanning_does_not_abort_other_sources() {
-        let mut runner = MockRunner::default();
-        runner.code_scanning_error =
-            Some("gh: Advanced Security must be enabled for this repository to use code scanning. (HTTP 403)".to_string());
+        let runner = MockRunner {
+            code_scanning_error: Some("gh: Advanced Security must be enabled for this repository to use code scanning. (HTTP 403)".to_string()),
+            ..Default::default()
+        };
         let mut args = args();
         args.no_errors = true;
         let outcome = run_inner(&runner, args).unwrap();
@@ -2095,16 +2096,34 @@ mod tests {
         );
         alerts.extend(parse_foxguard_findings(foxguard_findings(), "scan").unwrap());
         Report::new(
-            "greenticai/greentic-dev".to_string(),
-            "feature/foo".to_string(),
-            "abc123".to_string(),
-            vec!["open".to_string()],
-            Vec::new(),
-            Vec::new(),
+            report_metadata(
+                "greenticai/greentic-dev",
+                "feature/foo",
+                "abc123",
+                vec!["open".to_string()],
+                Some(FOXGUARD_REPORT_PATH.to_string()),
+            ),
             alerts,
-            Vec::new(),
-            Some(FOXGUARD_REPORT_PATH.to_string()),
         )
+    }
+
+    fn report_metadata(
+        repository: &str,
+        branch: &str,
+        commit: &str,
+        state_filter: Vec<String>,
+        foxguard_report_path: Option<String>,
+    ) -> ReportMetadata {
+        ReportMetadata {
+            repository: repository.to_string(),
+            branch: branch.to_string(),
+            commit: commit.to_string(),
+            state_filter,
+            severity_filter: Vec::new(),
+            security_severity_filter: Vec::new(),
+            warnings: Vec::new(),
+            foxguard_report_path,
+        }
     }
 
     fn code_scanning_alerts() -> &'static str {
