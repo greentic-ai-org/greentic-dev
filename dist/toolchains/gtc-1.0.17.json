@@ -497,6 +497,10 @@
   ],
   "components": [
     {
+      "id": "acme/demo",
+      "version": "0.1.0"
+    },
+    {
       "id": "component/component-events2msg",
       "version": "0.1.0"
     },
@@ -531,6 +535,14 @@
     {
       "id": "components/templates",
       "version": "0.1.16"
+    },
+    {
+      "id": "validators/events",
+      "version": "0.1.0"
+    },
+    {
+      "id": "validators/messaging",
+      "version": "0.1.0"
     }
   ]
 }

@@ -992,7 +992,7 @@ mod tests {
                     && package.bins == ["greentic-runner"])
         );
         assert_eq!(manifest.extension_packs.as_ref().unwrap().len(), 93);
-        assert_eq!(manifest.components.as_ref().unwrap().len(), 9);
+        assert_eq!(manifest.components.as_ref().unwrap().len(), 12);
         assert!(
             manifest
                 .extension_packs
@@ -1282,6 +1282,30 @@ mod tests {
                 .iter()
                 .any(|item| item.id == "component/component-llm-openai"
                     && item.version == "1.0.16")
+        );
+        assert!(
+            manifest
+                .components
+                .as_ref()
+                .unwrap()
+                .iter()
+                .any(|item| item.id == "validators/messaging" && item.version == "1.0.16")
+        );
+        assert!(
+            manifest
+                .components
+                .as_ref()
+                .unwrap()
+                .iter()
+                .any(|item| item.id == "validators/events" && item.version == "1.0.16")
+        );
+        assert!(
+            manifest
+                .components
+                .as_ref()
+                .unwrap()
+                .iter()
+                .any(|item| item.id == "acme/demo" && item.version == "1.0.16")
         );
     }
 
