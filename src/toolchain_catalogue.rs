@@ -66,6 +66,9 @@ pub const GREENTIC_TOOLCHAIN_PACKAGES: &[ToolchainPackageSpec] = &[
 
 pub const GREENTIC_EXTENSION_PACK_PACKAGES: &[OciPackageSpec] = &[
     OciPackageSpec {
+        package: "greentic-bundle/providers",
+    },
+    OciPackageSpec {
         package: "packs/apps/cards-demo",
     },
     OciPackageSpec {
@@ -425,12 +428,15 @@ mod tests {
 
     #[test]
     fn extension_pack_catalogue_tracks_github_packages() {
-        assert_eq!(GREENTIC_EXTENSION_PACK_PACKAGES.len(), 93);
+        assert_eq!(GREENTIC_EXTENSION_PACK_PACKAGES.len(), 94);
         assert_catalogue_has_no_duplicate_packages(GREENTIC_EXTENSION_PACK_PACKAGES);
+        assert!(GREENTIC_EXTENSION_PACK_PACKAGES.iter().all(|package| {
+            package.package.starts_with("packs/") || package.package.starts_with("greentic-bundle/")
+        }));
         assert!(
             GREENTIC_EXTENSION_PACK_PACKAGES
                 .iter()
-                .all(|package| package.package.starts_with("packs/"))
+                .any(|package| package.package == "greentic-bundle/providers")
         );
         assert!(
             GREENTIC_EXTENSION_PACK_PACKAGES
@@ -449,7 +455,9 @@ mod tests {
         assert_eq!(GREENTIC_COMPONENT_PACKAGES.len(), 9);
         assert_catalogue_has_no_duplicate_packages(GREENTIC_COMPONENT_PACKAGES);
         assert!(GREENTIC_COMPONENT_PACKAGES.iter().all(|package| {
-            package.package.starts_with("component/") || package.package.starts_with("components/")
+            package.package.starts_with("component/")
+                || package.package.starts_with("components/")
+                || package.package.starts_with("validators/")
         }));
         assert!(
             GREENTIC_COMPONENT_PACKAGES
