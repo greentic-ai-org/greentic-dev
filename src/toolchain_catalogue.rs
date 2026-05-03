@@ -377,12 +377,6 @@ pub const GREENTIC_COMPONENT_PACKAGES: &[OciPackageSpec] = &[
     OciPackageSpec {
         package: "components/templates",
     },
-    OciPackageSpec {
-        package: "validators/events",
-    },
-    OciPackageSpec {
-        package: "validators/messaging",
-    },
 ];
 
 #[cfg(test)]
@@ -458,7 +452,7 @@ mod tests {
 
     #[test]
     fn component_catalogue_tracks_github_packages() {
-        assert_eq!(GREENTIC_COMPONENT_PACKAGES.len(), 11);
+        assert_eq!(GREENTIC_COMPONENT_PACKAGES.len(), 9);
         assert_catalogue_has_no_duplicate_packages(GREENTIC_COMPONENT_PACKAGES);
         assert!(GREENTIC_COMPONENT_PACKAGES.iter().all(|package| {
             package.package.starts_with("component/")
@@ -474,16 +468,6 @@ mod tests {
             GREENTIC_COMPONENT_PACKAGES
                 .iter()
                 .any(|package| package.package == "components/component-adaptive-card")
-        );
-        assert!(
-            GREENTIC_COMPONENT_PACKAGES
-                .iter()
-                .any(|package| package.package == "validators/messaging")
-        );
-        assert!(
-            GREENTIC_COMPONENT_PACKAGES
-                .iter()
-                .any(|package| package.package == "validators/events")
         );
     }
 
