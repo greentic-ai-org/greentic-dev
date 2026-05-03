@@ -351,9 +351,6 @@ pub const GREENTIC_EXTENSION_PACK_PACKAGES: &[OciPackageSpec] = &[
 
 pub const GREENTIC_COMPONENT_PACKAGES: &[OciPackageSpec] = &[
     OciPackageSpec {
-        package: "acme/demo",
-    },
-    OciPackageSpec {
         package: "component/component-events2msg",
     },
     OciPackageSpec {
@@ -461,13 +458,12 @@ mod tests {
 
     #[test]
     fn component_catalogue_tracks_github_packages() {
-        assert_eq!(GREENTIC_COMPONENT_PACKAGES.len(), 12);
+        assert_eq!(GREENTIC_COMPONENT_PACKAGES.len(), 11);
         assert_catalogue_has_no_duplicate_packages(GREENTIC_COMPONENT_PACKAGES);
         assert!(GREENTIC_COMPONENT_PACKAGES.iter().all(|package| {
             package.package.starts_with("component/")
                 || package.package.starts_with("components/")
                 || package.package.starts_with("validators/")
-                || package.package.starts_with("acme/")
         }));
         assert!(
             GREENTIC_COMPONENT_PACKAGES
@@ -488,11 +484,6 @@ mod tests {
             GREENTIC_COMPONENT_PACKAGES
                 .iter()
                 .any(|package| package.package == "validators/events")
-        );
-        assert!(
-            GREENTIC_COMPONENT_PACKAGES
-                .iter()
-                .any(|package| package.package == "acme/demo")
         );
     }
 
