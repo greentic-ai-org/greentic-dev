@@ -715,8 +715,8 @@ impl ArtifactVersionResolver for GhcrArtifactVersionResolver {
     fn resolve_latest(&self, package: &str) -> Result<String> {
         let repository = format!("{}/{}", self.namespace, package);
         let tags = self.tags(&repository)?;
-        select_latest_semver_tag(&tags)
-            .with_context(|| format!("no semver tags found for GHCR package `{repository}`"))
+        select_latest_artifact_tag(&tags)
+            .with_context(|| format!("no usable tags found for GHCR package `{repository}`"))
     }
 }
 
@@ -731,12 +731,13 @@ struct GhcrTagsResponse {
     tags: Vec<String>,
 }
 
-fn select_latest_semver_tag(tags: &[String]) -> Result<String> {
+fn select_latest_artifact_tag(tags: &[String]) -> Result<String> {
     tags.iter()
         .filter_map(|tag| Version::parse(tag).ok().map(|version| (version, tag)))
         .max_by(|(left, _), (right, _)| left.cmp(right))
         .map(|(_, tag)| tag.clone())
-        .context("no semver tags found")
+        .or_else(|| tags.iter().find(|tag| tag.as_str() == "latest").cloned())
+        .context("no semver or latest tags found")
 }
 
 fn parse_cargo_search_version(crate_name: &str, stdout: &str) -> Result<String> {
@@ -967,7 +968,14 @@ mod tests {
             "1.0.0".to_string(),
         ];
 
-        assert_eq!(select_latest_semver_tag(&tags).unwrap(), "1.0.0");
+        assert_eq!(select_latest_artifact_tag(&tags).unwrap(), "1.0.0");
+    }
+
+    #[test]
+    fn selects_latest_tag_when_no_semver_tags_exist() {
+        let tags = vec!["latest".to_string()];
+
+        assert_eq!(select_latest_artifact_tag(&tags).unwrap(), "latest");
     }
 
     #[test]
@@ -991,7 +999,7 @@ mod tests {
                 .any(|package| package.crate_name == "greentic-runner"
                     && package.bins == ["greentic-runner"])
         );
-        assert_eq!(manifest.extension_packs.as_ref().unwrap().len(), 93);
+        assert_eq!(manifest.extension_packs.as_ref().unwrap().len(), 94);
         assert_eq!(manifest.components.as_ref().unwrap().len(), 12);
         assert!(
             manifest
@@ -1273,6 +1281,14 @@ mod tests {
                 .iter()
                 .any(|item| item.id == "packs/messaging/messaging-webchat-gui"
                     && item.version == "1.0.16")
+        );
+        assert!(
+            manifest
+                .extension_packs
+                .as_ref()
+                .unwrap()
+                .iter()
+                .any(|item| item.id == "greentic-bundle/providers" && item.version == "1.0.16")
         );
         assert!(
             manifest
