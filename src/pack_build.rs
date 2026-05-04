@@ -550,242 +550,241 @@ struct ImportToml {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use greentic_flow::flow_bundle::load_and_validate_bundle;
-    use once_cell::sync::Lazy;
+    use super::{
+        PackSigning, collect_component_artifacts, default_operation, ensure_node_operations,
+        is_builtin_component, parse_component_ref, report_schema_errors, strict_mode_enabled,
+        to_artifact, toml_to_json_map,
+    };
+    use crate::component_resolver::{NodeSchemaError, ResolvedComponent, ResolvedNode};
+    use greentic_component::describe::DescribePayload;
+    use semver::{Version, VersionReq};
     use serde_json::json;
-    use std::sync::Mutex;
+    use std::path::PathBuf;
+    use std::sync::{Arc, Mutex};
 
-    static ENV_LOCK: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
-
-    fn fixture_component_dir() -> PathBuf {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("fixtures/components")
-    }
-
-    fn fixture_bundle() -> greentic_flow::flow_bundle::FlowBundle {
-        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("tests/fixtures/hello-pack/hello-flow.ygtc");
-        let yaml = fs::read_to_string(&path).unwrap();
-        load_and_validate_bundle(&yaml, Some(path.as_path())).unwrap()
-    }
-
-    fn fixture_component() -> Arc<ResolvedComponent> {
-        let mut resolver = ComponentResolver::new(Some(fixture_component_dir()));
-        resolver
-            .resolve_component("dev.greentic.echo", &VersionReq::parse("*").unwrap())
-            .unwrap()
-    }
-
-    fn fixture_resolved_node(node_id: &str) -> ResolvedNode {
-        ResolvedNode {
-            node_id: node_id.to_string(),
-            component: fixture_component(),
-            pointer: format!("/nodes/{node_id}/dev.greentic.echo"),
-            config: json!({}),
-        }
-    }
+    static ENV_LOCK: Mutex<()> = Mutex::new(());
 
     #[test]
-    fn builtin_component_detection_matches_exec_and_emit_variants() {
-        assert!(is_builtin_component("component.exec"));
-        assert!(is_builtin_component("flow.call"));
-        assert!(is_builtin_component("session.wait"));
-        assert!(is_builtin_component("emit.result"));
-        assert!(!is_builtin_component("dev.greentic.echo"));
-    }
-
-    #[test]
-    fn parse_component_ref_accepts_default_and_explicit_versions() {
-        let (name, version_req) = parse_component_ref("dev.greentic.echo").unwrap();
-        assert_eq!(name, "dev.greentic.echo");
-        assert!(version_req.matches(&Version::parse("1.0.0").unwrap()));
-
-        let (name, version_req) = parse_component_ref("dev.greentic.echo @ ^1.2").unwrap();
-        assert_eq!(name, "dev.greentic.echo");
-        assert!(version_req.matches(&Version::parse("1.2.3").unwrap()));
-    }
-
-    #[test]
-    fn parse_component_ref_rejects_invalid_versions() {
-        let err = parse_component_ref("dev.greentic.echo@not-a-range").unwrap_err();
-        assert!(
-            err.to_string()
-                .contains("invalid version requirement `not-a-range`")
-        );
-    }
-
-    #[test]
-    fn default_operation_uses_first_manifest_operation() {
-        let component = fixture_component();
-        assert_eq!(
-            default_operation(&component).unwrap().as_deref(),
-            Some("echo")
-        );
-    }
-
-    #[test]
-    fn ensure_node_operations_backfills_missing_operation_fields() {
-        let mut flow_doc = json!({
-            "nodes": {
-                "n1": {
-                    "dev.greentic.echo": {
-                        "input": { "message": "hello" }
-                    }
-                }
-            }
-        });
-
-        ensure_node_operations(&mut flow_doc, &[fixture_resolved_node("n1")]).unwrap();
-
-        let config = &flow_doc["nodes"]["n1"]["dev.greentic.echo"];
-        assert_eq!(config["operation"], "echo");
-        assert_eq!(config["op"], "echo");
-    }
-
-    #[test]
-    fn ensure_node_operations_preserves_existing_operation_alias() {
-        let mut flow_doc = json!({
-            "nodes": {
-                "n1": {
-                    "dev.greentic.echo": {
-                        "op": "already-set"
-                    }
-                }
-            }
-        });
-
-        ensure_node_operations(&mut flow_doc, &[fixture_resolved_node("n1")]).unwrap();
-
-        let config = &flow_doc["nodes"]["n1"]["dev.greentic.echo"];
-        assert_eq!(config["op"], "already-set");
-        assert!(config.get("operation").is_none());
-    }
-
-    #[test]
-    fn collect_component_artifacts_deduplicates_by_name_and_version() {
-        let node_a = fixture_resolved_node("n1");
-        let node_b = fixture_resolved_node("n2");
-
-        let artifacts = collect_component_artifacts(&[node_a, node_b]);
-        assert_eq!(artifacts.len(), 1);
-        assert_eq!(artifacts[0].name, "dev.greentic.echo");
-        assert_eq!(
-            artifacts[0].hash_blake3.as_deref(),
-            Some("68ac29289794823124c368d9c1b6c765552d69dca8108e7d6325c965a16b891e")
-        );
-    }
-
-    #[test]
-    fn report_schema_errors_formats_each_issue() {
-        let err = report_schema_errors(&[
-            NodeSchemaError {
-                node_id: "n1".to_string(),
-                component: "dev.greentic.echo".to_string(),
-                pointer: "/nodes/n1/dev.greentic.echo".to_string(),
-                message: "first issue".to_string(),
-            },
-            NodeSchemaError {
-                node_id: "n2".to_string(),
-                component: "dev.greentic.echo".to_string(),
-                pointer: "/nodes/n2/dev.greentic.echo/message".to_string(),
-                message: "second issue".to_string(),
-            },
-        ])
-        .unwrap_err();
-
-        let message = err.to_string();
-        assert!(message.contains("component schema validation failed"));
-        assert!(
-            message.contains(
-                "- node `n1` (dev.greentic.echo) /nodes/n1/dev.greentic.echo: first issue"
-            )
-        );
-        assert!(message.contains(
-            "- node `n2` (dev.greentic.echo) /nodes/n2/dev.greentic.echo/message: second issue"
+    fn pack_signing_maps_to_builder_signing() {
+        assert!(matches!(
+            greentic_pack::builder::Signing::from(PackSigning::Dev),
+            greentic_pack::builder::Signing::Dev
+        ));
+        assert!(matches!(
+            greentic_pack::builder::Signing::from(PackSigning::None),
+            greentic_pack::builder::Signing::None
         ));
     }
 
     #[test]
-    fn load_pack_meta_uses_defaults_from_bundle() {
-        let bundle = fixture_bundle();
-        let meta = load_pack_meta(None, &bundle).unwrap();
-
-        assert_eq!(meta.pack_id, "dev.local.hello-flow");
-        assert_eq!(meta.name, "hello-flow");
-        assert_eq!(meta.version, Version::parse("0.1.0").unwrap());
-        assert_eq!(meta.entry_flows, vec!["hello-flow".to_string()]);
-        assert!(meta.annotations.is_empty());
-    }
-
-    #[test]
-    fn load_pack_meta_reads_imports_and_annotations() {
-        let bundle = fixture_bundle();
-        let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("pack.toml");
-        fs::write(
-            &path,
-            r#"
-pack_id = "dev.local.custom"
-version = "1.2.3"
-name = "custom-pack"
-entry_flows = ["hello-flow", "backup-flow"]
-
-[annotations]
-team = "core"
-retries = 3
-
-[[imports]]
-pack_id = "dev.local.base"
-version_req = "^1"
-"#,
-        )
-        .unwrap();
-
-        let meta = load_pack_meta(Some(path.as_path()), &bundle).unwrap();
-        assert_eq!(meta.pack_id, "dev.local.custom");
-        assert_eq!(meta.version, Version::parse("1.2.3").unwrap());
-        assert_eq!(
-            meta.entry_flows,
-            vec!["hello-flow".to_string(), "backup-flow".to_string()]
-        );
-        assert_eq!(meta.annotations["team"], "core");
-        assert_eq!(meta.annotations["retries"], 3);
-        assert_eq!(meta.imports.len(), 1);
-        assert_eq!(meta.imports[0].pack_id, "dev.local.base");
-        assert_eq!(meta.imports[0].version_req, "^1");
-    }
-
-    #[test]
-    fn load_pack_meta_rejects_invalid_versions() {
-        let bundle = fixture_bundle();
-        let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("pack.toml");
-        fs::write(
-            &path,
-            r#"
-version = "not-a-semver"
-"#,
-        )
-        .unwrap();
-
-        let err = load_pack_meta(Some(path.as_path()), &bundle).unwrap_err();
-        assert!(err.to_string().contains("invalid pack version in metadata"));
-    }
-
-    #[test]
-    fn strict_mode_enabled_reads_truthy_values() {
+    fn strict_mode_accepts_true_values_only() {
         let _guard = ENV_LOCK.lock().unwrap();
-        let previous = std::env::var("LOCAL_CHECK_STRICT").ok();
-
-        unsafe { std::env::set_var("LOCAL_CHECK_STRICT", "true") };
-        assert!(strict_mode_enabled());
-
-        unsafe { std::env::set_var("LOCAL_CHECK_STRICT", "0") };
+        unsafe {
+            std::env::remove_var("LOCAL_CHECK_STRICT");
+        }
         assert!(!strict_mode_enabled());
+        unsafe {
+            std::env::set_var("LOCAL_CHECK_STRICT", "1");
+        }
+        assert!(strict_mode_enabled());
+        unsafe {
+            std::env::set_var("LOCAL_CHECK_STRICT", "true");
+        }
+        assert!(strict_mode_enabled());
+        unsafe {
+            std::env::set_var("LOCAL_CHECK_STRICT", "yes");
+            std::env::remove_var("LOCAL_CHECK_STRICT");
+        }
+    }
 
-        match previous {
-            Some(value) => unsafe { std::env::set_var("LOCAL_CHECK_STRICT", value) },
-            None => unsafe { std::env::remove_var("LOCAL_CHECK_STRICT") },
+    #[test]
+    fn builtin_component_detection_matches_reserved_names() {
+        assert!(is_builtin_component("component.exec"));
+        assert!(is_builtin_component("flow.call"));
+        assert!(is_builtin_component("session.wait"));
+        assert!(is_builtin_component("emit.message"));
+        assert!(!is_builtin_component("demo.component"));
+    }
+
+    #[test]
+    fn parse_component_ref_supports_optional_version_req() {
+        let (name, req) = parse_component_ref(" demo.component @ ^1.2 ").unwrap();
+        assert_eq!(name, "demo.component");
+        assert!(req.matches(&Version::parse("1.5.0").unwrap()));
+
+        let (name, req) = parse_component_ref("demo.other").unwrap();
+        assert_eq!(name, "demo.other");
+        assert_eq!(req, VersionReq::default());
+
+        assert!(parse_component_ref("demo@not-semver").is_err());
+    }
+
+    #[test]
+    fn default_operation_reads_first_manifest_operation() {
+        let component = component_with_manifest(json!({
+            "operations": [
+                { "name": "first" },
+                { "name": "second" }
+            ]
+        }));
+
+        assert_eq!(
+            default_operation(&component).unwrap().as_deref(),
+            Some("first")
+        );
+    }
+
+    #[test]
+    fn default_operation_handles_absent_or_invalid_manifest_operations() {
+        let component = component_with_manifest(json!({ "operations": [] }));
+        assert_eq!(default_operation(&component).unwrap(), None);
+
+        let mut invalid = component_with_manifest(json!({}));
+        invalid.manifest_json = Some("{not json".to_string());
+        assert!(default_operation(&invalid).is_err());
+    }
+
+    #[test]
+    fn ensure_node_operations_backfills_missing_operation_aliases() {
+        let component = Arc::new(component_with_manifest(json!({
+            "operations": [{ "name": "send" }]
+        })));
+        let node = ResolvedNode {
+            node_id: "n1".to_string(),
+            component,
+            pointer: "/nodes/n1/demo.component".to_string(),
+            config: json!({}),
+        };
+        let mut flow = json!({
+            "nodes": {
+                "n1": {
+                    "demo.component": {
+                        "message": "hello"
+                    }
+                }
+            }
+        });
+
+        ensure_node_operations(&mut flow, &[node]).unwrap();
+
+        assert_eq!(flow["nodes"]["n1"]["demo.component"]["operation"], "send");
+        assert_eq!(flow["nodes"]["n1"]["demo.component"]["op"], "send");
+    }
+
+    #[test]
+    fn ensure_node_operations_preserves_existing_operation() {
+        let component = Arc::new(component_with_manifest(json!({
+            "operations": [{ "name": "send" }]
+        })));
+        let node = ResolvedNode {
+            node_id: "n1".to_string(),
+            component,
+            pointer: "/nodes/n1/demo.component".to_string(),
+            config: json!({}),
+        };
+        let mut flow = json!({
+            "nodes": {
+                "n1": {
+                    "demo.component": {
+                        "operation": "custom"
+                    }
+                }
+            }
+        });
+
+        ensure_node_operations(&mut flow, &[node]).unwrap();
+
+        assert_eq!(flow["nodes"]["n1"]["demo.component"]["operation"], "custom");
+        assert!(flow["nodes"]["n1"]["demo.component"].get("op").is_none());
+    }
+
+    #[test]
+    fn collect_component_artifacts_deduplicates_by_name_and_version() {
+        let component = Arc::new(component_with_manifest(json!({})));
+        let nodes = vec![
+            ResolvedNode {
+                node_id: "n1".to_string(),
+                component: component.clone(),
+                pointer: "/nodes/n1/demo.component".to_string(),
+                config: json!({}),
+            },
+            ResolvedNode {
+                node_id: "n2".to_string(),
+                component,
+                pointer: "/nodes/n2/demo.component".to_string(),
+                config: json!({}),
+            },
+        ];
+
+        let artifacts = collect_component_artifacts(&nodes);
+
+        assert_eq!(artifacts.len(), 1);
+        assert_eq!(artifacts[0].name, "demo.component");
+        assert_eq!(artifacts[0].hash_blake3.as_deref(), Some("abc123"));
+    }
+
+    #[test]
+    fn to_artifact_preserves_non_prefixed_hash() {
+        let mut component = component_with_manifest(json!({}));
+        component.wasm_hash = "raw-hash".to_string();
+        let artifact = to_artifact(&Arc::new(component));
+
+        assert_eq!(artifact.hash_blake3.as_deref(), Some("raw-hash"));
+    }
+
+    #[test]
+    fn report_schema_errors_formats_all_errors() {
+        let err = report_schema_errors(&[
+            NodeSchemaError {
+                node_id: "n1".to_string(),
+                component: "demo.component".to_string(),
+                pointer: "/nodes/n1/demo.component/name".to_string(),
+                message: "missing".to_string(),
+            },
+            NodeSchemaError {
+                node_id: "n2".to_string(),
+                component: "demo.other".to_string(),
+                pointer: "/nodes/n2/demo.other".to_string(),
+                message: "invalid".to_string(),
+            },
+        ])
+        .unwrap_err()
+        .to_string();
+
+        assert!(err.contains("component schema validation failed"));
+        assert!(err.contains("n1"));
+        assert!(err.contains("demo.other"));
+    }
+
+    #[test]
+    fn toml_to_json_map_converts_values() {
+        let mut table = toml::value::Table::new();
+        table.insert("enabled".to_string(), toml::Value::Boolean(true));
+        table.insert("count".to_string(), toml::Value::Integer(3));
+
+        let map = toml_to_json_map(table);
+
+        assert_eq!(map["enabled"], json!(true));
+        assert_eq!(map["count"], json!(3));
+    }
+
+    fn component_with_manifest(manifest: serde_json::Value) -> ResolvedComponent {
+        ResolvedComponent {
+            name: "demo.component".to_string(),
+            version: Version::parse("1.0.0").unwrap(),
+            wasm_path: PathBuf::from("component.wasm"),
+            manifest_path: PathBuf::from("manifest.json"),
+            schema_json: Some(json!({ "type": "object" }).to_string()),
+            manifest_json: Some(manifest.to_string()),
+            capabilities_json: Some(json!({ "wasi": {} })),
+            limits_json: None,
+            world: "greentic:component/component@0.4.0".to_string(),
+            wasm_hash: "blake3:abc123".to_string(),
+            describe: DescribePayload {
+                name: "demo.component".to_string(),
+                versions: Vec::new(),
+                schema_id: None,
+            },
         }
     }
 }

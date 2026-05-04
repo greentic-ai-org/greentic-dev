@@ -19,6 +19,7 @@ use greentic_dev::install;
 use greentic_dev::mcp_cmd;
 use greentic_dev::release_cmd;
 use greentic_dev::secrets_cli::run_secrets_command;
+use greentic_dev::security_cmd;
 use greentic_dev::wizard;
 
 fn main() -> Result<()> {
@@ -68,6 +69,9 @@ fn main() -> Result<()> {
         }
         Command::Config(config_cmd) => config::run(config_cmd),
         Command::Coverage(args) => coverage_cmd::run(args),
+        Command::Security(args) => {
+            std::process::exit(security_cmd::run(args));
+        }
         Command::Cbor(args) => cbor_cmd::run(args),
         Command::Mcp(mcp) => match mcp {
             McpCommand::Doctor(args) => mcp_cmd::doctor(&args.provider, args.json),

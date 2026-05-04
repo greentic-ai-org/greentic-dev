@@ -19,7 +19,10 @@ use crate::cli::{
 };
 use crate::install::block_on_maybe_runtime;
 use crate::passthrough::{ToolchainChannel, delegated_binary_name_for_channel};
-use crate::toolchain_catalogue::GREENTIC_TOOLCHAIN_PACKAGES;
+use crate::toolchain_catalogue::{
+    GREENTIC_COMPONENT_PACKAGES, GREENTIC_EXTENSION_PACK_PACKAGES, GREENTIC_TOOLCHAIN_PACKAGES,
+    OciPackageSpec,
+};
 
 const DEFAULT_OAUTH_USER: &str = "oauth2";
 pub const TOOLCHAIN_MANIFEST_SCHEMA: &str = "greentic.toolchain-manifest.v1";
@@ -37,6 +40,10 @@ pub struct ToolchainManifest {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub created_at: Option<String>,
     pub packages: Vec<ToolchainPackage>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extension_packs: Option<Vec<ExtensionPackRef>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub components: Option<Vec<ComponentRef>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -47,8 +54,21 @@ pub struct ToolchainPackage {
     pub version: String,
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ExtensionPackRef {
+    pub id: String,
+    pub version: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ComponentRef {
+    pub id: String,
+    pub version: String,
+}
+
 pub fn generate(args: ReleaseGenerateArgs) -> Result<()> {
     let resolver = default_resolver();
+    let artifact_resolver = GhcrArtifactVersionResolver::new(args.token.as_deref())?;
     let source = block_on_maybe_runtime(load_source_manifest(
         &args.repo,
         &args.from,
@@ -70,11 +90,12 @@ pub fn generate(args: ReleaseGenerateArgs) -> Result<()> {
             &resolver,
         )?,
     };
-    let manifest = generate_manifest(
+    let manifest = generate_manifest_with_artifact_resolver(
         &args.release,
         &args.from,
         source.as_ref(),
         &resolver,
+        &artifact_resolver,
         Some(created_at_now()?),
     )?;
     if args.dry_run {
@@ -411,6 +432,8 @@ pub fn snapshot_manifest<R: CrateVersionResolver>(
         channel: Some(from.to_string()),
         created_at,
         packages,
+        extension_packs: None,
+        components: None,
     })
 }
 
@@ -472,6 +495,24 @@ fn latest_manifest(created_at: Option<String>) -> ToolchainManifest {
         channel: Some("latest".to_string()),
         created_at,
         packages: latest_manifest_packages(),
+        extension_packs: Some(
+            GREENTIC_EXTENSION_PACK_PACKAGES
+                .iter()
+                .map(|package| ExtensionPackRef {
+                    id: package.package.to_string(),
+                    version: "latest".to_string(),
+                })
+                .collect(),
+        ),
+        components: Some(
+            GREENTIC_COMPONENT_PACKAGES
+                .iter()
+                .map(|package| ComponentRef {
+                    id: package.package.to_string(),
+                    version: "latest".to_string(),
+                })
+                .collect(),
+        ),
     }
 }
 
@@ -519,6 +560,29 @@ pub fn generate_manifest<R: CrateVersionResolver>(
     resolver: &R,
     created_at: Option<String>,
 ) -> Result<ToolchainManifest> {
+    let artifact_resolver = ReleaseArtifactVersionResolver { release };
+    generate_manifest_with_artifact_resolver(
+        release,
+        from,
+        source,
+        resolver,
+        &artifact_resolver,
+        created_at,
+    )
+}
+
+pub fn generate_manifest_with_artifact_resolver<R, A>(
+    release: &str,
+    from: &str,
+    source: Option<&ToolchainManifest>,
+    resolver: &R,
+    artifact_resolver: &A,
+    created_at: Option<String>,
+) -> Result<ToolchainManifest>
+where
+    R: CrateVersionResolver,
+    A: ArtifactVersionResolver,
+{
     if let Some(source) = source {
         validate_manifest(source)?;
     }
@@ -544,16 +608,87 @@ pub fn generate_manifest<R: CrateVersionResolver>(
         channel: Some(from.to_string()),
         created_at,
         packages,
+        extension_packs: Some(extension_pack_refs_for_release(source, artifact_resolver)?),
+        components: Some(component_refs_for_release(source, artifact_resolver)?),
     })
 }
 
 fn manifest_bins_for_source(from: &str, bins: &[&str]) -> Vec<String> {
-    if from == "dev" {
-        bins.iter()
-            .map(|bin| delegated_binary_name_for_channel(bin, ToolchainChannel::Development))
-            .collect()
-    } else {
-        bins.iter().map(|bin| (*bin).to_string()).collect()
+    let channel = match from {
+        "dev" => ToolchainChannel::Development,
+        "rnd" => ToolchainChannel::Rnd,
+        _ => ToolchainChannel::Stable,
+    };
+    bins.iter()
+        .map(|bin| delegated_binary_name_for_channel(bin, channel))
+        .collect()
+}
+
+fn extension_pack_refs_for_release<A: ArtifactVersionResolver>(
+    source: Option<&ToolchainManifest>,
+    artifact_resolver: &A,
+) -> Result<Vec<ExtensionPackRef>> {
+    let source_versions = source_ref_version_map(source.and_then(|manifest| {
+        manifest
+            .extension_packs
+            .as_ref()
+            .map(|refs| refs.iter().map(|item| (&item.id, &item.version)))
+    }));
+    GREENTIC_EXTENSION_PACK_PACKAGES
+        .iter()
+        .map(|package| {
+            Ok(ExtensionPackRef {
+                id: package.package.to_string(),
+                version: ref_version_for_package(package, &source_versions, artifact_resolver)?,
+            })
+        })
+        .collect()
+}
+
+fn component_refs_for_release<A: ArtifactVersionResolver>(
+    source: Option<&ToolchainManifest>,
+    artifact_resolver: &A,
+) -> Result<Vec<ComponentRef>> {
+    let source_versions = source_ref_version_map(source.and_then(|manifest| {
+        manifest
+            .components
+            .as_ref()
+            .map(|refs| refs.iter().map(|item| (&item.id, &item.version)))
+    }));
+    GREENTIC_COMPONENT_PACKAGES
+        .iter()
+        .map(|package| {
+            Ok(ComponentRef {
+                id: package.package.to_string(),
+                version: ref_version_for_package(package, &source_versions, artifact_resolver)?,
+            })
+        })
+        .collect()
+}
+
+fn source_ref_version_map<'a, I>(refs: Option<I>) -> BTreeMap<String, String>
+where
+    I: Iterator<Item = (&'a String, &'a String)>,
+{
+    let mut out = BTreeMap::new();
+    if let Some(refs) = refs {
+        for (id, version) in refs {
+            out.insert(id.clone(), version.clone());
+        }
+    }
+    out
+}
+
+fn ref_version_for_package(
+    package: &OciPackageSpec,
+    source_versions: &BTreeMap<String, String>,
+    artifact_resolver: &impl ArtifactVersionResolver,
+) -> Result<String> {
+    match source_versions.get(package.package).map(String::as_str) {
+        Some(version) if version != "latest" => Ok(version.to_string()),
+        _ => artifact_resolver
+            .resolve_latest(package.package)
+            .with_context(|| format!("failed to resolve GHCR version for `{}`", package.package)),
     }
 }
 
@@ -632,6 +767,10 @@ fn default_resolver() -> CratesIoApiVersionResolver {
     CratesIoApiVersionResolver::default()
 }
 
+pub trait ArtifactVersionResolver {
+    fn resolve_latest(&self, package: &str) -> Result<String>;
+}
+
 const CRATES_IO_API_BASE: &str = "https://crates.io/api/v1/crates";
 const CRATES_IO_USER_AGENT: &str = concat!(
     "greentic-dev/",
@@ -667,6 +806,109 @@ impl CratesIoApiVersionResolver {
             client,
         }
     }
+}
+
+struct ReleaseArtifactVersionResolver<'a> {
+    release: &'a str,
+}
+
+impl ArtifactVersionResolver for ReleaseArtifactVersionResolver<'_> {
+    fn resolve_latest(&self, _package: &str) -> Result<String> {
+        Ok(self.release.to_string())
+    }
+}
+
+struct GhcrArtifactVersionResolver {
+    client: reqwest::blocking::Client,
+    registry: String,
+    namespace: String,
+    basic_token: Option<String>,
+}
+
+impl GhcrArtifactVersionResolver {
+    fn new(raw_token: Option<&str>) -> Result<Self> {
+        Ok(Self {
+            client: reqwest::blocking::Client::builder()
+                .build()
+                .context("failed to build GHCR HTTP client")?,
+            registry: "ghcr.io".to_string(),
+            namespace: "greenticai".to_string(),
+            basic_token: resolve_registry_token(raw_token)?
+                .or_else(|| std::env::var("GHCR_TOKEN").ok())
+                .or_else(|| std::env::var("GITHUB_TOKEN").ok()),
+        })
+    }
+
+    fn bearer_token(&self, repository: &str) -> Result<String> {
+        let scope = format!("repository:{repository}:pull");
+        let mut request = self
+            .client
+            .get(format!("https://{}/token", self.registry))
+            .query(&[
+                ("service", self.registry.as_str()),
+                ("scope", scope.as_str()),
+            ]);
+        if let Some(token) = &self.basic_token {
+            request = request.basic_auth(DEFAULT_OAUTH_USER, Some(token));
+        }
+        let response = request
+            .send()
+            .with_context(|| format!("failed to request GHCR token for `{repository}`"))?
+            .error_for_status()
+            .with_context(|| format!("GHCR token request failed for `{repository}`"))?;
+        let body: GhcrTokenResponse = response
+            .json()
+            .with_context(|| format!("failed to parse GHCR token response for `{repository}`"))?;
+        Ok(body.token)
+    }
+
+    fn tags(&self, repository: &str) -> Result<Vec<String>> {
+        let token = self.bearer_token(repository)?;
+        let response = self
+            .client
+            .get(format!(
+                "https://{}/v2/{repository}/tags/list",
+                self.registry
+            ))
+            .bearer_auth(token)
+            .send()
+            .with_context(|| format!("failed to list GHCR tags for `{repository}`"))?
+            .error_for_status()
+            .with_context(|| format!("GHCR tag list request failed for `{repository}`"))?;
+        let body: GhcrTagsResponse = response
+            .json()
+            .with_context(|| format!("failed to parse GHCR tags for `{repository}`"))?;
+        Ok(body.tags)
+    }
+}
+
+impl ArtifactVersionResolver for GhcrArtifactVersionResolver {
+    fn resolve_latest(&self, package: &str) -> Result<String> {
+        let repository = format!("{}/{}", self.namespace, package);
+        let tags = self.tags(&repository)?;
+        select_latest_artifact_tag(&tags)
+            .with_context(|| format!("no usable tags found for GHCR package `{repository}`"))
+    }
+}
+
+#[derive(Deserialize)]
+struct GhcrTokenResponse {
+    token: String,
+}
+
+#[derive(Deserialize)]
+struct GhcrTagsResponse {
+    #[serde(default)]
+    tags: Vec<String>,
+}
+
+fn select_latest_artifact_tag(tags: &[String]) -> Result<String> {
+    tags.iter()
+        .filter_map(|tag| Version::parse(tag).ok().map(|version| (version, tag)))
+        .max_by(|(left, _), (right, _)| left.cmp(right))
+        .map(|(_, tag)| tag.clone())
+        .or_else(|| tags.iter().find(|tag| tag.as_str() == "latest").cloned())
+        .context("no semver or latest tags found")
 }
 
 impl CrateVersionResolver for CratesIoApiVersionResolver {
@@ -885,6 +1127,19 @@ mod tests {
         }
     }
 
+    struct FixedArtifactResolver;
+
+    impl ArtifactVersionResolver for FixedArtifactResolver {
+        fn resolve_latest(&self, package: &str) -> Result<String> {
+            Ok(match package {
+                "packs/messaging/messaging-webchat-gui" => "0.4.93",
+                "components/component-adaptive-card" => "0.5.8",
+                _ => "0.1.0",
+            }
+            .to_string())
+        }
+    }
+
     #[test]
     fn parses_crates_io_max_stable_version() {
         let body = r#"{"crate":{"id":"greentic-operator-dev","max_stable_version":"0.5.123"}}"#;
@@ -934,6 +1189,26 @@ mod tests {
     }
 
     #[test]
+    fn selects_latest_semver_tag() {
+        let tags = vec![
+            "latest".to_string(),
+            "0.4.93".to_string(),
+            "0.4.9".to_string(),
+            "1.0.0-beta.1".to_string(),
+            "1.0.0".to_string(),
+        ];
+
+        assert_eq!(select_latest_artifact_tag(&tags).unwrap(), "1.0.0");
+    }
+
+    #[test]
+    fn selects_latest_tag_when_no_semver_tags_exist() {
+        let tags = vec!["latest".to_string()];
+
+        assert_eq!(select_latest_artifact_tag(&tags).unwrap(), "latest");
+    }
+
+    #[test]
     fn generates_manifest_from_catalogue() {
         let manifest = generate_manifest("1.0.5", "latest", None, &FixedResolver, None).unwrap();
         assert_eq!(manifest.schema, TOOLCHAIN_MANIFEST_SCHEMA);
@@ -954,6 +1229,56 @@ mod tests {
                 .any(|package| package.crate_name == "greentic-runner"
                     && package.bins == ["greentic-runner"])
         );
+        assert_eq!(manifest.extension_packs.as_ref().unwrap().len(), 94);
+        assert_eq!(manifest.components.as_ref().unwrap().len(), 9);
+        assert!(
+            manifest
+                .extension_packs
+                .as_ref()
+                .unwrap()
+                .iter()
+                .all(|item| item.version == "1.0.5")
+        );
+        assert!(
+            manifest
+                .components
+                .as_ref()
+                .unwrap()
+                .iter()
+                .all(|item| item.version == "1.0.5")
+        );
+    }
+
+    #[test]
+    fn generated_manifest_can_use_artifact_resolver_versions() {
+        let manifest = generate_manifest_with_artifact_resolver(
+            "1.0.17",
+            "stable",
+            None,
+            &FixedResolver,
+            &FixedArtifactResolver,
+            None,
+        )
+        .unwrap();
+
+        assert!(
+            manifest
+                .extension_packs
+                .as_ref()
+                .unwrap()
+                .iter()
+                .any(|item| item.id == "packs/messaging/messaging-webchat-gui"
+                    && item.version == "0.4.93")
+        );
+        assert!(
+            manifest
+                .components
+                .as_ref()
+                .unwrap()
+                .iter()
+                .any(|item| item.id == "components/component-adaptive-card"
+                    && item.version == "0.5.8")
+        );
     }
 
     #[test]
@@ -969,6 +1294,8 @@ mod tests {
                 bins: vec!["greentic-dev".to_string()],
                 version: "0.5.9".to_string(),
             }],
+            extension_packs: None,
+            components: None,
         };
         let manifest =
             generate_manifest("1.0.5", "latest", Some(&source), &FixedResolver, None).unwrap();
@@ -989,6 +1316,8 @@ mod tests {
             channel: Some("stable".to_string()),
             created_at: None,
             packages: Vec::new(),
+            extension_packs: None,
+            components: None,
         };
         let manifest =
             generate_manifest("1.0.16", "dev", Some(&source), &FixedResolver, None).unwrap();
@@ -1120,6 +1449,8 @@ mod tests {
                 bins: vec!["greentic-operator-dev".to_string()],
                 version: "0.5.123".to_string(),
             }],
+            extension_packs: None,
+            components: None,
         };
         assert!(source_manifest_has_concrete_pins(&with_pins));
 
@@ -1132,6 +1463,22 @@ mod tests {
             ..with_pins
         };
         assert!(!source_manifest_has_concrete_pins(&only_latest));
+    }
+
+    #[test]
+    fn generate_from_rnd_uses_rnd_binary_names() {
+        let manifest = generate_manifest("1.2.0", "rnd", None, &FixedResolver, None).unwrap();
+        assert_eq!(manifest.channel.as_deref(), Some("rnd"));
+        assert!(
+            manifest
+                .packages
+                .iter()
+                .flat_map(|package| package.bins.iter())
+                .all(|bin| bin.ends_with("-rnd"))
+        );
+        assert!(manifest.packages.iter().any(|package| {
+            package.crate_name == "greentic-flow" && package.bins == ["greentic-flow-rnd"]
+        }));
     }
 
     #[test]
@@ -1356,8 +1703,104 @@ mod tests {
             channel: Some("stable".to_string()),
             created_at: None,
             packages: Vec::new(),
+            extension_packs: None,
+            components: None,
         };
         assert_eq!(manifest_file_name(&manifest), "gtc-1.0.12.json");
+    }
+
+    #[test]
+    fn parses_manifest_without_extension_sections() {
+        let manifest: ToolchainManifest = serde_json::from_str(
+            r#"{
+              "schema": "greentic.toolchain-manifest.v1",
+              "toolchain": "gtc",
+              "version": "1.0.16",
+              "channel": "stable",
+              "packages": []
+            }"#,
+        )
+        .unwrap();
+
+        assert_eq!(manifest.extension_packs, None);
+        assert_eq!(manifest.components, None);
+    }
+
+    #[test]
+    fn generated_manifest_includes_catalogue_extension_sections() {
+        let manifest = generate_manifest("1.0.16", "stable", None, &FixedResolver, None).unwrap();
+        let json = serde_json::to_value(&manifest).unwrap();
+
+        assert!(json.get("extension_packs").is_some());
+        assert!(json.get("components").is_some());
+        assert!(
+            manifest
+                .extension_packs
+                .as_ref()
+                .unwrap()
+                .iter()
+                .any(|item| item.id == "packs/messaging/messaging-webchat-gui"
+                    && item.version == "1.0.16")
+        );
+        assert!(
+            manifest
+                .extension_packs
+                .as_ref()
+                .unwrap()
+                .iter()
+                .any(|item| item.id == "greentic-bundle/providers" && item.version == "1.0.16")
+        );
+        assert!(
+            manifest
+                .components
+                .as_ref()
+                .unwrap()
+                .iter()
+                .any(|item| item.id == "component/component-llm-openai"
+                    && item.version == "1.0.16")
+        );
+    }
+
+    #[test]
+    fn generated_manifest_preserves_source_versions_for_tracked_extension_sections() {
+        let source = ToolchainManifest {
+            schema: TOOLCHAIN_MANIFEST_SCHEMA.to_string(),
+            toolchain: TOOLCHAIN_NAME.to_string(),
+            version: "dev".to_string(),
+            channel: Some("dev".to_string()),
+            created_at: None,
+            packages: Vec::new(),
+            extension_packs: Some(vec![ExtensionPackRef {
+                id: "packs/messaging/messaging-webchat-gui".to_string(),
+                version: "0.5.4".to_string(),
+            }]),
+            components: Some(vec![ComponentRef {
+                id: "components/component-adaptive-card".to_string(),
+                version: "0.5.8".to_string(),
+            }]),
+        };
+
+        let manifest =
+            generate_manifest("1.0.16", "stable", Some(&source), &FixedResolver, None).unwrap();
+
+        assert!(
+            manifest
+                .extension_packs
+                .as_ref()
+                .unwrap()
+                .iter()
+                .any(|item| item.id == "packs/messaging/messaging-webchat-gui"
+                    && item.version == "0.5.4")
+        );
+        assert!(
+            manifest
+                .components
+                .as_ref()
+                .unwrap()
+                .iter()
+                .any(|item| item.id == "components/component-adaptive-card"
+                    && item.version == "0.5.8")
+        );
     }
 
     #[test]
@@ -1404,6 +1847,8 @@ mod tests {
                 bins: vec!["greentic-dev".to_string()],
                 version: "0.6.0".to_string(),
             }],
+            extension_packs: None,
+            components: None,
         };
 
         let versions = source_version_map(Some(&source));
@@ -1465,6 +1910,22 @@ mod tests {
         assert!(manifest.packages.iter().any(|package| {
             package.crate_name == "greentic-dev-dev" && package.bins == ["greentic-dev-dev"]
         }));
+        assert!(
+            manifest
+                .extension_packs
+                .as_ref()
+                .unwrap()
+                .iter()
+                .all(|item| item.version == "latest")
+        );
+        assert!(
+            manifest
+                .components
+                .as_ref()
+                .unwrap()
+                .iter()
+                .all(|item| item.version == "latest")
+        );
     }
 
     #[test]

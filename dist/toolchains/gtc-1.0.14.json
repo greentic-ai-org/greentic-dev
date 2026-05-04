@@ -1,0 +1,100 @@
+{
+  "schema": "greentic.toolchain-manifest.v1",
+  "toolchain": "gtc",
+  "version": "1.0.14",
+  "channel": "stable",
+  "created_at": "2026-04-28T05:42:16.197667Z",
+  "packages": [
+    {
+      "crate": "greentic-dev",
+      "bins": [
+        "greentic-dev"
+      ],
+      "version": "0.5.1"
+    },
+    {
+      "crate": "greentic-operator",
+      "bins": [
+        "greentic-operator"
+      ],
+      "version": "0.4.49"
+    },
+    {
+      "crate": "greentic-bundle",
+      "bins": [
+        "greentic-bundle"
+      ],
+      "version": "0.5.2"
+    },
+    {
+      "crate": "greentic-setup",
+      "bins": [
+        "greentic-setup"
+      ],
+      "version": "0.5.2"
+    },
+    {
+      "crate": "greentic-start",
+      "bins": [
+        "greentic-start"
+      ],
+      "version": "0.5.6"
+    },
+    {
+      "crate": "greentic-deployer",
+      "bins": [
+        "greentic-deployer"
+      ],
+      "version": "0.4.52"
+    },
+    {
+      "crate": "greentic-component",
+      "bins": [
+        "greentic-component"
+      ],
+      "version": "0.5.2"
+    },
+    {
+      "crate": "greentic-flow",
+      "bins": [
+        "greentic-flow"
+      ],
+      "version": "0.5.7"
+    },
+    {
+      "crate": "greentic-pack",
+      "bins": [
+        "greentic-pack"
+      ],
+      "version": "0.5.5"
+    },
+    {
+      "crate": "greentic-runner",
+      "bins": [
+        "greentic-runner"
+      ],
+      "version": "0.5.12"
+    },
+    {
+      "crate": "greentic-gui",
+      "bins": [
+        "greentic-gui"
+      ],
+      "version": "0.5.2"
+    },
+    {
+      "crate": "greentic-secrets",
+      "bins": [
+        "greentic-secrets"
+      ],
+      "version": "0.5.0"
+    },
+    {
+      "crate": "greentic-mcp",
+      "bins": [
+        "greentic-mcp"
+      ],
+      "version": "0.5.1"
+    }
+  ]
+}

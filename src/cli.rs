@@ -48,6 +48,7 @@ pub fn localized_help_command(locale: &str) -> clap::Command {
         ("runner", "cli.command.runner.about"),
         ("config", "cli.command.config.about"),
         ("coverage", "cli.command.coverage.about"),
+        ("security", "cli.command.security.about"),
         ("mcp", "cli.command.mcp.about"),
         ("gui", "cli.command.gui.about"),
         ("secrets", "cli.command.secrets.about"),
@@ -250,6 +251,36 @@ pub fn localized_help_command(locale: &str) -> clap::Command {
                     arg.help(crate::i18n::t(locale, "cli.command.coverage.skip_run"))
                 })
         })
+        .mut_subcommand("security", |sub| {
+            sub.about(crate::i18n::t(locale, "cli.command.security.about"))
+                .mut_arg("format", |arg| {
+                    arg.help(crate::i18n::t(locale, "cli.command.security.format"))
+                })
+                .mut_arg("prompt", |arg| {
+                    arg.help(crate::i18n::t(locale, "cli.command.security.prompt"))
+                })
+                .mut_arg("no_errors", |arg| {
+                    arg.help(crate::i18n::t(locale, "cli.command.security.no_errors"))
+                })
+                .mut_arg("severity", |arg| {
+                    arg.help(crate::i18n::t(locale, "cli.command.security.severity"))
+                })
+                .mut_arg("security_severity", |arg| {
+                    arg.help(crate::i18n::t(
+                        locale,
+                        "cli.command.security.security_severity",
+                    ))
+                })
+                .mut_arg("state", |arg| {
+                    arg.help(crate::i18n::t(locale, "cli.command.security.state"))
+                })
+                .mut_arg("repo", |arg| {
+                    arg.help(crate::i18n::t(locale, "cli.command.security.repo"))
+                })
+                .mut_arg("branch", |arg| {
+                    arg.help(crate::i18n::t(locale, "cli.command.security.branch"))
+                })
+        })
         .mut_subcommand("wizard", |sub| {
             sub.about(crate::i18n::t(locale, "cli.command.wizard.about"))
                 .mut_arg("answers", |arg| {
@@ -418,6 +449,8 @@ pub enum Command {
     Config(ConfigCommand),
     /// cli.command.coverage.about
     Coverage(CoverageArgs),
+    /// cli.command.security.about
+    Security(SecurityArgs),
     /// cli.command.mcp.about
     #[command(subcommand)]
     Mcp(McpCommand),
@@ -710,6 +743,40 @@ pub struct CoverageArgs {
     /// cli.command.coverage.skip_run
     #[arg(long = "skip-run")]
     pub skip_run: bool,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, clap::ValueEnum)]
+pub enum SecurityFormat {
+    Markdown,
+    Json,
+}
+
+#[derive(Args, Debug, Clone)]
+pub struct SecurityArgs {
+    /// cli.command.security.format
+    #[arg(long = "format", value_enum, default_value_t = SecurityFormat::Markdown)]
+    pub format: SecurityFormat,
+    /// cli.command.security.prompt
+    #[arg(long = "prompt")]
+    pub prompt: bool,
+    /// cli.command.security.no_errors
+    #[arg(long = "ignore-errors", alias = "no-errors")]
+    pub no_errors: bool,
+    /// cli.command.security.severity
+    #[arg(long = "severity")]
+    pub severity: Option<String>,
+    /// cli.command.security.security_severity
+    #[arg(long = "security-severity")]
+    pub security_severity: Option<String>,
+    /// cli.command.security.state
+    #[arg(long = "state", default_value = "open")]
+    pub state: String,
+    /// cli.command.security.repo
+    #[arg(long = "repo")]
+    pub repo: Option<String>,
+    /// cli.command.security.branch
+    #[arg(long = "branch")]
+    pub branch: Option<String>,
 }
 
 #[derive(Args, Debug, Clone)]

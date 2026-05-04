@@ -28,19 +28,22 @@ fn write_script(dir: &Path, name: &str, script_body: &str) -> PathBuf {
 fn dev_binary_path(dir: &Path) -> PathBuf {
     let source = cargo_bin("greentic-dev");
     #[cfg(windows)]
-    let target = dir.join("greentic-dev-dev.exe");
-    #[cfg(not(windows))]
-    let target = dir.join("greentic-dev-dev");
+    {
+        let target = dir.join("greentic-dev-dev.exe");
+        fs::copy(&source, &target).expect("copy greentic-dev binary");
+        return target;
+    }
 
-    fs::copy(&source, &target).expect("copy greentic-dev binary");
     #[cfg(not(windows))]
     {
+        let target = dir.join("greentic-dev-dev");
+        fs::hard_link(&source, &target).expect("link greentic-dev binary");
         use std::os::unix::fs::PermissionsExt;
         let mut perms = fs::metadata(&target).expect("metadata").permissions();
         perms.set_mode(0o755);
         fs::set_permissions(&target, perms).expect("set mode");
+        target
     }
-    target
 }
 
 #[cfg(not(windows))]
@@ -90,6 +93,8 @@ fn dev_binary_unknown_subcommand_delegates_to_dev_prefixed_binary() {
         r#"echo "dev:$1:$2"; exit 23"#,
     );
 
+    // Accepted risk: test-only execution of a temporary greentic-dev copy with controlled PATH fixtures.
+    // foxguard: ignore[rs/no-command-injection]
     let mut cmd = Command::new(dev_exe);
     cmd.env("PATH", path_with(bin_dir.path()));
     cmd.args(["foo", "bar", "--baz=1"]);
@@ -119,6 +124,8 @@ fn dev_binary_known_passthrough_uses_dev_tool_binary() {
         r#"echo "dev-pack:$1"; exit 0"#,
     );
 
+    // Accepted risk: test-only execution of a temporary greentic-dev copy with controlled PATH fixtures.
+    // foxguard: ignore[rs/no-command-injection]
     let mut cmd = Command::new(dev_exe);
     cmd.env("PATH", path_with(bin_dir.path()));
     cmd.args(["pack", "doctor"]);
