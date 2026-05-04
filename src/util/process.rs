@@ -40,6 +40,8 @@ pub struct CommandOutput {
 }
 
 pub fn run(spec: CommandSpec) -> Result<CommandOutput> {
+    // Accepted risk: this shared runner receives program paths from Greentic delegation/config code and passes argv directly without a shell.
+    // foxguard: ignore[rs/no-command-injection]
     let mut command = Command::new(&spec.program);
     command.args(&spec.args);
     if let Some(dir) = &spec.current_dir {

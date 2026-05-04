@@ -155,5 +155,14 @@
   "runtime.wizard.executor.error.destructive": "plan ਨੇ destructive ਕਾਰਵਾਈਆਂ ਮੰਗੀਆਂ; --allow-destructive ਨਾਲ ਮੁੜ ਚਲਾਓ",
   "runtime.wizard.executor.error.replay_pin_mismatch": "{program} ਲਈ replay pin ਮੇਲ ਨਹੀਂ ਖਾਂਦਾ: ਉਮੀਦ ਸੀ {expected}, ਮਿਲਿਆ {actual}",
   "runtime.wizard.executor.error.step_failed": "wizard step command ਅਸਫਲ ਹੋਈ: {program} {args} (exit code {exit_code})",
-  "runtime.wizard.executor.error.unsafe_args": "command `{program}` ਵਿੱਚ ਰੋਕੇ ਗਏ shell-like arguments ਹਨ; ਚਲਾਉਣ ਤੋਂ ਇਨਕਾਰ"
+  "runtime.wizard.executor.error.unsafe_args": "command `{program}` ਵਿੱਚ ਰੋਕੇ ਗਏ shell-like arguments ਹਨ; ਚਲਾਉਣ ਤੋਂ ਇਨਕਾਰ",
+  "cli.command.security.about": "Inspect GitHub security and quality alerts",
+  "cli.command.security.format": "Output format: markdown or json",
+  "cli.command.security.prompt": "Emit a coding-agent-ready Markdown prompt",
+  "cli.command.security.no_errors": "Return success even when blocking security policy findings are present",
+  "cli.command.security.severity": "Comma-separated code scanning rule severity filter, such as error,warning,note",
+  "cli.command.security.security_severity": "Comma-separated security severity filter, such as critical,high,medium,low",
+  "cli.command.security.state": "Comma-separated GitHub alert state filter: open,dismissed,fixed,resolved,auto_dismissed",
+  "cli.command.security.repo": "GitHub repository as OWNER/REPO; defaults to origin",
+  "cli.command.security.branch": "Git branch name for code scanning alerts; defaults to the current branch"
 }

@@ -4,6 +4,11 @@ pub struct ToolchainPackageSpec {
     pub bins: &'static [&'static str],
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct OciPackageSpec {
+    pub package: &'static str,
+}
+
 pub const GREENTIC_TOOLCHAIN_PACKAGES: &[ToolchainPackageSpec] = &[
     ToolchainPackageSpec {
         crate_name: "greentic-dev",
@@ -59,9 +64,327 @@ pub const GREENTIC_TOOLCHAIN_PACKAGES: &[ToolchainPackageSpec] = &[
     },
 ];
 
+pub const GREENTIC_EXTENSION_PACK_PACKAGES: &[OciPackageSpec] = &[
+    OciPackageSpec {
+        package: "greentic-bundle/providers",
+    },
+    OciPackageSpec {
+        package: "packs/apps/cards-demo",
+    },
+    OciPackageSpec {
+        package: "packs/apps/github-mcp",
+    },
+    OciPackageSpec {
+        package: "packs/apps/greentic-ai",
+    },
+    OciPackageSpec {
+        package: "packs/apps/helpdesk-itsm",
+    },
+    OciPackageSpec {
+        package: "packs/apps/hr-onboarding",
+    },
+    OciPackageSpec {
+        package: "packs/apps/incident-demo",
+    },
+    OciPackageSpec {
+        package: "packs/apps/quickstart",
+    },
+    OciPackageSpec {
+        package: "packs/apps/quickstart-event",
+    },
+    OciPackageSpec {
+        package: "packs/apps/redbutton-demo",
+    },
+    OciPackageSpec {
+        package: "packs/apps/sales-crm",
+    },
+    OciPackageSpec {
+        package: "packs/apps/supply-chain",
+    },
+    OciPackageSpec {
+        package: "packs/apps/weatherapi-pack",
+    },
+    OciPackageSpec {
+        package: "packs/demos/cards-demo",
+    },
+    OciPackageSpec {
+        package: "packs/demos/cloud-deploy-demo-app",
+    },
+    OciPackageSpec {
+        package: "packs/demos/deep-research-demo",
+    },
+    OciPackageSpec {
+        package: "packs/demos/github-mcp",
+    },
+    OciPackageSpec {
+        package: "packs/demos/greentic-ai",
+    },
+    OciPackageSpec {
+        package: "packs/demos/greentic.hr-onboarding.demo",
+    },
+    OciPackageSpec {
+        package: "packs/demos/helpdesk-itsm",
+    },
+    OciPackageSpec {
+        package: "packs/demos/hr-onboarding",
+    },
+    OciPackageSpec {
+        package: "packs/demos/incident-demo",
+    },
+    OciPackageSpec {
+        package: "packs/demos/quickstart",
+    },
+    OciPackageSpec {
+        package: "packs/demos/quickstart-event",
+    },
+    OciPackageSpec {
+        package: "packs/demos/redbutton-demo",
+    },
+    OciPackageSpec {
+        package: "packs/demos/sales-crm",
+    },
+    OciPackageSpec {
+        package: "packs/demos/supply-chain",
+    },
+    OciPackageSpec {
+        package: "packs/demos/telco-x",
+    },
+    OciPackageSpec {
+        package: "packs/demos/weather-mcp-demo",
+    },
+    OciPackageSpec {
+        package: "packs/demos/weatherapi-pack",
+    },
+    OciPackageSpec {
+        package: "packs/deployer/greentic.fixture.helm.gtpack",
+    },
+    OciPackageSpec {
+        package: "packs/deployer/greentic.fixture.juju.k8s.gtpack",
+    },
+    OciPackageSpec {
+        package: "packs/deployer/greentic.fixture.juju.machine.gtpack",
+    },
+    OciPackageSpec {
+        package: "packs/deployer/greentic.fixture.k8s.raw.gtpack",
+    },
+    OciPackageSpec {
+        package: "packs/deployer/greentic.fixture.serverless.gtpack",
+    },
+    OciPackageSpec {
+        package: "packs/deployer/greentic.fixture.snap.gtpack",
+    },
+    OciPackageSpec {
+        package: "packs/deployer/greentic.fixture.terraform.gtpack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/context/compressor-pack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/context/retrieval-pack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/context/static-pack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/control/basic-policy-pack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/control/delegation-guard-pack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/delegation/capability-match-pack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/delegation/static-router-pack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/engine/default-pack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/engine/router-lite-pack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/memory/short-term-in-memory-pack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/memory/short-term-redis-pack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/observer/basic-audit-pack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/observer/basic-metrics-pack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/planning/llm-outline-pack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/planning/static-pack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/reflection/llm-critic-pack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/reflection/rules-pack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/reflection/schema-check-pack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/state/task-store-in-memory-pack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/state/task-store-redis-pack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/tool/component-adapter-pack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/tool/mcp-adapter-pack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/workspace/fs-pack",
+    },
+    OciPackageSpec {
+        package: "packs/dw/workspace/in-memory-pack",
+    },
+    OciPackageSpec {
+        package: "packs/events/events-dummy",
+    },
+    OciPackageSpec {
+        package: "packs/events/events-email",
+    },
+    OciPackageSpec {
+        package: "packs/events/events-email-sendgrid",
+    },
+    OciPackageSpec {
+        package: "packs/events/events-sms",
+    },
+    OciPackageSpec {
+        package: "packs/events/events-sms-twilio",
+    },
+    OciPackageSpec {
+        package: "packs/events/events-timer",
+    },
+    OciPackageSpec {
+        package: "packs/events/events-webhook",
+    },
+    OciPackageSpec {
+        package: "packs/messaging/messaging-dummy",
+    },
+    OciPackageSpec {
+        package: "packs/messaging/messaging-email",
+    },
+    OciPackageSpec {
+        package: "packs/messaging/messaging-slack",
+    },
+    OciPackageSpec {
+        package: "packs/messaging/messaging-teams",
+    },
+    OciPackageSpec {
+        package: "packs/messaging/messaging-telegram",
+    },
+    OciPackageSpec {
+        package: "packs/messaging/messaging-webchat",
+    },
+    OciPackageSpec {
+        package: "packs/messaging/messaging-webchat-gui",
+    },
+    OciPackageSpec {
+        package: "packs/messaging/messaging-webex",
+    },
+    OciPackageSpec {
+        package: "packs/messaging/messaging-whatsapp",
+    },
+    OciPackageSpec {
+        package: "packs/messaging/state-memory",
+    },
+    OciPackageSpec {
+        package: "packs/messaging/state-redis",
+    },
+    OciPackageSpec {
+        package: "packs/oauth/oauth-github",
+    },
+    OciPackageSpec {
+        package: "packs/oauth/oauth-google",
+    },
+    OciPackageSpec {
+        package: "packs/oauth/oauth-microsoft-graph",
+    },
+    OciPackageSpec {
+        package: "packs/oauth/oauth-oidc-generic",
+    },
+    OciPackageSpec {
+        package: "packs/oauth/oauth-slack",
+    },
+    OciPackageSpec {
+        package: "packs/secret/greentic.secrets.aws-sm.gtpack",
+    },
+    OciPackageSpec {
+        package: "packs/secret/greentic.secrets.azure-kv.gtpack",
+    },
+    OciPackageSpec {
+        package: "packs/secret/greentic.secrets.gcp-sm.gtpack",
+    },
+    OciPackageSpec {
+        package: "packs/secret/greentic.secrets.k8s.gtpack",
+    },
+    OciPackageSpec {
+        package: "packs/secret/greentic.secrets.providers.gtpack",
+    },
+    OciPackageSpec {
+        package: "packs/secret/greentic.secrets.vault-kv.gtpack",
+    },
+    OciPackageSpec {
+        package: "packs/state-memory",
+    },
+    OciPackageSpec {
+        package: "packs/state-redis",
+    },
+    OciPackageSpec {
+        package: "packs/state/state-memory",
+    },
+    OciPackageSpec {
+        package: "packs/state/state-redis",
+    },
+];
+
+pub const GREENTIC_COMPONENT_PACKAGES: &[OciPackageSpec] = &[
+    OciPackageSpec {
+        package: "component/component-events2msg",
+    },
+    OciPackageSpec {
+        package: "component/component-http",
+    },
+    OciPackageSpec {
+        package: "component/component-llm-openai",
+    },
+    OciPackageSpec {
+        package: "component/component-msg2events",
+    },
+    OciPackageSpec {
+        package: "component/component-pack2flow",
+    },
+    OciPackageSpec {
+        package: "components/component-adaptive-card",
+    },
+    OciPackageSpec {
+        package: "components/component-qa",
+    },
+    OciPackageSpec {
+        package: "components/secrets-provider-inmemory",
+    },
+    OciPackageSpec {
+        package: "components/templates",
+    },
+];
+
 #[cfg(test)]
 mod tests {
-    use super::GREENTIC_TOOLCHAIN_PACKAGES;
+    use super::{
+        GREENTIC_COMPONENT_PACKAGES, GREENTIC_EXTENSION_PACK_PACKAGES, GREENTIC_TOOLCHAIN_PACKAGES,
+        OciPackageSpec,
+    };
     use std::collections::BTreeSet;
 
     #[test]
@@ -103,6 +426,51 @@ mod tests {
         }
     }
 
+    #[test]
+    fn extension_pack_catalogue_tracks_github_packages() {
+        assert_eq!(GREENTIC_EXTENSION_PACK_PACKAGES.len(), 94);
+        assert_catalogue_has_no_duplicate_packages(GREENTIC_EXTENSION_PACK_PACKAGES);
+        assert!(GREENTIC_EXTENSION_PACK_PACKAGES.iter().all(|package| {
+            package.package.starts_with("packs/") || package.package.starts_with("greentic-bundle/")
+        }));
+        assert!(
+            GREENTIC_EXTENSION_PACK_PACKAGES
+                .iter()
+                .any(|package| package.package == "greentic-bundle/providers")
+        );
+        assert!(
+            GREENTIC_EXTENSION_PACK_PACKAGES
+                .iter()
+                .any(|package| package.package == "packs/messaging/messaging-webchat-gui")
+        );
+        assert!(
+            GREENTIC_EXTENSION_PACK_PACKAGES
+                .iter()
+                .any(|package| package.package == "packs/oauth/oauth-microsoft-graph")
+        );
+    }
+
+    #[test]
+    fn component_catalogue_tracks_github_packages() {
+        assert_eq!(GREENTIC_COMPONENT_PACKAGES.len(), 9);
+        assert_catalogue_has_no_duplicate_packages(GREENTIC_COMPONENT_PACKAGES);
+        assert!(GREENTIC_COMPONENT_PACKAGES.iter().all(|package| {
+            package.package.starts_with("component/")
+                || package.package.starts_with("components/")
+                || package.package.starts_with("validators/")
+        }));
+        assert!(
+            GREENTIC_COMPONENT_PACKAGES
+                .iter()
+                .any(|package| package.package == "component/component-llm-openai")
+        );
+        assert!(
+            GREENTIC_COMPONENT_PACKAGES
+                .iter()
+                .any(|package| package.package == "components/component-adaptive-card")
+        );
+    }
+
     fn catalogue_pairs() -> BTreeSet<(&'static str, &'static str)> {
         GREENTIC_TOOLCHAIN_PACKAGES
             .iter()
@@ -113,5 +481,16 @@ mod tests {
                     .map(move |bin| (package.crate_name, *bin))
             })
             .collect()
+    }
+
+    fn assert_catalogue_has_no_duplicate_packages(catalogue: &[OciPackageSpec]) {
+        let mut seen = BTreeSet::new();
+        for package in catalogue {
+            assert!(
+                seen.insert(package.package),
+                "duplicate package: {}",
+                package.package
+            );
+        }
     }
 }
