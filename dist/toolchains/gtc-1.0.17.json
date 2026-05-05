@@ -100,7 +100,7 @@
   "extension_packs": [
     {
       "id": "greentic-bundle/providers",
-      "version": "latest"
+      "version": "stable"
     },
     {
       "id": "packs/apps/cards-demo",
