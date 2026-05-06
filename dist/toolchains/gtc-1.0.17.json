@@ -10,42 +10,42 @@
       "bins": [
         "greentic-dev"
       ],
-      "version": "0.5.4"
+      "version": "0.5.5"
     },
     {
       "crate": "greentic-operator",
       "bins": [
         "greentic-operator"
       ],
-      "version": "0.4.49"
+      "version": "0.4.50"
     },
     {
       "crate": "greentic-bundle",
       "bins": [
         "greentic-bundle"
       ],
-      "version": "0.5.6"
+      "version": "0.5.7"
     },
     {
       "crate": "greentic-setup",
       "bins": [
         "greentic-setup"
       ],
-      "version": "0.5.7"
+      "version": "0.5.10"
     },
     {
       "crate": "greentic-start",
       "bins": [
         "greentic-start"
       ],
-      "version": "0.5.16"
+      "version": "0.5.18"
     },
     {
       "crate": "greentic-deployer",
       "bins": [
         "greentic-deployer"
       ],
-      "version": "0.5.0"
+      "version": "0.5.2"
     },
     {
       "crate": "greentic-component",
@@ -73,7 +73,7 @@
       "bins": [
         "greentic-runner"
       ],
-      "version": "0.5.13"
+      "version": "0.5.14"
     },
     {
       "crate": "greentic-gui",
@@ -396,47 +396,39 @@
     },
     {
       "id": "packs/messaging/messaging-dummy",
-      "version": "0.4.93"
+      "version": "0.4.98"
     },
     {
       "id": "packs/messaging/messaging-email",
-      "version": "0.4.93"
+      "version": "0.4.98"
     },
     {
       "id": "packs/messaging/messaging-slack",
-      "version": "0.4.93"
+      "version": "0.4.98"
     },
     {
       "id": "packs/messaging/messaging-teams",
-      "version": "0.4.93"
+      "version": "0.4.98"
     },
     {
       "id": "packs/messaging/messaging-telegram",
-      "version": "0.4.93"
+      "version": "0.4.98"
     },
     {
       "id": "packs/messaging/messaging-webchat",
-      "version": "0.4.93"
+      "version": "0.4.98"
     },
     {
       "id": "packs/messaging/messaging-webchat-gui",
-      "version": "0.4.93"
+      "version": "0.4.98"
     },
     {
       "id": "packs/messaging/messaging-webex",
-      "version": "0.4.93"
+      "version": "0.4.98"
     },
     {
       "id": "packs/messaging/messaging-whatsapp",
-      "version": "0.4.93"
-    },
-    {
-      "id": "packs/messaging/state-memory",
-      "version": "0.4.57"
-    },
-    {
-      "id": "packs/messaging/state-redis",
-      "version": "0.4.57"
+      "version": "0.4.98"
     },
     {
       "id": "packs/oauth/oauth-github",
