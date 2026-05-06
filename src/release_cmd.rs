@@ -401,6 +401,7 @@ fn channel_tag(channel: ToolchainChannel) -> &'static str {
     match channel {
         ToolchainChannel::Stable => "stable",
         ToolchainChannel::Development => "dev",
+        ToolchainChannel::Rnd => "rnd",
     }
 }
 
