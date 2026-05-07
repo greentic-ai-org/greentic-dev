@@ -199,11 +199,14 @@ fn ensure_tool(bin: &str, package: &str, offline: bool) -> Result<()> {
         bail!("missing {package} but offline mode is enabled");
     }
 
+    // Force reinstall: binstall trusts `~/.cargo/.crates.toml` and skips when it
+    // reports "already installed", but a CI cache may restore that metadata
+    // without restoring `~/.cargo/bin/{bin}` itself.
     log(&format!("installing {package}"));
     let mut command = Command::new("cargo");
     command.arg("binstall");
     command.args(cargo_args_for_network(offline));
-    command.args(["-y", package]);
+    command.args(["-y", "--force", package]);
     let status = command
         .stdin(Stdio::inherit())
         .stdout(Stdio::inherit())
@@ -212,6 +215,9 @@ fn ensure_tool(bin: &str, package: &str, offline: bool) -> Result<()> {
         .with_context(|| format!("failed to install {package}"))?;
     if !status.success() {
         bail!("failed to install {package}");
+    }
+    if !command_exists(bin) {
+        bail!("{package} install reported success but `{bin}` is not on PATH");
     }
     Ok(())
 }
