@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "Lokal JSON-fil for verktøykjedemanifest som skal publiseres",
   "cli.command.release.out": "Katalog for genererte verktøykjedemanifester",
   "cli.command.release.promote.about": "Flytt en GHCR-tagg til en eksisterende Greentic-verktøykjedeutgivelse",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Generer og publiser et Greentic-verktøykjedeutgivelsesmanifest",
   "cli.command.release.release": "Utgivelsesversjon som skal genereres, publiseres eller promoteres",
   "cli.command.release.repo": "GHCR-verktøykjedemanifestlager",

@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "Lokalny plik JSON manifestu toolchainu do opublikowania",
   "cli.command.release.out": "Katalog dla wygenerowanych manifestów zestawu narzędzi",
   "cli.command.release.promote.about": "Przenieś tag GHCR do istniejącego wydania zestawu narzędzi Greentic",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Wygeneruj i opublikuj manifest wydania zestawu narzędzi Greentic",
   "cli.command.release.release": "Wersja wydania do wygenerowania, opublikowania lub promowania",
   "cli.command.release.repo": "Repozytorium manifestu zestawu narzędzi GHCR",
