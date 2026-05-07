@@ -45,7 +45,7 @@
       "bins": [
         "greentic-deployer"
       ],
-      "version": "0.5.2"
+      "version": "0.5.5"
     },
     {
       "crate": "greentic-component",
@@ -94,7 +94,7 @@
       "bins": [
         "greentic-mcp"
       ],
-      "version": "0.5.1"
+      "version": "0.5.2"
     }
   ],
   "extension_packs": [
