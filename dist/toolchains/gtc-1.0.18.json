@@ -1,7 +1,7 @@
 {
   "schema": "greentic.toolchain-manifest.v1",
   "toolchain": "gtc",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "channel": "stable",
   "created_at": "2026-05-01T12:05:52.813403Z",
   "packages": [
@@ -99,96 +99,32 @@
   ],
   "extension_packs": [
     {
-      "id": "greentic-bundle/providers",
-      "version": "latest"
-    },
-    {
-      "id": "packs/apps/cards-demo",
-      "version": "0.1.26"
-    },
-    {
-      "id": "packs/apps/github-mcp",
-      "version": "0.1.55"
-    },
-    {
-      "id": "packs/apps/greentic-ai",
-      "version": "0.1.55"
-    },
-    {
-      "id": "packs/apps/helpdesk-itsm",
-      "version": "0.1.29"
-    },
-    {
-      "id": "packs/apps/hr-onboarding",
-      "version": "0.1.55"
-    },
-    {
-      "id": "packs/apps/incident-demo",
-      "version": "0.1.29"
-    },
-    {
-      "id": "packs/apps/quickstart",
-      "version": "0.1.55"
-    },
-    {
-      "id": "packs/apps/quickstart-event",
-      "version": "0.1.55"
-    },
-    {
-      "id": "packs/apps/redbutton-demo",
-      "version": "0.1.29"
-    },
-    {
-      "id": "packs/apps/sales-crm",
-      "version": "0.1.55"
-    },
-    {
-      "id": "packs/apps/supply-chain",
-      "version": "0.1.29"
-    },
-    {
-      "id": "packs/apps/weatherapi-pack",
-      "version": "0.1.55"
-    },
-    {
       "id": "packs/demos/cards-demo",
-      "version": "v0.1.55"
+      "version": "v0.1.77"
     },
     {
       "id": "packs/demos/cloud-deploy-demo-app",
-      "version": "v0.1.55"
+      "version": "v0.1.77"
     },
     {
       "id": "packs/demos/deep-research-demo",
-      "version": "v0.1.55"
-    },
-    {
-      "id": "packs/demos/github-mcp",
-      "version": "0.1.55"
-    },
-    {
-      "id": "packs/demos/greentic-ai",
-      "version": "0.1.55"
-    },
-    {
-      "id": "packs/demos/greentic.hr-onboarding.demo",
-      "version": "0.1.29"
+      "version": "v0.1.77"
     },
     {
       "id": "packs/demos/helpdesk-itsm",
-      "version": "v0.1.76"
+      "version": "v0.1.77"
     },
     {
       "id": "packs/demos/hr-onboarding",
-      "version": "v0.1.55"
+      "version": "v0.1.77"
     },
     {
       "id": "packs/demos/incident-demo",
-      "version": "v0.1.55"
+      "version": "v0.1.77"
     },
     {
       "id": "packs/demos/quickstart",
-      "version": "v0.1.55"
+      "version": "v0.1.77"
     },
     {
       "id": "packs/demos/quickstart-event",
@@ -200,15 +136,15 @@
     },
     {
       "id": "packs/demos/sales-crm",
-      "version": "v0.1.55"
+      "version": "v0.1.77"
     },
     {
       "id": "packs/demos/supply-chain",
-      "version": "v0.1.55"
+      "version": "v0.1.77"
     },
     {
       "id": "packs/demos/telco-x",
-      "version": "v0.1.55"
+      "version": "v0.1.77"
     },
     {
       "id": "packs/demos/weather-mcp-demo",
@@ -216,7 +152,7 @@
     },
     {
       "id": "packs/demos/weatherapi-pack",
-      "version": "v0.1.55"
+      "version": "v0.1.77"
     },
     {
       "id": "packs/deployer/greentic.fixture.helm.gtpack",
