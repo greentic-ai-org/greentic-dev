@@ -24,7 +24,7 @@
       "bins": [
         "greentic-bundle"
       ],
-      "version": "0.5.7"
+      "version": "0.5.8"
     },
     {
       "crate": "greentic-setup",
