@@ -31,14 +31,14 @@
       "bins": [
         "greentic-setup"
       ],
-      "version": "0.5.11"
+      "version": "0.5.12"
     },
     {
       "crate": "greentic-start",
       "bins": [
         "greentic-start"
       ],
-      "version": "0.5.19"
+      "version": "0.5.21"
     },
     {
       "crate": "greentic-deployer",
