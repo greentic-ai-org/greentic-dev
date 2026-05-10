@@ -45,7 +45,7 @@
       "bins": [
         "greentic-deployer"
       ],
-      "version": "0.5.10"
+      "version": "0.5.11"
     },
     {
       "crate": "greentic-component",
@@ -196,15 +196,15 @@
     },
     {
       "id": "packs/deployer/greentic.deploy.gcp",
-      "version": "0.5.10"
+      "version": "0.5.11"
     },
     {
       "id": "packs/deployer/greentic.deploy.azure",
-      "version": "0.5.10"
+      "version": "0.5.11"
     },
     {
       "id": "packs/deployer/greentic.deploy.aws",
-      "version": "0.5.10"
+      "version": "0.5.11"
     },
     {
       "id": "packs/dw/context/compressor-pack",
