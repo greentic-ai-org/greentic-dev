@@ -196,15 +196,15 @@
     },
     {
       "id": "packs/deployer/greentic.deploy.gcp",
-      "version": "0.4.59"
+      "version": "0.5.10"
     },
     {
       "id": "packs/deployer/greentic.deploy.azure",
-      "version": "0.4.59"
+      "version": "0.5.10"
     },
     {
       "id": "packs/deployer/greentic.deploy.aws",
-      "version": "0.4.59"
+      "version": "0.5.10"
     },
     {
       "id": "packs/dw/context/compressor-pack",
