@@ -10,70 +10,70 @@
       "bins": [
         "greentic-dev-dev"
       ],
-      "version": "0.6.0-dev.25162253331"
+      "version": "1.1.0-dev.25540695147"
     },
     {
       "crate": "greentic-operator",
       "bins": [
         "greentic-operator-dev"
       ],
-      "version": "0.5.0-dev.25156134133"
+      "version": "1.1.0-dev.25480062349"
     },
     {
       "crate": "greentic-bundle",
       "bins": [
         "greentic-bundle-dev"
       ],
-      "version": "0.7.0-dev.25202823346"
+      "version": "1.1.0-dev.25483880035"
     },
     {
       "crate": "greentic-setup",
       "bins": [
         "greentic-setup-dev"
       ],
-      "version": "0.6.0-dev.25148335770"
+      "version": "1.1.0-dev.25540653568"
     },
     {
       "crate": "greentic-start",
       "bins": [
         "greentic-start-dev"
       ],
-      "version": "0.6.0-dev.25148341013"
+      "version": "1.1.0-dev.25480077578"
     },
     {
       "crate": "greentic-deployer",
       "bins": [
         "greentic-deployer-dev"
       ],
-      "version": "0.6.0-dev.25157281845"
+      "version": "1.1.0-dev.25540613839"
     },
     {
       "crate": "greentic-component",
       "bins": [
         "greentic-component-dev"
       ],
-      "version": "0.6.0-dev.25093059064"
+      "version": "1.1.0-dev.25540604532"
     },
     {
       "crate": "greentic-flow",
       "bins": [
         "greentic-flow-dev"
       ],
-      "version": "0.6.0-dev.25001174716"
+      "version": "1.1.0-dev.25540621195"
     },
     {
       "crate": "greentic-pack",
       "bins": [
         "greentic-pack-dev"
       ],
-      "version": "0.6.0-dev.25148337007"
+      "version": "1.1.0-dev.25540669628"
     },
     {
       "crate": "greentic-runner",
       "bins": [
         "greentic-runner-dev"
       ],
-      "version": "0.6.0-dev.25178467126"
+      "version": "1.1.0-dev.25540702111"
     },
     {
       "crate": "greentic-gui",
@@ -87,108 +87,44 @@
       "bins": [
         "greentic-secrets-dev"
       ],
-      "version": "0.6.0-dev.25098179817"
+      "version": "1.1.0-dev.25540523455"
     },
     {
       "crate": "greentic-mcp",
       "bins": [
         "greentic-mcp-dev"
       ],
-      "version": "0.6.0-dev.25152205289"
+      "version": "1.1.0-dev.25540505806"
     }
   ],
   "extension_packs": [
     {
-      "id": "greentic-bundle/providers",
-      "version": "latest"
-    },
-    {
-      "id": "packs/apps/cards-demo",
-      "version": "0.1.26"
-    },
-    {
-      "id": "packs/apps/github-mcp",
-      "version": "0.1.55"
-    },
-    {
-      "id": "packs/apps/greentic-ai",
-      "version": "0.1.55"
-    },
-    {
-      "id": "packs/apps/helpdesk-itsm",
-      "version": "0.1.29"
-    },
-    {
-      "id": "packs/apps/hr-onboarding",
-      "version": "0.1.44"
-    },
-    {
-      "id": "packs/apps/incident-demo",
-      "version": "0.1.29"
-    },
-    {
-      "id": "packs/apps/quickstart",
-      "version": "0.1.44"
-    },
-    {
-      "id": "packs/apps/quickstart-event",
-      "version": "0.1.55"
-    },
-    {
-      "id": "packs/apps/redbutton-demo",
-      "version": "0.1.29"
-    },
-    {
-      "id": "packs/apps/sales-crm",
-      "version": "0.1.43"
-    },
-    {
-      "id": "packs/apps/supply-chain",
-      "version": "0.1.29"
-    },
-    {
-      "id": "packs/apps/weatherapi-pack",
-      "version": "0.1.55"
-    },
-    {
       "id": "packs/demos/cards-demo",
-      "version": "0.1.61"
+      "version": "v0.1.77"
     },
     {
       "id": "packs/demos/cloud-deploy-demo-app",
-      "version": "0.1.55"
+      "version": "v0.1.77"
     },
     {
       "id": "packs/demos/deep-research-demo",
-      "version": "0.1.61"
-    },
-    {
-      "id": "packs/demos/github-mcp",
-      "version": "0.1.55"
-    },
-    {
-      "id": "packs/demos/greentic-ai",
-      "version": "0.1.55"
-    },
-    {
-      "id": "packs/demos/greentic.hr-onboarding.demo",
-      "version": "0.1.29"
+      "version": "v0.1.77"
     },
     {
       "id": "packs/demos/helpdesk-itsm",
-      "version": "0.1.61"
+      "version": "v0.1.77"
     },
     {
       "id": "packs/demos/hr-onboarding",
-      "version": "0.1.61"
+      "version": "v0.1.77"
     },
     {
       "id": "packs/demos/incident-demo",
-      "version": "0.1.61"
+      "version": "v0.1.77"
     },
     {
       "id": "packs/demos/quickstart",
-      "version": "0.1.61"
+      "version": "v0.1.77"
     },
     {
       "id": "packs/demos/quickstart-event",
@@ -196,19 +132,19 @@
     },
     {
       "id": "packs/demos/redbutton-demo",
-      "version": "0.1.61"
+      "version": "v0.1.55"
     },
     {
       "id": "packs/demos/sales-crm",
-      "version": "0.1.61"
+      "version": "v0.1.77"
     },
     {
       "id": "packs/demos/supply-chain",
-      "version": "0.1.61"
+      "version": "v0.1.77"
     },
     {
       "id": "packs/demos/telco-x",
-      "version": "0.1.61"
+      "version": "v0.1.77"
     },
     {
       "id": "packs/demos/weather-mcp-demo",
@@ -216,35 +152,59 @@
     },
     {
       "id": "packs/demos/weatherapi-pack",
-      "version": "0.1.55"
+      "version": "v0.1.77"
     },
     {
       "id": "packs/deployer/greentic.fixture.helm.gtpack",
-      "version": "0.4.57"
+      "version": "0.4.59"
     },
     {
       "id": "packs/deployer/greentic.fixture.juju.k8s.gtpack",
-      "version": "0.4.57"
+      "version": "0.4.59"
     },
     {
       "id": "packs/deployer/greentic.fixture.juju.machine.gtpack",
-      "version": "0.4.57"
+      "version": "0.4.59"
     },
     {
       "id": "packs/deployer/greentic.fixture.k8s.raw.gtpack",
-      "version": "0.4.57"
+      "version": "0.4.59"
     },
     {
       "id": "packs/deployer/greentic.fixture.serverless.gtpack",
-      "version": "0.4.57"
+      "version": "0.4.59"
     },
     {
       "id": "packs/deployer/greentic.fixture.snap.gtpack",
-      "version": "0.4.57"
+      "version": "0.4.59"
     },
     {
       "id": "packs/deployer/greentic.fixture.terraform.gtpack",
-      "version": "0.4.57"
+      "version": "0.4.59"
+    },
+    {
+      "id": "packs/deployer/greentic.fixture.gcp.gtpack",
+      "version": "0.4.58"
+    },
+    {
+      "id": "packs/deployer/greentic.fixture.azure.gtpack",
+      "version": "0.4.58"
+    },
+    {
+      "id": "packs/deployer/greentic.fixture.aws.gtpack",
+      "version": "0.4.58"
+    },
+    {
+      "id": "packs/deployer/greentic.deploy.gcp",
+      "version": "0.4.59"
+    },
+    {
+      "id": "packs/deployer/greentic.deploy.azure",
+      "version": "0.4.59"
+    },
+    {
+      "id": "packs/deployer/greentic.deploy.aws",
+      "version": "0.4.59"
     },
     {
       "id": "packs/dw/context/compressor-pack",
@@ -372,47 +332,39 @@
     },
     {
       "id": "packs/messaging/messaging-dummy",
-      "version": "0.4.93"
+      "version": "0.4.98"
     },
     {
       "id": "packs/messaging/messaging-email",
-      "version": "0.4.93"
+      "version": "0.4.98"
     },
     {
       "id": "packs/messaging/messaging-slack",
-      "version": "0.4.93"
+      "version": "0.4.98"
     },
     {
       "id": "packs/messaging/messaging-teams",
-      "version": "0.4.93"
+      "version": "0.4.98"
     },
     {
       "id": "packs/messaging/messaging-telegram",
-      "version": "0.4.93"
+      "version": "0.4.98"
     },
     {
       "id": "packs/messaging/messaging-webchat",
-      "version": "0.4.93"
+      "version": "0.4.98"
     },
     {
       "id": "packs/messaging/messaging-webchat-gui",
-      "version": "0.4.93"
+      "version": "0.4.98"
     },
     {
       "id": "packs/messaging/messaging-webex",
-      "version": "0.4.93"
+      "version": "0.4.98"
     },
     {
       "id": "packs/messaging/messaging-whatsapp",
-      "version": "0.4.93"
-    },
-    {
-      "id": "packs/messaging/state-memory",
-      "version": "0.4.57"
-    },
-    {
-      "id": "packs/messaging/state-redis",
-      "version": "0.4.57"
+      "version": "0.4.98"
     },
     {
       "id": "packs/oauth/oauth-github",
