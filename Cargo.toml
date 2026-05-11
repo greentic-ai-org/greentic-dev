@@ -31,6 +31,14 @@ targets = [
   "aarch64-pc-windows-msvc",
 ]
 
+[package.metadata.binstall.overrides.x86_64-pc-windows-msvc]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-v{ version }-{ target }.zip"
+pkg-fmt = "zip"
+
+[package.metadata.binstall.overrides.aarch64-pc-windows-msvc]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-v{ version }-{ target }.zip"
+pkg-fmt = "zip"
+
 [workspace]
 members = ["xtask"]
 resolver = "2"
