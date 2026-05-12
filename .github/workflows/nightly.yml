@@ -95,10 +95,14 @@ jobs:
         uses: cargo-bins/cargo-binstall@main
 
       - name: Install required binary tools via binstall
+        # --force re-installs binaries even when crates2.json (restored by
+        # rust-cache) marks them present. ~/.cargo/bin can be missing the
+        # actual binary while metadata says installed, in which case binstall
+        # short-circuits and `cargo <tool>` then fails with "no such command".
         run: |
-          cargo binstall --locked -y tomlq
-          cargo binstall --locked -y cargo-llvm-cov
-          cargo binstall --locked -y cargo-nextest
+          cargo binstall --locked --force -y tomlq
+          cargo binstall --locked --force -y cargo-llvm-cov
+          cargo binstall --locked --force -y cargo-nextest
 
       - name: Build + Test (full, conformance on)
         run: |
