@@ -100,31 +100,31 @@
   "extension_packs": [
     {
       "id": "packs/demos/cards-demo",
-      "version": "v0.1.77"
+      "version": "0.1.81"
     },
     {
       "id": "packs/demos/cloud-deploy-demo-app",
-      "version": "v0.1.77"
+      "version": "0.1.81"
     },
     {
       "id": "packs/demos/deep-research-demo",
-      "version": "v0.1.77"
+      "version": "0.1.81"
     },
     {
       "id": "packs/demos/helpdesk-itsm",
-      "version": "v0.1.77"
+      "version": "0.1.81"
     },
     {
       "id": "packs/demos/hr-onboarding",
-      "version": "v0.1.77"
+      "version": "0.1.81"
     },
     {
       "id": "packs/demos/incident-demo",
-      "version": "v0.1.77"
+      "version": "0.1.81"
     },
     {
       "id": "packs/demos/quickstart",
-      "version": "v0.1.77"
+      "version": "0.1.81"
     },
     {
       "id": "packs/demos/quickstart-event",
@@ -132,19 +132,19 @@
     },
     {
       "id": "packs/demos/redbutton-demo",
-      "version": "v0.1.55"
+      "version": "0.1.81"
     },
     {
       "id": "packs/demos/sales-crm",
-      "version": "v0.1.77"
+      "version": "0.1.81"
     },
     {
       "id": "packs/demos/supply-chain",
-      "version": "v0.1.77"
+      "version": "0.1.81"
     },
     {
       "id": "packs/demos/telco-x",
-      "version": "v0.1.77"
+      "version": "0.1.81"
     },
     {
       "id": "packs/demos/weather-mcp-demo",
@@ -152,35 +152,35 @@
     },
     {
       "id": "packs/demos/weatherapi-pack",
-      "version": "v0.1.77"
+      "version": "0.1.81"
     },
     {
       "id": "packs/deployer/greentic.fixture.helm.gtpack",
-      "version": "0.4.59"
+      "version": "0.5.10"
     },
     {
       "id": "packs/deployer/greentic.fixture.juju.k8s.gtpack",
-      "version": "0.4.59"
+      "version": "0.5.10"
     },
     {
       "id": "packs/deployer/greentic.fixture.juju.machine.gtpack",
-      "version": "0.4.59"
+      "version": "0.5.10"
     },
     {
       "id": "packs/deployer/greentic.fixture.k8s.raw.gtpack",
-      "version": "0.4.59"
+      "version": "0.5.10"
     },
     {
       "id": "packs/deployer/greentic.fixture.serverless.gtpack",
-      "version": "0.4.59"
+      "version": "0.5.10"
     },
     {
       "id": "packs/deployer/greentic.fixture.snap.gtpack",
-      "version": "0.4.59"
+      "version": "0.5.10"
     },
     {
       "id": "packs/deployer/greentic.fixture.terraform.gtpack",
-      "version": "0.4.59"
+      "version": "0.5.10"
     },
     {
       "id": "packs/deployer/greentic.fixture.gcp.gtpack",
