@@ -66,45 +66,6 @@ pub const GREENTIC_TOOLCHAIN_PACKAGES: &[ToolchainPackageSpec] = &[
 
 pub const GREENTIC_EXTENSION_PACK_PACKAGES: &[OciPackageSpec] = &[
     OciPackageSpec {
-        package: "greentic-bundle/providers",
-    },
-    OciPackageSpec {
-        package: "packs/apps/cards-demo",
-    },
-    OciPackageSpec {
-        package: "packs/apps/github-mcp",
-    },
-    OciPackageSpec {
-        package: "packs/apps/greentic-ai",
-    },
-    OciPackageSpec {
-        package: "packs/apps/helpdesk-itsm",
-    },
-    OciPackageSpec {
-        package: "packs/apps/hr-onboarding",
-    },
-    OciPackageSpec {
-        package: "packs/apps/incident-demo",
-    },
-    OciPackageSpec {
-        package: "packs/apps/quickstart",
-    },
-    OciPackageSpec {
-        package: "packs/apps/quickstart-event",
-    },
-    OciPackageSpec {
-        package: "packs/apps/redbutton-demo",
-    },
-    OciPackageSpec {
-        package: "packs/apps/sales-crm",
-    },
-    OciPackageSpec {
-        package: "packs/apps/supply-chain",
-    },
-    OciPackageSpec {
-        package: "packs/apps/weatherapi-pack",
-    },
-    OciPackageSpec {
         package: "packs/demos/cards-demo",
     },
     OciPackageSpec {
@@ -112,15 +73,6 @@ pub const GREENTIC_EXTENSION_PACK_PACKAGES: &[OciPackageSpec] = &[
     },
     OciPackageSpec {
         package: "packs/demos/deep-research-demo",
-    },
-    OciPackageSpec {
-        package: "packs/demos/github-mcp",
-    },
-    OciPackageSpec {
-        package: "packs/demos/greentic-ai",
-    },
-    OciPackageSpec {
-        package: "packs/demos/greentic.hr-onboarding.demo",
     },
     OciPackageSpec {
         package: "packs/demos/helpdesk-itsm",
@@ -175,6 +127,24 @@ pub const GREENTIC_EXTENSION_PACK_PACKAGES: &[OciPackageSpec] = &[
     },
     OciPackageSpec {
         package: "packs/deployer/greentic.fixture.terraform.gtpack",
+    },
+    OciPackageSpec {
+        package: "packs/deployer/greentic.fixture.gcp.gtpack",
+    },
+    OciPackageSpec {
+        package: "packs/deployer/greentic.fixture.azure.gtpack",
+    },
+    OciPackageSpec {
+        package: "packs/deployer/greentic.fixture.aws.gtpack",
+    },
+    OciPackageSpec {
+        package: "packs/deployer/greentic.deploy.gcp",
+    },
+    OciPackageSpec {
+        package: "packs/deployer/greentic.deploy.azure",
+    },
+    OciPackageSpec {
+        package: "packs/deployer/greentic.deploy.aws",
     },
     OciPackageSpec {
         package: "packs/dw/context/compressor-pack",
@@ -297,12 +267,6 @@ pub const GREENTIC_EXTENSION_PACK_PACKAGES: &[OciPackageSpec] = &[
         package: "packs/messaging/messaging-whatsapp",
     },
     OciPackageSpec {
-        package: "packs/messaging/state-memory",
-    },
-    OciPackageSpec {
-        package: "packs/messaging/state-redis",
-    },
-    OciPackageSpec {
         package: "packs/oauth/oauth-github",
     },
     OciPackageSpec {
@@ -348,7 +312,6 @@ pub const GREENTIC_EXTENSION_PACK_PACKAGES: &[OciPackageSpec] = &[
         package: "packs/state/state-redis",
     },
 ];
-
 pub const GREENTIC_COMPONENT_PACKAGES: &[OciPackageSpec] = &[
     OciPackageSpec {
         package: "component/component-events2msg",
@@ -428,7 +391,7 @@ mod tests {
 
     #[test]
     fn extension_pack_catalogue_tracks_github_packages() {
-        assert_eq!(GREENTIC_EXTENSION_PACK_PACKAGES.len(), 94);
+        assert_eq!(GREENTIC_EXTENSION_PACK_PACKAGES.len(), 82);
         assert_catalogue_has_no_duplicate_packages(GREENTIC_EXTENSION_PACK_PACKAGES);
         assert!(GREENTIC_EXTENSION_PACK_PACKAGES.iter().all(|package| {
             package.package.starts_with("packs/") || package.package.starts_with("greentic-bundle/")
@@ -436,7 +399,7 @@ mod tests {
         assert!(
             GREENTIC_EXTENSION_PACK_PACKAGES
                 .iter()
-                .any(|package| package.package == "greentic-bundle/providers")
+                .any(|package| package.package == "packs/deployer/greentic.deploy.aws")
         );
         assert!(
             GREENTIC_EXTENSION_PACK_PACKAGES

@@ -19,6 +19,7 @@ jobs:
     with:
       package: greentic-dev
       binary: greentic-dev
+      windows-archive-format: zip
       extra-files: |
         README.md
         LICENSE-MIT
