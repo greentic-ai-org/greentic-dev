@@ -1230,7 +1230,7 @@ mod tests {
                 .any(|package| package.crate_name == "greentic-runner"
                     && package.bins == ["greentic-runner"])
         );
-        assert_eq!(manifest.extension_packs.as_ref().unwrap().len(), 94);
+        assert_eq!(manifest.extension_packs.as_ref().unwrap().len(), 82);
         assert_eq!(manifest.components.as_ref().unwrap().len(), 9);
         assert!(
             manifest
@@ -1749,7 +1749,8 @@ mod tests {
                 .as_ref()
                 .unwrap()
                 .iter()
-                .any(|item| item.id == "greentic-bundle/providers" && item.version == "1.0.16")
+                .any(|item| item.id == "packs/deployer/greentic.deploy.aws"
+                    && item.version == "1.0.16")
         );
         assert!(
             manifest

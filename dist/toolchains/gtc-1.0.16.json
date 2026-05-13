@@ -17,35 +17,35 @@
       "bins": [
         "greentic-operator"
       ],
-      "version": "0.4.49"
+      "version": "0.4.50"
     },
     {
       "crate": "greentic-bundle",
       "bins": [
         "greentic-bundle"
       ],
-      "version": "0.5.5"
+      "version": "0.5.7"
     },
     {
       "crate": "greentic-setup",
       "bins": [
         "greentic-setup"
       ],
-      "version": "0.5.7"
+      "version": "0.5.10"
     },
     {
       "crate": "greentic-start",
       "bins": [
         "greentic-start"
       ],
-      "version": "0.5.16"
+      "version": "0.5.18"
     },
     {
       "crate": "greentic-deployer",
       "bins": [
         "greentic-deployer"
       ],
-      "version": "0.4.59"
+      "version": "0.5.2"
     },
     {
       "crate": "greentic-component",
@@ -73,7 +73,7 @@
       "bins": [
         "greentic-runner"
       ],
-      "version": "0.5.12"
+      "version": "0.5.14"
     },
     {
       "crate": "greentic-gui",
@@ -94,7 +94,7 @@
       "bins": [
         "greentic-mcp"
       ],
-      "version": "0.5.1"
+      "version": "0.5.2"
     }
   ]
 }

@@ -97,6 +97,7 @@ greentic-dev pack run --pack dist/hello.gtpack --artifacts dist/artifacts
 That sequence yields a runnable pack that pulls a config-flow-defined node from your component, bundles it, and executes it locally without touching the network.
 
 > If doctor/pack build fails, double-check: (a) the WASM is a component (built with `cargo component`), (b) `component.manifest.json` includes `dev_flows.default`, and (c) the pack’s `pack.yaml` references your component artifact.
+> If a `.gtbundle` has an issue, use `gtc setup doctor <bundle>` to diagnose setup issues and `gtc start doctor <bundle>` to diagnose runtime issues.
 
 ---
 
@@ -174,4 +175,3 @@ greentic-dev pack run --pack dist/hello.gtpack --offline
 # greentic-pack providers info dist/hello.gtpack --id dev.local.hello.provider
 # greentic-pack providers validate dist/hello.gtpack
 ```
-
