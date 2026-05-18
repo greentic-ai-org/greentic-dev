@@ -38,7 +38,7 @@
       "bins": [
         "greentic-start"
       ],
-      "version": "0.5.30"
+      "version": "0.5.31"
     },
     {
       "crate": "greentic-deployer",
@@ -380,7 +380,7 @@
     },
     {
       "id": "packs/messaging/messaging-slack",
-      "version": "0.4.98"
+      "version": "0.4.99"
     },
     {
       "id": "packs/messaging/messaging-teams",
