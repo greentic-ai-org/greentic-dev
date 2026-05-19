@@ -348,7 +348,7 @@
     },
     {
       "id": "packs/messaging/messaging-telegram",
-      "version": "0.4.98"
+      "version": "0.4.100"
     },
     {
       "id": "packs/messaging/messaging-webchat",
@@ -360,7 +360,7 @@
     },
     {
       "id": "packs/messaging/messaging-webex",
-      "version": "0.4.98"
+      "version": "0.4.100"
     },
     {
       "id": "packs/messaging/messaging-whatsapp",
