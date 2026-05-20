@@ -155,56 +155,44 @@
       "version": "0.1.81"
     },
     {
-      "id": "packs/deployer/greentic.fixture.helm.gtpack",
-      "version": "0.5.10"
-    },
-    {
-      "id": "packs/deployer/greentic.fixture.juju.k8s.gtpack",
-      "version": "0.5.10"
-    },
-    {
-      "id": "packs/deployer/greentic.fixture.juju.machine.gtpack",
-      "version": "0.5.10"
-    },
-    {
-      "id": "packs/deployer/greentic.fixture.k8s.raw.gtpack",
-      "version": "0.5.10"
-    },
-    {
-      "id": "packs/deployer/greentic.fixture.serverless.gtpack",
-      "version": "0.5.10"
-    },
-    {
-      "id": "packs/deployer/greentic.fixture.snap.gtpack",
-      "version": "0.5.10"
-    },
-    {
-      "id": "packs/deployer/greentic.fixture.terraform.gtpack",
-      "version": "0.5.10"
-    },
-    {
-      "id": "packs/deployer/greentic.fixture.gcp.gtpack",
-      "version": "0.4.58"
-    },
-    {
-      "id": "packs/deployer/greentic.fixture.azure.gtpack",
-      "version": "0.4.58"
-    },
-    {
-      "id": "packs/deployer/greentic.fixture.aws.gtpack",
-      "version": "0.4.58"
-    },
-    {
       "id": "packs/deployer/greentic.deploy.gcp",
-      "version": "0.5.11"
+      "version": "0.5.12"
     },
     {
       "id": "packs/deployer/greentic.deploy.azure",
-      "version": "0.5.11"
+      "version": "0.5.12"
     },
     {
       "id": "packs/deployer/greentic.deploy.aws",
-      "version": "0.5.11"
+      "version": "0.5.12"
+    },
+    {
+      "id": "packs/deployer/greentic.deploy.helm",
+      "version": "0.5.12"
+    },
+    {
+      "id": "packs/deployer/greentic.deploy.juju-k8s",
+      "version": "0.5.12"
+    },
+    {
+      "id": "packs/deployer/greentic.deploy.juju-machine",
+      "version": "0.5.12"
+    },
+    {
+      "id": "packs/deployer/greentic.deploy.k8s-raw",
+      "version": "0.5.12"
+    },
+    {
+      "id": "packs/deployer/greentic.deploy.serverless",
+      "version": "0.5.12"
+    },
+    {
+      "id": "packs/deployer/greentic.deploy.snap",
+      "version": "0.5.12"
+    },
+    {
+      "id": "packs/deployer/greentic.deploy.terraform",
+      "version": "0.5.12"
     },
     {
       "id": "packs/dw/context/compressor-pack",
