@@ -392,7 +392,7 @@
     },
     {
       "id": "packs/messaging/messaging-slack",
-      "version": "0.4.100"
+      "version": "0.4.103"
     },
     {
       "id": "packs/messaging/messaging-teams",
