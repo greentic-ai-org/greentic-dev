@@ -1310,9 +1310,11 @@ fn convert_image(image: ImageData) -> greentic_distributor_client::oci_packs::Pu
             }
         })
         .collect();
+    let manifest_annotations = image.manifest.and_then(|m| m.annotations);
     greentic_distributor_client::oci_packs::PulledImage {
         digest: image.digest,
         layers,
+        manifest_annotations,
     }
 }
 
