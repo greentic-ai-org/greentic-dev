@@ -108,36 +108,6 @@ pub const GREENTIC_EXTENSION_PACK_PACKAGES: &[OciPackageSpec] = &[
         package: "packs/demos/weatherapi-pack",
     },
     OciPackageSpec {
-        package: "packs/deployer/greentic.fixture.helm.gtpack",
-    },
-    OciPackageSpec {
-        package: "packs/deployer/greentic.fixture.juju.k8s.gtpack",
-    },
-    OciPackageSpec {
-        package: "packs/deployer/greentic.fixture.juju.machine.gtpack",
-    },
-    OciPackageSpec {
-        package: "packs/deployer/greentic.fixture.k8s.raw.gtpack",
-    },
-    OciPackageSpec {
-        package: "packs/deployer/greentic.fixture.serverless.gtpack",
-    },
-    OciPackageSpec {
-        package: "packs/deployer/greentic.fixture.snap.gtpack",
-    },
-    OciPackageSpec {
-        package: "packs/deployer/greentic.fixture.terraform.gtpack",
-    },
-    OciPackageSpec {
-        package: "packs/deployer/greentic.fixture.gcp.gtpack",
-    },
-    OciPackageSpec {
-        package: "packs/deployer/greentic.fixture.azure.gtpack",
-    },
-    OciPackageSpec {
-        package: "packs/deployer/greentic.fixture.aws.gtpack",
-    },
-    OciPackageSpec {
         package: "packs/deployer/greentic.deploy.gcp",
     },
     OciPackageSpec {
@@ -145,6 +115,27 @@ pub const GREENTIC_EXTENSION_PACK_PACKAGES: &[OciPackageSpec] = &[
     },
     OciPackageSpec {
         package: "packs/deployer/greentic.deploy.aws",
+    },
+    OciPackageSpec {
+        package: "packs/deployer/greentic.deploy.helm",
+    },
+    OciPackageSpec {
+        package: "packs/deployer/greentic.deploy.juju-k8s",
+    },
+    OciPackageSpec {
+        package: "packs/deployer/greentic.deploy.juju-machine",
+    },
+    OciPackageSpec {
+        package: "packs/deployer/greentic.deploy.k8s-raw",
+    },
+    OciPackageSpec {
+        package: "packs/deployer/greentic.deploy.serverless",
+    },
+    OciPackageSpec {
+        package: "packs/deployer/greentic.deploy.snap",
+    },
+    OciPackageSpec {
+        package: "packs/deployer/greentic.deploy.terraform",
     },
     OciPackageSpec {
         package: "packs/dw/context/compressor-pack",
@@ -391,7 +382,7 @@ mod tests {
 
     #[test]
     fn extension_pack_catalogue_tracks_github_packages() {
-        assert_eq!(GREENTIC_EXTENSION_PACK_PACKAGES.len(), 82);
+        assert_eq!(GREENTIC_EXTENSION_PACK_PACKAGES.len(), 79);
         assert_catalogue_has_no_duplicate_packages(GREENTIC_EXTENSION_PACK_PACKAGES);
         assert!(GREENTIC_EXTENSION_PACK_PACKAGES.iter().all(|package| {
             package.package.starts_with("packs/") || package.package.starts_with("greentic-bundle/")
@@ -401,6 +392,16 @@ mod tests {
                 .iter()
                 .any(|package| package.package == "packs/deployer/greentic.deploy.aws")
         );
+        assert!(
+            GREENTIC_EXTENSION_PACK_PACKAGES
+                .iter()
+                .any(|package| package.package == "packs/deployer/greentic.deploy.helm")
+        );
+        assert!(GREENTIC_EXTENSION_PACK_PACKAGES.iter().all(|package| {
+            !package
+                .package
+                .starts_with("packs/deployer/greentic.fixture.")
+        }));
         assert!(
             GREENTIC_EXTENSION_PACK_PACKAGES
                 .iter()

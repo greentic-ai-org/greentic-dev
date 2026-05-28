@@ -1230,7 +1230,7 @@ mod tests {
                 .any(|package| package.crate_name == "greentic-runner"
                     && package.bins == ["greentic-runner"])
         );
-        assert_eq!(manifest.extension_packs.as_ref().unwrap().len(), 82);
+        assert_eq!(manifest.extension_packs.as_ref().unwrap().len(), 79);
         assert_eq!(manifest.components.as_ref().unwrap().len(), 9);
         assert!(
             manifest
