@@ -1,79 +1,79 @@
 {
   "schema": "greentic.toolchain-manifest.v1",
   "toolchain": "gtc",
-  "version": "1.0.15",
-  "channel": "latest",
-  "created_at": "2026-05-12T06:52:03.958788Z",
+  "version": "1.0.20",
+  "channel": "stable",
+  "created_at": "2026-05-29T11:32:56.000059Z",
   "packages": [
     {
       "crate": "greentic-dev",
       "bins": [
         "greentic-dev"
       ],
-      "version": "1.1.0-dev.25540695147"
+      "version": "0.5.5"
     },
     {
       "crate": "greentic-operator",
       "bins": [
         "greentic-operator"
       ],
-      "version": "1.1.0-dev.25480062349"
+      "version": "0.4.50"
     },
     {
       "crate": "greentic-bundle",
       "bins": [
         "greentic-bundle"
       ],
-      "version": "1.2.0-dev.25660813678"
+      "version": "0.5.11"
     },
     {
       "crate": "greentic-setup",
       "bins": [
         "greentic-setup"
       ],
-      "version": "1.1.0-dev.25661237634"
+      "version": "0.5.15"
     },
     {
       "crate": "greentic-start",
       "bins": [
         "greentic-start"
       ],
-      "version": "1.1.0-dev.25660775600"
+      "version": "0.5.32"
     },
     {
       "crate": "greentic-deployer",
       "bins": [
         "greentic-deployer"
       ],
-      "version": "1.1.0-dev.25540613839"
+      "version": "0.5.12"
     },
     {
       "crate": "greentic-component",
       "bins": [
         "greentic-component"
       ],
-      "version": "1.1.0-dev.25540604532"
+      "version": "0.5.2"
     },
     {
       "crate": "greentic-flow",
       "bins": [
         "greentic-flow"
       ],
-      "version": "1.1.0-dev.25540621195"
+      "version": "0.5.11"
     },
     {
       "crate": "greentic-pack",
       "bins": [
         "greentic-pack"
       ],
-      "version": "1.1.0-dev.25540669628"
+      "version": "0.5.6"
     },
     {
       "crate": "greentic-runner",
       "bins": [
         "greentic-runner"
       ],
-      "version": "1.1.0-dev.25660735572"
+      "version": "0.5.20"
     },
     {
       "crate": "greentic-gui",
@@ -87,426 +87,374 @@
       "bins": [
         "greentic-secrets"
       ],
-      "version": "1.1.0-dev.25660820435"
+      "version": "0.5.0"
     },
     {
       "crate": "greentic-mcp",
       "bins": [
         "greentic-mcp"
       ],
-      "version": "1.1.0-dev.25540505806"
+      "version": "0.5.2"
     }
   ],
   "extension_packs": [
     {
-      "id": "greentic-bundle/providers",
-      "version": "1.0.15"
-    },
-    {
-      "id": "packs/apps/cards-demo",
-      "version": "1.0.15"
-    },
-    {
-      "id": "packs/apps/github-mcp",
-      "version": "1.0.15"
-    },
-    {
-      "id": "packs/apps/greentic-ai",
-      "version": "1.0.15"
-    },
-    {
-      "id": "packs/apps/helpdesk-itsm",
-      "version": "1.0.15"
-    },
-    {
-      "id": "packs/apps/hr-onboarding",
-      "version": "1.0.15"
-    },
-    {
-      "id": "packs/apps/incident-demo",
-      "version": "1.0.15"
-    },
-    {
-      "id": "packs/apps/quickstart",
-      "version": "1.0.15"
-    },
-    {
-      "id": "packs/apps/quickstart-event",
-      "version": "1.0.15"
-    },
-    {
-      "id": "packs/apps/redbutton-demo",
-      "version": "1.0.15"
-    },
-    {
-      "id": "packs/apps/sales-crm",
-      "version": "1.0.15"
-    },
-    {
-      "id": "packs/apps/supply-chain",
-      "version": "1.0.15"
-    },
-    {
-      "id": "packs/apps/weatherapi-pack",
-      "version": "1.0.15"
-    },
-    {
       "id": "packs/demos/cards-demo",
-      "version": "1.0.15"
+      "version": "0.1.81"
     },
     {
       "id": "packs/demos/cloud-deploy-demo-app",
-      "version": "1.0.15"
+      "version": "0.1.81"
     },
     {
       "id": "packs/demos/deep-research-demo",
-      "version": "1.0.15"
-    },
-    {
-      "id": "packs/demos/github-mcp",
-      "version": "1.0.15"
-    },
-    {
-      "id": "packs/demos/greentic-ai",
-      "version": "1.0.15"
-    },
-    {
-      "id": "packs/demos/greentic.hr-onboarding.demo",
-      "version": "1.0.15"
+      "version": "0.1.81"
     },
     {
       "id": "packs/demos/helpdesk-itsm",
-      "version": "1.0.15"
+      "version": "0.1.81"
     },
     {
       "id": "packs/demos/hr-onboarding",
-      "version": "1.0.15"
+      "version": "0.1.81"
     },
     {
       "id": "packs/demos/incident-demo",
-      "version": "1.0.15"
+      "version": "0.1.81"
     },
     {
       "id": "packs/demos/quickstart",
-      "version": "1.0.15"
+      "version": "0.1.81"
     },
     {
       "id": "packs/demos/quickstart-event",
-      "version": "1.0.15"
+      "version": "0.1.55"
     },
     {
       "id": "packs/demos/redbutton-demo",
-      "version": "1.0.15"
+      "version": "0.1.81"
     },
     {
       "id": "packs/demos/sales-crm",
-      "version": "1.0.15"
+      "version": "0.1.81"
     },
     {
       "id": "packs/demos/supply-chain",
-      "version": "1.0.15"
+      "version": "0.1.81"
     },
     {
       "id": "packs/demos/telco-x",
-      "version": "1.0.15"
+      "version": "0.1.81"
     },
     {
       "id": "packs/demos/weather-mcp-demo",
-      "version": "1.0.15"
+      "version": "0.1.55"
     },
     {
       "id": "packs/demos/weatherapi-pack",
-      "version": "1.0.15"
+      "version": "0.1.81"
     },
     {
-      "id": "packs/deployer/greentic.fixture.juju.k8s.gtpack",
-      "version": "1.0.15"
+      "id": "packs/deployer/greentic.deploy.gcp",
+      "version": "0.5.12"
     },
     {
-      "id": "packs/deployer/greentic.fixture.juju.machine.gtpack",
-      "version": "1.0.15"
+      "id": "packs/deployer/greentic.deploy.azure",
+      "version": "0.5.12"
     },
     {
-      "id": "packs/deployer/greentic.fixture.k8s.raw.gtpack",
-      "version": "1.0.15"
+      "id": "packs/deployer/greentic.deploy.aws",
+      "version": "0.5.12"
     },
     {
-      "id": "packs/deployer/greentic.fixture.serverless.gtpack",
-      "version": "1.0.15"
+      "id": "packs/deployer/greentic.deploy.helm",
+      "version": "0.5.12"
     },
     {
-      "id": "packs/deployer/greentic.fixture.snap.gtpack",
-      "version": "1.0.15"
+      "id": "packs/deployer/greentic.deploy.juju-k8s",
+      "version": "0.5.12"
     },
     {
-      "id": "packs/deployer/greentic.fixture.terraform.gtpack",
-      "version": "1.0.15"
+      "id": "packs/deployer/greentic.deploy.juju-machine",
+      "version": "0.5.12"
+    },
+    {
+      "id": "packs/deployer/greentic.deploy.k8s-raw",
+      "version": "0.5.12"
+    },
+    {
+      "id": "packs/deployer/greentic.deploy.serverless",
+      "version": "0.5.12"
+    },
+    {
+      "id": "packs/deployer/greentic.deploy.snap",
+      "version": "0.5.12"
+    },
+    {
+      "id": "packs/deployer/greentic.deploy.terraform",
+      "version": "0.5.12"
     },
     {
       "id": "packs/dw/context/compressor-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/dw/context/retrieval-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/dw/context/static-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/dw/control/basic-policy-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/dw/control/delegation-guard-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/dw/delegation/capability-match-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/dw/delegation/static-router-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/dw/engine/default-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/dw/engine/router-lite-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/dw/memory/short-term-in-memory-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/dw/memory/short-term-redis-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/dw/observer/basic-audit-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/dw/observer/basic-metrics-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/dw/planning/llm-outline-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/dw/planning/static-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/dw/reflection/llm-critic-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/dw/reflection/rules-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/dw/reflection/schema-check-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/dw/state/task-store-in-memory-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/dw/state/task-store-redis-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/dw/tool/component-adapter-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/dw/tool/mcp-adapter-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/dw/workspace/fs-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/dw/workspace/in-memory-pack",
-      "version": "1.0.15"
+      "version": "0.5.6"
     },
     {
       "id": "packs/events/events-dummy",
-      "version": "1.0.15"
+      "version": "0.4.17"
     },
     {
       "id": "packs/events/events-email",
-      "version": "1.0.15"
+      "version": "0.4.17"
     },
     {
       "id": "packs/events/events-email-sendgrid",
-      "version": "1.0.15"
+      "version": "0.4.17"
     },
     {
       "id": "packs/events/events-sms",
-      "version": "1.0.15"
+      "version": "0.4.17"
     },
     {
       "id": "packs/events/events-sms-twilio",
-      "version": "1.0.15"
+      "version": "0.4.17"
     },
     {
       "id": "packs/events/events-timer",
-      "version": "1.0.15"
+      "version": "0.4.17"
     },
     {
       "id": "packs/events/events-webhook",
-      "version": "1.0.15"
+      "version": "0.4.17"
     },
     {
       "id": "packs/messaging/messaging-dummy",
-      "version": "1.0.15"
+      "version": "0.4.99"
     },
     {
       "id": "packs/messaging/messaging-email",
-      "version": "1.0.15"
+      "version": "0.5.1"
     },
     {
       "id": "packs/messaging/messaging-slack",
-      "version": "1.0.15"
+      "version": "0.5.1"
     },
     {
       "id": "packs/messaging/messaging-teams",
-      "version": "1.0.15"
+      "version": "0.5.1"
     },
     {
       "id": "packs/messaging/messaging-telegram",
-      "version": "1.0.15"
+      "version": "0.5.1"
     },
     {
       "id": "packs/messaging/messaging-webchat",
-      "version": "1.0.15"
+      "version": "0.5.1"
     },
     {
       "id": "packs/messaging/messaging-webchat-gui",
-      "version": "1.0.15"
+      "version": "0.5.1"
     },
     {
       "id": "packs/messaging/messaging-webex",
-      "version": "1.0.15"
+      "version": "0.5.1"
     },
     {
       "id": "packs/messaging/messaging-whatsapp",
-      "version": "1.0.15"
-    },
-    {
-      "id": "packs/messaging/state-memory",
-      "version": "1.0.15"
-    },
-    {
-      "id": "packs/messaging/state-redis",
-      "version": "1.0.15"
+      "version": "0.5.1"
     },
     {
       "id": "packs/oauth/oauth-github",
-      "version": "1.0.15"
+      "version": "0.4.24"
     },
     {
       "id": "packs/oauth/oauth-google",
-      "version": "1.0.15"
+      "version": "0.4.24"
     },
     {
       "id": "packs/oauth/oauth-microsoft-graph",
-      "version": "1.0.15"
+      "version": "0.4.24"
     },
     {
       "id": "packs/oauth/oauth-oidc-generic",
-      "version": "1.0.15"
+      "version": "0.4.24"
     },
     {
       "id": "packs/oauth/oauth-slack",
-      "version": "1.0.15"
+      "version": "0.4.24"
     },
     {
       "id": "packs/secret/greentic.secrets.aws-sm.gtpack",
-      "version": "1.0.15"
+      "version": "0.4.26"
     },
     {
       "id": "packs/secret/greentic.secrets.azure-kv.gtpack",
-      "version": "1.0.15"
+      "version": "0.4.26"
     },
     {
       "id": "packs/secret/greentic.secrets.gcp-sm.gtpack",
-      "version": "1.0.15"
+      "version": "0.4.26"
     },
     {
       "id": "packs/secret/greentic.secrets.k8s.gtpack",
-      "version": "1.0.15"
+      "version": "0.4.26"
     },
     {
       "id": "packs/secret/greentic.secrets.providers.gtpack",
-      "version": "1.0.15"
+      "version": "0.4.26"
     },
     {
       "id": "packs/secret/greentic.secrets.vault-kv.gtpack",
-      "version": "1.0.15"
+      "version": "0.4.26"
     },
     {
       "id": "packs/state-memory",
-      "version": "1.0.15"
+      "version": "0.4.49"
     },
     {
       "id": "packs/state-redis",
-      "version": "1.0.15"
+      "version": "0.4.49"
     },
     {
       "id": "packs/state/state-memory",
-      "version": "1.0.15"
+      "version": "0.4.5"
     },
     {
       "id": "packs/state/state-redis",
-      "version": "1.0.15"
+      "version": "0.4.5"
     }
   ],
   "components": [
     {
       "id": "component/component-events2msg",
-      "version": "1.0.15"
+      "version": "0.1.0"
     },
     {
       "id": "component/component-http",
-      "version": "1.0.15"
+      "version": "0.1.0"
     },
     {
       "id": "component/component-llm-openai",
-      "version": "1.0.15"
+      "version": "0.1.7"
     },
     {
       "id": "component/component-msg2events",
-      "version": "1.0.15"
+      "version": "0.1.0"
     },
     {
       "id": "component/component-pack2flow",
-      "version": "1.0.15"
+      "version": "0.1.0"
+    },
+    {
+      "id": "component/component-sorx-business",
+      "version": "0.1.3"
     },
     {
       "id": "components/component-adaptive-card",
-      "version": "1.0.15"
+      "version": "0.2.0"
     },
     {
       "id": "components/component-qa",
-      "version": "1.0.15"
+      "version": "0.5.0"
     },
     {
       "id": "components/secrets-provider-inmemory",
-      "version": "1.0.15"
+      "version": "0.4.26"
     },
     {
       "id": "components/templates",
-      "version": "1.0.15"
+      "version": "0.1.16"
     }
   ]
 }
