@@ -320,6 +320,9 @@ pub const GREENTIC_COMPONENT_PACKAGES: &[OciPackageSpec] = &[
         package: "component/component-pack2flow",
     },
     OciPackageSpec {
+        package: "component/component-sorx-business",
+    },
+    OciPackageSpec {
         package: "components/component-adaptive-card",
     },
     OciPackageSpec {
@@ -416,7 +419,7 @@ mod tests {
 
     #[test]
     fn component_catalogue_tracks_github_packages() {
-        assert_eq!(GREENTIC_COMPONENT_PACKAGES.len(), 9);
+        assert_eq!(GREENTIC_COMPONENT_PACKAGES.len(), 10);
         assert_catalogue_has_no_duplicate_packages(GREENTIC_COMPONENT_PACKAGES);
         assert!(GREENTIC_COMPONENT_PACKAGES.iter().all(|package| {
             package.package.starts_with("component/")
@@ -427,6 +430,11 @@ mod tests {
             GREENTIC_COMPONENT_PACKAGES
                 .iter()
                 .any(|package| package.package == "component/component-llm-openai")
+        );
+        assert!(
+            GREENTIC_COMPONENT_PACKAGES
+                .iter()
+                .any(|package| package.package == "component/component-sorx-business")
         );
         assert!(
             GREENTIC_COMPONENT_PACKAGES
