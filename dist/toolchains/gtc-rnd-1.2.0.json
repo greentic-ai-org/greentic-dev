@@ -328,7 +328,7 @@
     },
     {
       "id": "packs/messaging/messaging-slack",
-      "version": "0.5.1"
+      "version": "0.5.2"
     },
     {
       "id": "packs/messaging/messaging-teams",
