@@ -155,10 +155,6 @@
       "version": "0.1.81"
     },
     {
-      "id": "packs/deployer/greentic.fixture.helm.gtpack",
-      "version": "0.5.10"
-    },
-    {
       "id": "packs/deployer/greentic.fixture.juju.k8s.gtpack",
       "version": "0.5.10"
     },

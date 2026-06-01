@@ -1231,7 +1231,7 @@ mod tests {
                     && package.bins == ["greentic-runner"])
         );
         assert_eq!(manifest.extension_packs.as_ref().unwrap().len(), 79);
-        assert_eq!(manifest.components.as_ref().unwrap().len(), 9);
+        assert_eq!(manifest.components.as_ref().unwrap().len(), 10);
         assert!(
             manifest
                 .extension_packs
