@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "Fisier JSON local de manifest al lantului de instrumente de publicat",
   "cli.command.release.out": "Director pentru manifestele generate ale lanțului de instrumente",
   "cli.command.release.promote.about": "Mută o etichetă GHCR la o lansare existentă a lanțului de instrumente Greentic",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Generează și publică un manifest de lansare a lanțului de instrumente Greentic",
   "cli.command.release.release": "Versiune de lansare de generat, publicat sau promovat",
   "cli.command.release.repo": "Depozit GHCR pentru manifestul lanțului de instrumente",

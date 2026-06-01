@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "Локальный JSON-файл манифеста набора инструментов для публикации",
   "cli.command.release.out": "Каталог для сгенерированных манифестов набора инструментов",
   "cli.command.release.promote.about": "Переместить тег GHCR в существующий релиз набора инструментов Greentic",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Создать и опубликовать манифест релиза набора инструментов Greentic",
   "cli.command.release.release": "Версия релиза для создания, публикации или продвижения",
   "cli.command.release.repo": "Репозиторий манифеста набора инструментов GHCR",

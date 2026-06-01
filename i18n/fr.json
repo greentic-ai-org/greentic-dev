@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "Fichier JSON de manifeste de chaîne d'outils locale à publier",
   "cli.command.release.out": "Répertoire des manifestes générés de la chaîne d’outils",
   "cli.command.release.promote.about": "Déplacer une balise GHCR vers une version existante de la chaîne d’outils Greentic",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Générer et publier un manifeste de version de la chaîne d’outils Greentic",
   "cli.command.release.release": "Version à générer, publier ou promouvoir",
   "cli.command.release.repo": "Dépôt du manifeste de la chaîne d’outils GHCR",

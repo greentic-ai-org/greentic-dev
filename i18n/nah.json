@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "Kaltitlan tequitl tlatecpan manifest JSON amatl ipan mopanoltis",
   "cli.command.release.out": "Directorio para generated toolchain manifests",
   "cli.command.release.promote.about": "Xikmijcuani se GHCR tag itech se Greentic toolchain release tlen ya onka",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Xikchihua ihuan xikpanolti se Greentic toolchain release manifest",
   "cli.command.release.release": "Release version tlen mochihuas, panoltis, noso yolchikahuas",
   "cli.command.release.repo": "GHCR toolchain manifest repository",
