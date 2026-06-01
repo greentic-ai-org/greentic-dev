@@ -332,11 +332,11 @@
     },
     {
       "id": "packs/messaging/messaging-slack",
-      "version": "0.5.6"
+      "version": "0.5.7"
     },
     {
       "id": "packs/messaging/messaging-teams",
-      "version": "0.5.9"
+      "version": "0.5.10"
     },
     {
       "id": "packs/messaging/messaging-telegram",
