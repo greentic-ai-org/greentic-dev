@@ -332,7 +332,7 @@
     },
     {
       "id": "packs/messaging/messaging-slack",
-      "version": "0.5.4"
+      "version": "0.5.5"
     },
     {
       "id": "packs/messaging/messaging-teams",
@@ -344,15 +344,15 @@
     },
     {
       "id": "packs/messaging/messaging-webchat",
-      "version": "0.5.2"
+      "version": "0.5.3"
     },
     {
       "id": "packs/messaging/messaging-webchat-gui",
-      "version": "0.5.4"
+      "version": "0.5.5"
     },
     {
       "id": "packs/messaging/messaging-webex",
-      "version": "0.5.9"
+      "version": "0.5.10"
     },
     {
       "id": "packs/messaging/messaging-whatsapp",
