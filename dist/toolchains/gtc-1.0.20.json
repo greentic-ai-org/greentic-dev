@@ -31,14 +31,14 @@
       "bins": [
         "greentic-setup"
       ],
-      "version": "0.5.18"
+      "version": "0.5.19"
     },
     {
       "crate": "greentic-start",
       "bins": [
         "greentic-start"
       ],
-      "version": "0.5.33"
+      "version": "0.5.34"
     },
     {
       "crate": "greentic-deployer",
@@ -320,39 +320,43 @@
     },
     {
       "id": "packs/messaging/messaging-dummy",
-      "version": "0.4.99"
+      "version": "0.5.1"
     },
     {
       "id": "packs/messaging/messaging-email",
       "version": "0.5.1"
     },
     {
+      "id": "packs/messaging/messaging-microsoft-email",
+      "version": "0.5.1"
+    },
+    {
       "id": "packs/messaging/messaging-slack",
-      "version": "0.5.2"
+      "version": "0.5.4"
     },
     {
       "id": "packs/messaging/messaging-teams",
-      "version": "0.5.2"
+      "version": "0.5.9"
     },
     {
       "id": "packs/messaging/messaging-telegram",
-      "version": "0.5.1"
+      "version": "0.5.3"
     },
     {
       "id": "packs/messaging/messaging-webchat",
-      "version": "0.5.1"
+      "version": "0.5.2"
     },
     {
       "id": "packs/messaging/messaging-webchat-gui",
-      "version": "0.5.1"
+      "version": "0.5.4"
     },
     {
       "id": "packs/messaging/messaging-webex",
-      "version": "0.5.1"
+      "version": "0.5.9"
     },
     {
       "id": "packs/messaging/messaging-whatsapp",
-      "version": "0.5.1"
+      "version": "0.5.3"
     },
     {
       "id": "packs/oauth/oauth-github",
