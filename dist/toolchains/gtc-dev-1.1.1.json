@@ -10,70 +10,70 @@
       "bins": [
         "greentic-dev-dev"
       ],
-      "version": "1.1.0-dev.25540695147"
+      "version": "1.1.0-dev.26763021498"
     },
     {
       "crate": "greentic-operator",
       "bins": [
         "greentic-operator-dev"
       ],
-      "version": "1.1.0-dev.25480062349"
+      "version": "1.1.0-dev.26776008977"
     },
     {
       "crate": "greentic-bundle",
       "bins": [
         "greentic-bundle-dev"
       ],
-      "version": "1.1.0-dev.25483880035"
+      "version": "1.2.0-dev.26622968877"
     },
     {
       "crate": "greentic-setup",
       "bins": [
         "greentic-setup-dev"
       ],
-      "version": "1.1.0-dev.25540653568"
+      "version": "1.1.0-dev.26622982020"
     },
     {
       "crate": "greentic-start",
       "bins": [
         "greentic-start-dev"
       ],
-      "version": "1.1.0-dev.25480077578"
+      "version": "1.1.0-dev.26931012849"
     },
     {
       "crate": "greentic-deployer",
       "bins": [
         "greentic-deployer-dev"
       ],
-      "version": "1.1.0-dev.25540613839"
+      "version": "1.1.0-dev.26812807230"
     },
     {
       "crate": "greentic-component",
       "bins": [
         "greentic-component-dev"
       ],
-      "version": "1.1.0-dev.25540604532"
+      "version": "1.1.0-dev.26677388022"
     },
     {
       "crate": "greentic-flow",
       "bins": [
         "greentic-flow-dev"
       ],
-      "version": "1.1.0-dev.25540621195"
+      "version": "1.1.0-dev.26802580431"
     },
     {
       "crate": "greentic-pack",
       "bins": [
         "greentic-pack-dev"
       ],
-      "version": "1.1.0-dev.25540669628"
+      "version": "1.1.0-dev.26677406368"
     },
     {
       "crate": "greentic-runner",
       "bins": [
         "greentic-runner-dev"
       ],
-      "version": "1.1.0-dev.25540702111"
+      "version": "1.2.0-research"
     },
     {
       "crate": "greentic-gui",
@@ -87,32 +87,32 @@
       "bins": [
         "greentic-secrets-dev"
       ],
-      "version": "1.1.0-dev.25540523455"
+      "version": "1.1.0-dev.26677358416"
     },
     {
       "crate": "greentic-mcp",
       "bins": [
         "greentic-mcp-dev"
       ],
-      "version": "1.1.0-dev.25540505806"
+      "version": "1.1.0-dev.26677351399"
     }
   ],
   "extension_packs": [
     {
       "id": "packs/demos/cards-demo",
-      "version": "0.1.81"
+      "version": "0.1.84"
     },
     {
       "id": "packs/demos/cloud-deploy-demo-app",
-      "version": "0.1.81"
+      "version": "0.1.84"
     },
     {
       "id": "packs/demos/deep-research-demo",
-      "version": "0.1.81"
+      "version": "0.1.84"
     },
     {
       "id": "packs/demos/helpdesk-itsm",
-      "version": "0.1.81"
+      "version": "0.1.61"
     },
     {
       "id": "packs/demos/hr-onboarding",
@@ -120,11 +120,11 @@
     },
     {
       "id": "packs/demos/incident-demo",
-      "version": "0.1.81"
+      "version": "0.1.61"
     },
     {
       "id": "packs/demos/quickstart",
-      "version": "0.1.81"
+      "version": "0.1.61"
     },
     {
       "id": "packs/demos/quickstart-event",
@@ -132,19 +132,19 @@
     },
     {
       "id": "packs/demos/redbutton-demo",
-      "version": "0.1.81"
+      "version": "0.1.61"
     },
     {
       "id": "packs/demos/sales-crm",
-      "version": "0.1.81"
+      "version": "0.1.61"
     },
     {
       "id": "packs/demos/supply-chain",
-      "version": "0.1.81"
+      "version": "0.1.61"
     },
     {
       "id": "packs/demos/telco-x",
-      "version": "0.1.81"
+      "version": "0.1.84"
     },
     {
       "id": "packs/demos/weather-mcp-demo",
@@ -152,7 +152,7 @@
     },
     {
       "id": "packs/demos/weatherapi-pack",
-      "version": "0.1.81"
+      "version": "0.1.84"
     },
     {
       "id": "packs/deployer/greentic.deploy.gcp",
@@ -196,99 +196,99 @@
     },
     {
       "id": "packs/dw/context/compressor-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/dw/context/retrieval-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/dw/context/static-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/dw/control/basic-policy-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/dw/control/delegation-guard-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/dw/delegation/capability-match-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/dw/delegation/static-router-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/dw/engine/default-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/dw/engine/router-lite-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/dw/memory/short-term-in-memory-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/dw/memory/short-term-redis-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/dw/observer/basic-audit-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/dw/observer/basic-metrics-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/dw/planning/llm-outline-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/dw/planning/static-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/dw/reflection/llm-critic-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/dw/reflection/rules-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/dw/reflection/schema-check-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/dw/state/task-store-in-memory-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/dw/state/task-store-redis-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/dw/tool/component-adapter-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/dw/tool/mcp-adapter-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/dw/workspace/fs-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/dw/workspace/in-memory-pack",
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "id": "packs/events/events-dummy",
@@ -320,11 +320,11 @@
     },
     {
       "id": "packs/messaging/messaging-dummy",
-      "version": "0.5.1"
+      "version": "1.1.0"
     },
     {
       "id": "packs/messaging/messaging-email",
-      "version": "0.5.1"
+      "version": "1.1.0"
     },
     {
       "id": "packs/messaging/messaging-microsoft-email",
@@ -332,31 +332,31 @@
     },
     {
       "id": "packs/messaging/messaging-slack",
-      "version": "0.5.11"
+      "version": "1.1.0"
     },
     {
       "id": "packs/messaging/messaging-teams",
-      "version": "0.5.15"
+      "version": "1.1.0"
     },
     {
       "id": "packs/messaging/messaging-telegram",
-      "version": "0.5.3"
+      "version": "1.1.0"
     },
     {
       "id": "packs/messaging/messaging-webchat",
-      "version": "0.5.4"
+      "version": "1.1.0"
     },
     {
       "id": "packs/messaging/messaging-webchat-gui",
-      "version": "0.5.7"
+      "version": "1.1.0"
     },
     {
       "id": "packs/messaging/messaging-webex",
-      "version": "0.5.11"
+      "version": "1.1.0"
     },
     {
       "id": "packs/messaging/messaging-whatsapp",
-      "version": "0.5.3"
+      "version": "1.1.0"
     },
     {
       "id": "packs/oauth/oauth-github",
@@ -422,11 +422,11 @@
   "components": [
     {
       "id": "component/component-events2msg",
-      "version": "0.1.0"
+      "version": "0.1.3"
     },
     {
       "id": "component/component-http",
-      "version": "0.1.0"
+      "version": "1.2.0"
     },
     {
       "id": "component/component-llm-openai",
@@ -434,11 +434,11 @@
     },
     {
       "id": "component/component-msg2events",
-      "version": "0.1.0"
+      "version": "0.1.3"
     },
     {
       "id": "component/component-pack2flow",
-      "version": "0.1.0"
+      "version": "0.1.3"
     },
     {
       "id": "component/component-sorx-business",
@@ -446,7 +446,7 @@
     },
     {
       "id": "components/component-adaptive-card",
-      "version": "0.2.0"
+      "version": "1.2.0"
     },
     {
       "id": "components/component-qa",
