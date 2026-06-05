@@ -9,6 +9,7 @@ pub mod coverage_cmd;
 pub mod delegate;
 pub mod dev_runner;
 pub mod distributor;
+pub mod dw_cmd;
 pub mod i18n;
 pub mod install;
 pub mod mcp_cmd;
