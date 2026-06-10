@@ -1838,9 +1838,9 @@ dependencies = [
  "unic-langid",
  "uuid",
  "walkdir",
- "wasm-encoder 0.248.0",
+ "wasm-encoder 0.251.0",
  "wasm-metadata 0.251.0",
- "wasmparser 0.248.0",
+ "wasmparser 0.251.0",
  "wasmtime",
  "wasmtime-wasi",
  "wit-component 0.247.0",
@@ -2072,9 +2072,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-pack-lib"
-version = "0.5.5"
+version = "0.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "edc53199a02ae29b222d0981670c443575bc574d118529043cdd609ccb46b3b3"
+checksum = "8d8835803148fa5e7d82921068cfab24941cac523cfbdde8606d38438c60fe2f"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -3812,7 +3812,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "27c6023962132f4b30eb4c172c91ce92d933da334c59c23cddee82358ddafb0b"
 dependencies = [
  "anyhow",
- "itertools 0.13.0",
+ "itertools 0.14.0",
  "proc-macro2",
  "quote",
  "syn",
@@ -5906,7 +5906,6 @@ dependencies = [
  "hashbrown 0.17.1",
  "indexmap 2.14.0",
  "semver",
- "serde",
 ]
 
 [[package]]
@@ -5919,6 +5918,7 @@ dependencies = [
  "hashbrown 0.17.1",
  "indexmap 2.14.0",
  "semver",
+ "serde",
 ]
 
 [[package]]
