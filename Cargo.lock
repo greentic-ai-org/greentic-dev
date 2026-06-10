@@ -1838,9 +1838,9 @@ dependencies = [
  "unic-langid",
  "uuid",
  "walkdir",
- "wasm-encoder 0.248.0",
+ "wasm-encoder 0.251.0",
  "wasm-metadata 0.251.0",
- "wasmparser 0.248.0",
+ "wasmparser 0.251.0",
  "wasmtime",
  "wasmtime-wasi",
  "wit-component 0.247.0",
@@ -3812,7 +3812,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "27c6023962132f4b30eb4c172c91ce92d933da334c59c23cddee82358ddafb0b"
 dependencies = [
  "anyhow",
- "itertools 0.13.0",
+ "itertools 0.14.0",
  "proc-macro2",
  "quote",
  "syn",
@@ -5906,7 +5906,6 @@ dependencies = [
  "hashbrown 0.17.1",
  "indexmap 2.14.0",
  "semver",
- "serde",
 ]
 
 [[package]]
@@ -5919,6 +5918,7 @@ dependencies = [
  "hashbrown 0.17.1",
  "indexmap 2.14.0",
  "semver",
+ "serde",
 ]
 
 [[package]]
@@ -6303,9 +6303,9 @@ dependencies = [
 
 [[package]]
 name = "which"
-version = "8.0.2"
+version = "8.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81995fafaaaf6ae47a7d0cc83c67caf92aeb7e5331650ae6ff856f7c0c60c459"
+checksum = "c789537cf2f7f55be8e6192f92e464174ee55f91af622777f7f1ceb0dbccd03e"
 dependencies = [
  "libc",
 ]
