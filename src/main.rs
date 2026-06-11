@@ -9,6 +9,7 @@ use greentic_dev::cli::{Cli, Command};
 use greentic_dev::cli::{
     InstallSubcommand, McpCommand, ReleaseCommand, ToolsCommand, WizardSubcommand,
 };
+use greentic_dev::dw_cmd;
 use greentic_dev::passthrough::{delegated_binary_name, resolve_binary, run_passthrough};
 
 use greentic_dev::cbor_cmd;
@@ -110,6 +111,7 @@ fn main() -> Result<()> {
             std::process::exit(status.code().unwrap_or(1));
         }
         Command::Secrets(secrets) => run_secrets_command(secrets, &selected_locale),
+        Command::Dw(dw) => dw_cmd::run(dw, &selected_locale),
     }
 }
 
@@ -269,6 +271,7 @@ fn is_known_subcommand(subcmd: &str) -> bool {
             | "mcp"
             | "gui"
             | "secrets"
+            | "dw"
             | "tools"
             | "install"
             | "release"

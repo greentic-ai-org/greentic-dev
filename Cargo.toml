@@ -146,6 +146,7 @@ default-features = false
 features = [
     "blocking",
     "json",
+    "multipart",
     "rustls",
 ]
 

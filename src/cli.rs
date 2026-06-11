@@ -1,5 +1,6 @@
 use std::{ffi::OsString, path::PathBuf};
 
+use crate::dw_cmd::DwCommand;
 use crate::secrets_cli::SecretsCommand;
 use clap::{Arg, ArgAction, Args, CommandFactory, Parser, Subcommand};
 
@@ -52,6 +53,7 @@ pub fn localized_help_command(locale: &str) -> clap::Command {
         ("mcp", "cli.command.mcp.about"),
         ("gui", "cli.command.gui.about"),
         ("secrets", "cli.command.secrets.about"),
+        ("dw", "cli.command.dw.about"),
         ("tools", "cli.command.tools.about"),
         ("install", "cli.command.install.about"),
         ("release", "cli.command.release.about"),
@@ -73,6 +75,40 @@ pub fn localized_help_command(locale: &str) -> clap::Command {
                             locale,
                             "cli.command.secrets.init.passthrough",
                         ))
+                    })
+            })
+    });
+
+    command = command.mut_subcommand("dw", |sub| {
+        sub.about(crate::i18n::t(locale, "cli.command.dw.about"))
+            .mut_subcommand("publish", |sub| {
+                sub.about(crate::i18n::t(locale, "cli.command.dw.publish.about"))
+                    .mut_arg("artifact", |arg| {
+                        arg.help(crate::i18n::t(locale, "cli.command.dw.publish.artifact"))
+                    })
+                    .mut_arg("describe", |arg| {
+                        arg.help(crate::i18n::t(locale, "cli.command.dw.publish.describe"))
+                    })
+                    .mut_arg("store", |arg| {
+                        arg.help(crate::i18n::t(locale, "cli.command.dw.publish.store"))
+                    })
+                    .mut_arg("token", |arg| {
+                        arg.help(crate::i18n::t(locale, "cli.command.dw.publish.token"))
+                    })
+            })
+            .mut_subcommand("install", |sub| {
+                sub.about(crate::i18n::t(locale, "cli.command.dw.install.about"))
+                    .mut_arg("name", |arg| {
+                        arg.help(crate::i18n::t(locale, "cli.command.dw.install.name"))
+                    })
+                    .mut_arg("version", |arg| {
+                        arg.help(crate::i18n::t(locale, "cli.command.dw.install.version"))
+                    })
+                    .mut_arg("store", |arg| {
+                        arg.help(crate::i18n::t(locale, "cli.command.dw.install.store"))
+                    })
+                    .mut_arg("out", |arg| {
+                        arg.help(crate::i18n::t(locale, "cli.command.dw.install.out"))
                     })
             })
     });
@@ -459,6 +495,9 @@ pub enum Command {
     /// cli.command.secrets.about
     #[command(subcommand)]
     Secrets(SecretsCommand),
+    /// cli.command.dw.about
+    #[command(subcommand)]
+    Dw(DwCommand),
     /// cli.command.tools.about
     #[command(subcommand)]
     Tools(ToolsCommand),
