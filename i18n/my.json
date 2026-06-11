@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "ထုတ်ဝေရန် ဒေသတွင်း toolchain manifest JSON ဖိုင်",
   "cli.command.release.out": "ဖန်တီးထားသော toolchain manifest များအတွက် ဒိုင်ရက်ထရီ",
   "cli.command.release.promote.about": "GHCR tag ကို ရှိပြီးသား Greentic toolchain release သို့ ရွှေ့ပါ",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Greentic toolchain release manifest ကို ဖန်တီးပြီး ထုတ်ဝေပါ",
   "cli.command.release.release": "ဖန်တီးရန်၊ ထုတ်ဝေရန် သို့မဟုတ် မြှင့်တင်ရန် release version",
   "cli.command.release.repo": "GHCR toolchain manifest repository",
