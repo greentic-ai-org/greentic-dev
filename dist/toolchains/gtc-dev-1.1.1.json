@@ -164,7 +164,7 @@
     },
     {
       "id": "packs/deployer/greentic.deploy.aws",
-      "version": "0.5.12"
+      "version": "0.5.13"
     },
     {
       "id": "packs/deployer/greentic.deploy.helm",
