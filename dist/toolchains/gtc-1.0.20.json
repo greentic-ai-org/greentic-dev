@@ -59,7 +59,7 @@
       "bins": [
         "greentic-flow"
       ],
-      "version": "0.5.15"
+      "version": "0.5.11"
     },
     {
       "crate": "greentic-pack",
