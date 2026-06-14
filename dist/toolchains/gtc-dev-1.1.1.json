@@ -156,43 +156,43 @@
     },
     {
       "id": "packs/deployer/greentic.deploy.gcp",
-      "version": "0.5.12"
+      "version": "0.5.15"
     },
     {
       "id": "packs/deployer/greentic.deploy.azure",
-      "version": "0.5.12"
+      "version": "0.5.15"
     },
     {
       "id": "packs/deployer/greentic.deploy.aws",
-      "version": "0.5.13"
+      "version": "0.5.15"
     },
     {
       "id": "packs/deployer/greentic.deploy.helm",
-      "version": "0.5.12"
+      "version": "0.5.15"
     },
     {
       "id": "packs/deployer/greentic.deploy.juju-k8s",
-      "version": "0.5.12"
+      "version": "0.5.15"
     },
     {
       "id": "packs/deployer/greentic.deploy.juju-machine",
-      "version": "0.5.12"
+      "version": "0.5.15"
     },
     {
       "id": "packs/deployer/greentic.deploy.k8s-raw",
-      "version": "0.5.12"
+      "version": "0.5.15"
     },
     {
       "id": "packs/deployer/greentic.deploy.serverless",
-      "version": "0.5.12"
+      "version": "0.5.15"
     },
     {
       "id": "packs/deployer/greentic.deploy.snap",
-      "version": "0.5.12"
+      "version": "0.5.15"
     },
     {
       "id": "packs/deployer/greentic.deploy.terraform",
-      "version": "0.5.12"
+      "version": "0.5.15"
     },
     {
       "id": "packs/dw/context/compressor-pack",
