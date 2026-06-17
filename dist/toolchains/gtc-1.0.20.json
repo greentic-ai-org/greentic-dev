@@ -31,7 +31,7 @@
       "bins": [
         "greentic-setup"
       ],
-      "version": "0.5.21"
+      "version": "0.5.22"
     },
     {
       "crate": "greentic-start",
@@ -45,7 +45,7 @@
       "bins": [
         "greentic-deployer"
       ],
-      "version": "0.5.18"
+      "version": "0.5.19"
     },
     {
       "crate": "greentic-component",
@@ -156,43 +156,43 @@
     },
     {
       "id": "packs/deployer/greentic.deploy.gcp",
-      "version": "0.5.18"
+      "version": "0.5.19"
     },
     {
       "id": "packs/deployer/greentic.deploy.azure",
-      "version": "0.5.18"
+      "version": "0.5.19"
     },
     {
       "id": "packs/deployer/greentic.deploy.aws",
-      "version": "0.5.18"
+      "version": "0.5.19"
     },
     {
       "id": "packs/deployer/greentic.deploy.helm",
-      "version": "0.5.18"
+      "version": "0.5.19"
     },
     {
       "id": "packs/deployer/greentic.deploy.juju-k8s",
-      "version": "0.5.18"
+      "version": "0.5.19"
     },
     {
       "id": "packs/deployer/greentic.deploy.juju-machine",
-      "version": "0.5.18"
+      "version": "0.5.19"
     },
     {
       "id": "packs/deployer/greentic.deploy.k8s-raw",
-      "version": "0.5.18"
+      "version": "0.5.19"
     },
     {
       "id": "packs/deployer/greentic.deploy.serverless",
-      "version": "0.5.18"
+      "version": "0.5.19"
     },
     {
       "id": "packs/deployer/greentic.deploy.snap",
-      "version": "0.5.18"
+      "version": "0.5.19"
     },
     {
       "id": "packs/deployer/greentic.deploy.terraform",
-      "version": "0.5.18"
+      "version": "0.5.19"
     },
     {
       "id": "packs/dw/context/compressor-pack",
