@@ -38,7 +38,7 @@
       "bins": [
         "greentic-start"
       ],
-      "version": "0.5.42"
+      "version": "0.5.44"
     },
     {
       "crate": "greentic-deployer",
