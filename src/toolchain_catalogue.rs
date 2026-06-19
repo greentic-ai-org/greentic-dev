@@ -237,6 +237,9 @@ pub const GREENTIC_EXTENSION_PACK_PACKAGES: &[OciPackageSpec] = &[
         package: "packs/messaging/messaging-email",
     },
     OciPackageSpec {
+        package: "packs/messaging/messaging-http",
+    },
+    OciPackageSpec {
         package: "packs/messaging/messaging-slack",
     },
     OciPackageSpec {
@@ -253,6 +256,9 @@ pub const GREENTIC_EXTENSION_PACK_PACKAGES: &[OciPackageSpec] = &[
     },
     OciPackageSpec {
         package: "packs/messaging/messaging-webex",
+    },
+    OciPackageSpec {
+        package: "packs/messaging/messaging-websocket",
     },
     OciPackageSpec {
         package: "packs/messaging/messaging-whatsapp",
@@ -385,7 +391,7 @@ mod tests {
 
     #[test]
     fn extension_pack_catalogue_tracks_github_packages() {
-        assert_eq!(GREENTIC_EXTENSION_PACK_PACKAGES.len(), 79);
+        assert_eq!(GREENTIC_EXTENSION_PACK_PACKAGES.len(), 81);
         assert_catalogue_has_no_duplicate_packages(GREENTIC_EXTENSION_PACK_PACKAGES);
         assert!(GREENTIC_EXTENSION_PACK_PACKAGES.iter().all(|package| {
             package.package.starts_with("packs/") || package.package.starts_with("greentic-bundle/")
@@ -409,6 +415,16 @@ mod tests {
             GREENTIC_EXTENSION_PACK_PACKAGES
                 .iter()
                 .any(|package| package.package == "packs/messaging/messaging-webchat-gui")
+        );
+        assert!(
+            GREENTIC_EXTENSION_PACK_PACKAGES
+                .iter()
+                .any(|package| package.package == "packs/messaging/messaging-http")
+        );
+        assert!(
+            GREENTIC_EXTENSION_PACK_PACKAGES
+                .iter()
+                .any(|package| package.package == "packs/messaging/messaging-websocket")
         );
         assert!(
             GREENTIC_EXTENSION_PACK_PACKAGES
