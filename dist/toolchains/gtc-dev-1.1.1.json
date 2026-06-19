@@ -320,11 +320,11 @@
     },
     {
       "id": "packs/messaging/messaging-dummy",
-      "version": "1.1.0"
+      "version": "0.5.1"
     },
     {
       "id": "packs/messaging/messaging-email",
-      "version": "1.1.0"
+      "version": "0.5.1"
     },
     {
       "id": "packs/messaging/messaging-microsoft-email",
@@ -332,31 +332,31 @@
     },
     {
       "id": "packs/messaging/messaging-slack",
-      "version": "1.1.0"
+      "version": "0.5.11"
     },
     {
       "id": "packs/messaging/messaging-teams",
-      "version": "1.1.0"
+      "version": "0.5.18"
     },
     {
       "id": "packs/messaging/messaging-telegram",
-      "version": "1.1.0"
+      "version": "0.5.3"
     },
     {
       "id": "packs/messaging/messaging-webchat",
-      "version": "1.1.0"
+      "version": "0.5.4"
     },
     {
       "id": "packs/messaging/messaging-webchat-gui",
-      "version": "1.1.0"
+      "version": "0.5.8"
     },
     {
       "id": "packs/messaging/messaging-webex",
-      "version": "1.1.0"
+      "version": "0.5.11"
     },
     {
       "id": "packs/messaging/messaging-whatsapp",
-      "version": "1.1.0"
+      "version": "0.5.3"
     },
     {
       "id": "packs/oauth/oauth-github",

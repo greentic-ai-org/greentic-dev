@@ -336,7 +336,7 @@
     },
     {
       "id": "packs/messaging/messaging-teams",
-      "version": "0.5.15"
+      "version": "0.5.18"
     },
     {
       "id": "packs/messaging/messaging-telegram",
@@ -348,7 +348,7 @@
     },
     {
       "id": "packs/messaging/messaging-webchat-gui",
-      "version": "0.5.7"
+      "version": "0.5.8"
     },
     {
       "id": "packs/messaging/messaging-webex",
