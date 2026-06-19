@@ -291,34 +291,6 @@
       "version": "0.5.6"
     },
     {
-      "id": "packs/events/events-dummy",
-      "version": "0.4.17"
-    },
-    {
-      "id": "packs/events/events-email",
-      "version": "0.4.17"
-    },
-    {
-      "id": "packs/events/events-email-sendgrid",
-      "version": "0.4.17"
-    },
-    {
-      "id": "packs/events/events-sms",
-      "version": "0.4.17"
-    },
-    {
-      "id": "packs/events/events-sms-twilio",
-      "version": "0.4.17"
-    },
-    {
-      "id": "packs/events/events-timer",
-      "version": "0.4.17"
-    },
-    {
-      "id": "packs/events/events-webhook",
-      "version": "0.4.17"
-    },
-    {
       "id": "packs/messaging/messaging-dummy",
       "version": "0.5.1"
     },
@@ -327,32 +299,40 @@
       "version": "0.5.1"
     },
     {
+      "id": "packs/messaging/messaging-http",
+      "version": "0.1.0"
+    },
+    {
       "id": "packs/messaging/messaging-microsoft-email",
       "version": "0.5.1"
     },
     {
       "id": "packs/messaging/messaging-slack",
-      "version": "0.5.11"
+      "version": "0.5.12"
     },
     {
       "id": "packs/messaging/messaging-teams",
-      "version": "0.5.18"
+      "version": "0.5.19"
     },
     {
       "id": "packs/messaging/messaging-telegram",
-      "version": "0.5.3"
-    },
-    {
-      "id": "packs/messaging/messaging-webchat",
       "version": "0.5.4"
     },
     {
+      "id": "packs/messaging/messaging-webchat",
+      "version": "0.5.5"
+    },
+    {
       "id": "packs/messaging/messaging-webchat-gui",
-      "version": "0.5.8"
+      "version": "0.5.9"
     },
     {
       "id": "packs/messaging/messaging-webex",
-      "version": "0.5.11"
+      "version": "0.5.12"
+    },
+    {
+      "id": "packs/messaging/messaging-websocket",
+      "version": "0.1.0"
     },
     {
       "id": "packs/messaging/messaging-whatsapp",
