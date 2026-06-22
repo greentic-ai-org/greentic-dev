@@ -312,11 +312,11 @@
     },
     {
       "id": "packs/messaging/messaging-teams",
-      "version": "0.5.20"
+      "version": "0.5.21"
     },
     {
       "id": "packs/messaging/messaging-telegram",
-      "version": "0.5.3"
+      "version": "0.5.6"
     },
     {
       "id": "packs/messaging/messaging-webchat",
@@ -328,7 +328,7 @@
     },
     {
       "id": "packs/messaging/messaging-webex",
-      "version": "0.5.13"
+      "version": "0.5.14"
     },
     {
       "id": "packs/messaging/messaging-websocket",
