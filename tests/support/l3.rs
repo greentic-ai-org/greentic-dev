@@ -35,6 +35,7 @@ pub fn build_l3_pack() -> Result<Vec<u8>> {
         signatures: Default::default(),
         bootstrap: None,
         extensions: None,
+        agents: Default::default(),
     };
     let manifest_bytes = greentic_types::encode_pack_manifest(&manifest)?;
 
