@@ -10,7 +10,7 @@
       "bins": [
         "greentic-dev"
       ],
-      "version": "0.5.5"
+      "version": "0.5.6"
     },
     {
       "crate": "greentic-operator",
@@ -31,21 +31,21 @@
       "bins": [
         "greentic-setup"
       ],
-      "version": "0.5.19"
+      "version": "0.5.25"
     },
     {
       "crate": "greentic-start",
       "bins": [
         "greentic-start"
       ],
-      "version": "0.5.40"
+      "version": "0.5.47"
     },
     {
       "crate": "greentic-deployer",
       "bins": [
         "greentic-deployer"
       ],
-      "version": "0.5.12"
+      "version": "0.5.21"
     },
     {
       "crate": "greentic-component",
@@ -66,14 +66,14 @@
       "bins": [
         "greentic-pack"
       ],
-      "version": "0.5.6"
+      "version": "0.5.8"
     },
     {
       "crate": "greentic-runner",
       "bins": [
         "greentic-runner"
       ],
-      "version": "0.5.20"
+      "version": "0.5.21"
     },
     {
       "crate": "greentic-gui",
@@ -87,7 +87,7 @@
       "bins": [
         "greentic-secrets"
       ],
-      "version": "0.5.0"
+      "version": "0.5.3"
     },
     {
       "crate": "greentic-mcp",
@@ -156,43 +156,43 @@
     },
     {
       "id": "packs/deployer/greentic.deploy.gcp",
-      "version": "0.5.12"
+      "version": "0.5.21"
     },
     {
       "id": "packs/deployer/greentic.deploy.azure",
-      "version": "0.5.12"
+      "version": "0.5.21"
     },
     {
       "id": "packs/deployer/greentic.deploy.aws",
-      "version": "0.5.12"
+      "version": "0.5.21"
     },
     {
       "id": "packs/deployer/greentic.deploy.helm",
-      "version": "0.5.12"
+      "version": "0.5.21"
     },
     {
       "id": "packs/deployer/greentic.deploy.juju-k8s",
-      "version": "0.5.12"
+      "version": "0.5.21"
     },
     {
       "id": "packs/deployer/greentic.deploy.juju-machine",
-      "version": "0.5.12"
+      "version": "0.5.21"
     },
     {
       "id": "packs/deployer/greentic.deploy.k8s-raw",
-      "version": "0.5.12"
+      "version": "0.5.21"
     },
     {
       "id": "packs/deployer/greentic.deploy.serverless",
-      "version": "0.5.12"
+      "version": "0.5.21"
     },
     {
       "id": "packs/deployer/greentic.deploy.snap",
-      "version": "0.5.12"
+      "version": "0.5.21"
     },
     {
       "id": "packs/deployer/greentic.deploy.terraform",
-      "version": "0.5.12"
+      "version": "0.5.21"
     },
     {
       "id": "packs/dw/context/compressor-pack",
@@ -324,39 +324,47 @@
     },
     {
       "id": "packs/messaging/messaging-email",
-      "version": "0.5.1"
+      "version": "0.5.2"
+    },
+    {
+      "id": "packs/messaging/messaging-http",
+      "version": "0.1.0"
     },
     {
       "id": "packs/messaging/messaging-microsoft-email",
-      "version": "0.5.1"
+      "version": "0.5.2"
     },
     {
       "id": "packs/messaging/messaging-slack",
-      "version": "0.5.11"
+      "version": "0.5.13"
     },
     {
       "id": "packs/messaging/messaging-teams",
-      "version": "0.5.15"
+      "version": "0.5.21"
     },
     {
       "id": "packs/messaging/messaging-telegram",
-      "version": "0.5.3"
+      "version": "0.5.6"
     },
     {
       "id": "packs/messaging/messaging-webchat",
-      "version": "0.5.4"
+      "version": "0.5.5"
     },
     {
       "id": "packs/messaging/messaging-webchat-gui",
-      "version": "0.5.7"
+      "version": "0.5.9"
     },
     {
       "id": "packs/messaging/messaging-webex",
-      "version": "0.5.11"
+      "version": "0.5.14"
+    },
+    {
+      "id": "packs/messaging/messaging-websocket",
+      "version": "0.1.0"
     },
     {
       "id": "packs/messaging/messaging-whatsapp",
-      "version": "0.5.3"
+      "version": "0.5.4"
     },
     {
       "id": "packs/oauth/oauth-github",
