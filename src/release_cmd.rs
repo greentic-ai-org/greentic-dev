@@ -418,7 +418,7 @@ pub fn snapshot_manifest<R: CrateVersionResolver>(
     for package in GREENTIC_TOOLCHAIN_PACKAGES {
         let crate_in_manifest = manifest_crate_name_for_source(from, package.crate_name);
         let version = resolver
-            .resolve_latest(&crate_in_manifest)
+            .resolve_latest_for_channel(&crate_in_manifest, channel)
             .with_context(|| {
                 format!("failed to resolve latest version for `{crate_in_manifest}`")
             })?;
@@ -596,7 +596,8 @@ where
         let source_version = source_versions.get(&crate_in_manifest);
         let version = match source_version.map(String::as_str) {
             Some(version) if version != "latest" => version.to_string(),
-            _ => resolver.resolve_latest(&crate_in_manifest)?,
+            _ => resolver
+                .resolve_latest_for_channel(&crate_in_manifest, channel_from_source_tag(from))?,
         };
         packages.push(ToolchainPackage {
             crate_name: crate_in_manifest,
@@ -616,12 +617,17 @@ where
     })
 }
 
-fn manifest_bins_for_source(from: &str, bins: &[&str]) -> Vec<String> {
-    let channel = match from {
+/// Map a manifest source-tag (`dev`/`rnd`/`stable`) to its channel.
+fn channel_from_source_tag(from: &str) -> ToolchainChannel {
+    match from {
         "dev" => ToolchainChannel::Development,
         "rnd" => ToolchainChannel::Rnd,
         _ => ToolchainChannel::Stable,
-    };
+    }
+}
+
+fn manifest_bins_for_source(from: &str, bins: &[&str]) -> Vec<String> {
+    let channel = channel_from_source_tag(from);
     bins.iter()
         .map(|bin| delegated_binary_name_for_channel(bin, channel))
         .collect()
@@ -761,6 +767,20 @@ fn created_at_now() -> Result<String> {
 
 pub trait CrateVersionResolver {
     fn resolve_latest(&self, crate_name: &str) -> Result<String>;
+
+    /// Channel-aware resolution. The research (`rnd`) lane publishes base-name
+    /// crates at `X.Y.Z-research` PRERELEASES (greentic-runner's
+    /// research-publish.yml), which `resolve_latest`'s `max_stable_version`
+    /// preference silently skips — so the dev/stable behaviour returns the old
+    /// stable (e.g. `0.5.x`) instead of the current `1.2.0-research`. The
+    /// default delegates to `resolve_latest` (correct for dev/stable).
+    fn resolve_latest_for_channel(
+        &self,
+        crate_name: &str,
+        _channel: ToolchainChannel,
+    ) -> Result<String> {
+        self.resolve_latest(crate_name)
+    }
 }
 
 /// Default resolver used by `generate`, `publish`, and `snapshot`. Hits the
@@ -931,6 +951,67 @@ impl CrateVersionResolver for CratesIoApiVersionResolver {
         }
         parse_crates_io_version(crate_name, &body)
     }
+
+    fn resolve_latest_for_channel(
+        &self,
+        crate_name: &str,
+        channel: ToolchainChannel,
+    ) -> Result<String> {
+        if channel != ToolchainChannel::Rnd {
+            return self.resolve_latest(crate_name);
+        }
+        let url = format!("{}/{}", self.base_url.trim_end_matches('/'), crate_name);
+        let response = self
+            .client
+            .get(&url)
+            .send()
+            .with_context(|| format!("failed to GET {url}"))?;
+        let status = response.status();
+        let body = response
+            .text()
+            .with_context(|| format!("failed to read body of {url}"))?;
+        if !status.is_success() {
+            bail!("crates.io API GET {url} returned {status}: {body}");
+        }
+        parse_crates_io_research_version(crate_name, &body)
+    }
+}
+
+/// Pick the highest non-yanked `-research` prerelease from the crates.io
+/// `/crates/<name>` response's top-level `versions` array. The research (`rnd`)
+/// toolchain lane publishes `X.Y.Z-research`, which `max_stable_version` skips.
+fn parse_crates_io_research_version(crate_name: &str, body: &str) -> Result<String> {
+    let payload: serde_json::Value = serde_json::from_str(body)
+        .with_context(|| format!("crates.io API for `{crate_name}` returned invalid JSON"))?;
+    let versions = payload
+        .get("versions")
+        .and_then(|v| v.as_array())
+        .ok_or_else(|| anyhow!("crates.io API for `{crate_name}` is missing the `versions` array"))?;
+    let mut best: Option<Version> = None;
+    for entry in versions {
+        if entry
+            .get("yanked")
+            .and_then(serde_json::Value::as_bool)
+            .unwrap_or(false)
+        {
+            continue;
+        }
+        let Some(num) = entry.get("num").and_then(|n| n.as_str()) else {
+            continue;
+        };
+        let Ok(parsed) = Version::parse(num) else {
+            continue;
+        };
+        if !parsed.pre.as_str().starts_with("research") {
+            continue;
+        }
+        if best.as_ref().is_none_or(|current| parsed > *current) {
+            best = Some(parsed);
+        }
+    }
+    best.map(|v| v.to_string()).ok_or_else(|| {
+        anyhow!("crates.io API for `{crate_name}` exposes no non-yanked `-research` version")
+    })
 }
 
 fn parse_crates_io_version(crate_name: &str, body: &str) -> Result<String> {
@@ -1148,6 +1229,29 @@ mod tests {
         let body = r#"{"crate":{"id":"greentic-operator-dev","max_stable_version":"0.5.123"}}"#;
         let version = parse_crates_io_version("greentic-operator-dev", body).unwrap();
         assert_eq!(version, "0.5.123");
+    }
+
+    #[test]
+    fn research_resolver_picks_highest_non_yanked_research_prerelease() {
+        // The research lane must ignore the stable `max_stable_version` (0.5.48)
+        // and pick the highest non-yanked `-research` prerelease.
+        let body = r#"{"crate":{"id":"greentic-runner","max_stable_version":"0.5.48"},
+            "versions":[
+                {"num":"0.5.48","yanked":false},
+                {"num":"1.2.0-research.0","yanked":false},
+                {"num":"1.2.0-research.1","yanked":false},
+                {"num":"1.2.0-research.2","yanked":true}
+            ]}"#;
+        let version = parse_crates_io_research_version("greentic-runner", body).unwrap();
+        assert_eq!(version, "1.2.0-research.1");
+    }
+
+    #[test]
+    fn research_resolver_errors_when_no_research_version() {
+        let body = r#"{"crate":{"id":"greentic-setup"},
+            "versions":[{"num":"1.2.0-dev.123","yanked":false},{"num":"0.5.25","yanked":false}]}"#;
+        let err = parse_crates_io_research_version("greentic-setup", body).unwrap_err();
+        assert!(err.to_string().contains("no non-yanked `-research`"));
     }
 
     #[test]
