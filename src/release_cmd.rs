@@ -248,7 +248,7 @@ fn publish_manifest_input(
         eprintln!(
             "warning: `release publish --from {from}` reuses the pinned versions in `{}` instead \
              of querying crates.io. To refresh a channel from the latest crates.io versions, use \
-             `release snapshot --channel <dev|stable>`. To copy an existing release tag without \
+             `release snapshot --channel <dev|research|stable>`. To copy an existing release tag without \
              re-resolving, use `release promote`. The conflated `--from` semantics will be \
              removed in a future release.",
             toolchain_ref(&args.repo, from),
@@ -389,10 +389,12 @@ pub fn snapshot(args: ReleaseSnapshotArgs) -> Result<()> {
 fn parse_channel(channel: &str) -> Result<ToolchainChannel> {
     match channel {
         "dev" | "development" => Ok(ToolchainChannel::Development),
+        "rnd" | "research" => Ok(ToolchainChannel::Rnd),
         "stable" => Ok(ToolchainChannel::Stable),
         other => bail!(
-            "unknown channel `{other}` (expected `dev` or `stable`); pass --channel dev for the \
-             dev lane or --channel stable for the stable lane"
+            "unknown channel `{other}` (expected `dev`, `research` (alias `rnd`), or `stable`); \
+             pass --channel dev for the dev lane, --channel research for the research lane, or \
+             --channel stable for the stable lane"
         ),
     }
 }
