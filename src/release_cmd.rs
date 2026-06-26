@@ -973,14 +973,37 @@ impl CrateVersionResolver for CratesIoApiVersionResolver {
         if !status.is_success() {
             bail!("crates.io API GET {url} returned {status}: {body}");
         }
-        parse_crates_io_research_version(crate_name, &body)
+        // Prefer the highest `-research` prerelease (multi-provider work lives on
+        // the research line). Toolchain crates with no `-research` publish yet
+        // (independent binaries: greentic-dev/operator/gui/mcp/…) fall back to the
+        // latest published version so the snapshot still assembles — the
+        // multi-provider-critical crates (runner/setup/start) MUST carry a
+        // `-research` build. The fallback is logged so silent staleness is visible.
+        match parse_crates_io_research_version(crate_name, &body) {
+            Ok(version) => Ok(version),
+            Err(_) => {
+                let fallback = pick_highest_crates_io_version(crate_name, &body, false)?;
+                eprintln!(
+                    "note: `{crate_name}` has no -research publish; the research \
+                     toolchain falls back to latest `{fallback}`"
+                );
+                Ok(fallback)
+            }
+        }
     }
 }
 
-/// Pick the highest non-yanked `-research` prerelease from the crates.io
-/// `/crates/<name>` response's top-level `versions` array. The research (`rnd`)
-/// toolchain lane publishes `X.Y.Z-research`, which `max_stable_version` skips.
-fn parse_crates_io_research_version(crate_name: &str, body: &str) -> Result<String> {
+/// Pick the highest non-yanked version from the crates.io `/crates/<name>`
+/// response's top-level `versions` array. When `research_only`, restricts to
+/// `-research` prereleases (the research lane publishes `X.Y.Z-research`, which
+/// `max_stable_version` skips). Otherwise picks the highest semver of ANY
+/// channel — the fallback for toolchain crates with no `-research` build, which
+/// keeps them at their latest dev build instead of regressing to old stable.
+fn pick_highest_crates_io_version(
+    crate_name: &str,
+    body: &str,
+    research_only: bool,
+) -> Result<String> {
     let payload: serde_json::Value = serde_json::from_str(body)
         .with_context(|| format!("crates.io API for `{crate_name}` returned invalid JSON"))?;
     let versions = payload
@@ -1002,7 +1025,7 @@ fn parse_crates_io_research_version(crate_name: &str, body: &str) -> Result<Stri
         let Ok(parsed) = Version::parse(num) else {
             continue;
         };
-        if !parsed.pre.as_str().starts_with("research") {
+        if research_only && !parsed.pre.as_str().starts_with("research") {
             continue;
         }
         if best.as_ref().is_none_or(|current| parsed > *current) {
@@ -1010,8 +1033,17 @@ fn parse_crates_io_research_version(crate_name: &str, body: &str) -> Result<Stri
         }
     }
     best.map(|v| v.to_string()).ok_or_else(|| {
-        anyhow!("crates.io API for `{crate_name}` exposes no non-yanked `-research` version")
+        let what = if research_only {
+            "no non-yanked `-research` version"
+        } else {
+            "no non-yanked versions"
+        };
+        anyhow!("crates.io API for `{crate_name}` exposes {what}")
     })
+}
+
+fn parse_crates_io_research_version(crate_name: &str, body: &str) -> Result<String> {
+    pick_highest_crates_io_version(crate_name, body, true)
 }
 
 fn parse_crates_io_version(crate_name: &str, body: &str) -> Result<String> {
