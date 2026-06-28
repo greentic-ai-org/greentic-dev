@@ -1009,7 +1009,9 @@ fn pick_highest_crates_io_version(
     let versions = payload
         .get("versions")
         .and_then(|v| v.as_array())
-        .ok_or_else(|| anyhow!("crates.io API for `{crate_name}` is missing the `versions` array"))?;
+        .ok_or_else(|| {
+            anyhow!("crates.io API for `{crate_name}` is missing the `versions` array")
+        })?;
     let mut best: Option<Version> = None;
     for entry in versions {
         if entry
