@@ -154,13 +154,50 @@ pub fn run_passthrough(bin: &Path, args: &[OsString], verbose: bool) -> Result<E
 pub fn install_all_delegated_tools(latest: bool, locale: &str) -> Result<()> {
     ensure_cargo_binstall()?;
     let channel = current_toolchain_channel();
+    // The research (`rnd`) lane publishes `<crate>-rnd` at `X.Y.Z-research`
+    // PRERELEASE versions. `cargo binstall`/cargo will not select a pre-release
+    // without an explicit `--version`, so for the Rnd channel we resolve the
+    // latest research version per crate and pin it. Stable/Development publish
+    // regular releases that binstall picks up without a version.
+    let resolver = (channel == ToolchainChannel::Rnd)
+        .then(crate::release_cmd::CratesIoApiVersionResolver::default);
     for package in GREENTIC_TOOLCHAIN_PACKAGES {
         let crate_name = delegated_binary_name_for_channel(package.crate_name, channel);
+        let version: Option<String> = match resolver.as_ref() {
+            // Research channel: resolve the `-rnd` prerelease to pin. Tools with
+            // no research build (404) come back `Absent` — skip them with a note
+            // instead of aborting the whole install, since only start/runner/
+            // setup ship `-research` builds. Use the stable channel for the rest.
+            Some(resolver) => {
+                match crate::release_cmd::CrateVersionResolver::resolve_research_version(
+                    resolver,
+                    &crate_name,
+                )
+                .with_context(|| {
+                    format!(
+                        "failed to resolve research version for `{crate_name}` \
+                         (gtc-research install needs an explicit pre-release version)"
+                    )
+                })? {
+                    crate::release_cmd::ResearchVersion::Pinned(version) => Some(version),
+                    crate::release_cmd::ResearchVersion::Absent => {
+                        eprintln!(
+                            "note: `{crate_name}` has no research build on crates.io; \
+                             skipping it on the research toolchain (use the stable \
+                             channel for this tool)"
+                        );
+                        continue;
+                    }
+                }
+            }
+            None => None,
+        };
         for bin_name in package.bins {
             install_with_binstall(
                 &crate_name,
                 &delegated_binary_name_for_channel(bin_name, channel),
                 latest,
+                version.as_deref(),
                 locale,
             )?;
         }
@@ -172,6 +209,7 @@ fn install_with_binstall(
     crate_name: &str,
     bin_name: &str,
     force_latest: bool,
+    version: Option<&str>,
     locale: &str,
 ) -> Result<()> {
     eprintln!(
@@ -187,7 +225,7 @@ fn install_with_binstall(
     );
 
     let mut cmd = Command::new("cargo");
-    cmd.args(binstall_args(crate_name, bin_name, force_latest));
+    cmd.args(binstall_args(crate_name, bin_name, force_latest, version));
 
     let status = cmd
         .stdin(Stdio::inherit())
@@ -214,7 +252,12 @@ fn install_with_binstall(
     }
 }
 
-fn binstall_args(crate_name: &str, bin_name: &str, force_latest: bool) -> Vec<String> {
+fn binstall_args(
+    crate_name: &str,
+    bin_name: &str,
+    force_latest: bool,
+    version: Option<&str>,
+) -> Vec<String> {
     let mut args = vec![
         "binstall".to_string(),
         "-y".to_string(),
@@ -223,6 +266,12 @@ fn binstall_args(crate_name: &str, bin_name: &str, force_latest: bool) -> Vec<St
         "--bin".to_string(),
         bin_name.to_string(),
     ];
+    // Pre-release (`X.Y.Z-research`) `-rnd` crates need an explicit pinned
+    // version; binstall will not select a pre-release otherwise.
+    if let Some(version) = version {
+        args.push("--version".to_string());
+        args.push(version.to_string());
+    }
     if force_latest {
         args.push("--force".to_string());
     }
@@ -395,7 +444,7 @@ mod tests {
     #[test]
     fn binstall_args_include_force_only_when_latest_requested() {
         assert_eq!(
-            binstall_args("greentic-runner", "greentic-runner", false),
+            binstall_args("greentic-runner", "greentic-runner", false, None),
             vec![
                 "binstall",
                 "-y",
@@ -406,7 +455,7 @@ mod tests {
             ]
         );
         assert_eq!(
-            binstall_args("greentic-runner", "greentic-runner", true),
+            binstall_args("greentic-runner", "greentic-runner", true, None),
             vec![
                 "binstall",
                 "-y",
@@ -415,6 +464,30 @@ mod tests {
                 "--bin",
                 "greentic-runner",
                 "--force"
+            ]
+        );
+    }
+
+    #[test]
+    fn binstall_args_pin_version_for_rnd_prerelease() {
+        // The `-rnd` lane publishes `X.Y.Z-research` PRERELEASES; binstall needs
+        // an explicit `--version` to select them.
+        assert_eq!(
+            binstall_args(
+                "greentic-start-rnd",
+                "greentic-start-rnd",
+                false,
+                Some("1.2.0-research.1"),
+            ),
+            vec![
+                "binstall",
+                "-y",
+                "--locked",
+                "greentic-start-rnd",
+                "--bin",
+                "greentic-start-rnd",
+                "--version",
+                "1.2.0-research.1",
             ]
         );
     }
