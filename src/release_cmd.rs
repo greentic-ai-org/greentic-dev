@@ -407,6 +407,38 @@ fn channel_tag(channel: ToolchainChannel) -> &'static str {
     }
 }
 
+/// Resolve the version for a single toolchain manifest entry on `channel`.
+/// Returns `Ok(None)` when the research channel has no `-rnd` build for the
+/// crate (skip it) so manifest assembly does not abort on the ~10 of 13
+/// toolchain crates that ship no research build.
+fn resolve_manifest_version<R: CrateVersionResolver>(
+    resolver: &R,
+    crate_in_manifest: &str,
+    channel: ToolchainChannel,
+) -> Result<Option<String>> {
+    if channel == ToolchainChannel::Rnd {
+        match resolver
+            .resolve_research_version(crate_in_manifest)
+            .with_context(|| {
+                format!("failed to resolve research version for `{crate_in_manifest}`")
+            })? {
+            ResearchVersion::Pinned(version) => Ok(Some(version)),
+            ResearchVersion::Absent => {
+                eprintln!(
+                    "note: `{crate_in_manifest}` has no research build on crates.io; \
+                     omitting it from the research toolchain manifest"
+                );
+                Ok(None)
+            }
+        }
+    } else {
+        resolver
+            .resolve_latest_for_channel(crate_in_manifest, channel)
+            .with_context(|| format!("failed to resolve latest version for `{crate_in_manifest}`"))
+            .map(Some)
+    }
+}
+
 pub fn snapshot_manifest<R: CrateVersionResolver>(
     release: &str,
     channel: ToolchainChannel,
@@ -417,11 +449,9 @@ pub fn snapshot_manifest<R: CrateVersionResolver>(
     let mut packages = Vec::new();
     for package in GREENTIC_TOOLCHAIN_PACKAGES {
         let crate_in_manifest = manifest_crate_name_for_source(from, package.crate_name);
-        let version = resolver
-            .resolve_latest_for_channel(&crate_in_manifest, channel)
-            .with_context(|| {
-                format!("failed to resolve latest version for `{crate_in_manifest}`")
-            })?;
+        let Some(version) = resolve_manifest_version(resolver, &crate_in_manifest, channel)? else {
+            continue;
+        };
         packages.push(ToolchainPackage {
             crate_name: crate_in_manifest,
             bins: manifest_bins_for_source(from, package.bins),
@@ -595,9 +625,15 @@ where
         let crate_in_manifest = manifest_crate_name_for_source(from, package.crate_name);
         let source_version = source_versions.get(&crate_in_manifest);
         let version = match source_version.map(String::as_str) {
-            Some(version) if version != "latest" => version.to_string(),
-            _ => resolver
-                .resolve_latest_for_channel(&crate_in_manifest, channel_from_source_tag(from))?,
+            Some(version) if version != "latest" => Some(version.to_string()),
+            _ => resolve_manifest_version(
+                resolver,
+                &crate_in_manifest,
+                channel_from_source_tag(from),
+            )?,
+        };
+        let Some(version) = version else {
+            continue;
         };
         packages.push(ToolchainPackage {
             crate_name: crate_in_manifest,
@@ -765,6 +801,21 @@ fn created_at_now() -> Result<String> {
         .context("failed to format current time")
 }
 
+/// Outcome of resolving the research (`-rnd`) version of a toolchain crate.
+///
+/// Only `start`/`runner`/`setup` carry `-research` builds; the other ~10
+/// delegated toolchain crates have no `<name>-rnd` published. Resolving those
+/// must not be a hard error — it is an expected "no research build" signal that
+/// the caller turns into a skip, so the research channel still assembles.
+pub enum ResearchVersion {
+    /// The `<name>-rnd` crate is published; pin this exact version.
+    Pinned(String),
+    /// The `<name>-rnd` crate is not published on crates.io (HTTP 404). The
+    /// tool ships no research build and must be skipped on the research channel
+    /// rather than aborting the whole install / manifest assembly.
+    Absent,
+}
+
 pub trait CrateVersionResolver {
     fn resolve_latest(&self, crate_name: &str) -> Result<String>;
 
@@ -780,6 +831,16 @@ pub trait CrateVersionResolver {
         _channel: ToolchainChannel,
     ) -> Result<String> {
         self.resolve_latest(crate_name)
+    }
+
+    /// Resolve the research (`-rnd`) version, distinguishing an unpublished
+    /// crate (HTTP 404 → [`ResearchVersion::Absent`]) from a genuine resolution
+    /// error. The default treats every resolvable crate as
+    /// [`ResearchVersion::Pinned`]; only the crates.io resolver can observe a
+    /// 404, so it overrides this.
+    fn resolve_research_version(&self, crate_name: &str) -> Result<ResearchVersion> {
+        self.resolve_latest_for_channel(crate_name, ToolchainChannel::Rnd)
+            .map(ResearchVersion::Pinned)
     }
 }
 
@@ -827,6 +888,60 @@ impl CratesIoApiVersionResolver {
         Self {
             base_url: base_url.into(),
             client,
+        }
+    }
+
+    /// GET the crates.io page for `crate_name`. `Ok(None)` when the crate is
+    /// absent (HTTP 404), `Ok(Some(body))` on success, `Err` on any other
+    /// status or transport failure. Lets callers treat "no such crate" as a
+    /// skip rather than a hard error.
+    fn fetch_crate_body(&self, crate_name: &str) -> Result<Option<String>> {
+        let url = format!("{}/{}", self.base_url.trim_end_matches('/'), crate_name);
+        let response = self
+            .client
+            .get(&url)
+            .send()
+            .with_context(|| format!("failed to GET {url}"))?;
+        let status = response.status();
+        let body = response
+            .text()
+            .with_context(|| format!("failed to read body of {url}"))?;
+        classify_crate_response(status, &url, body)
+    }
+}
+
+/// Classify a crates.io crate-page response by HTTP status: `Ok(None)` for a
+/// 404 (crate absent), `Ok(Some(body))` for success, `Err` otherwise. Pure so
+/// the 404-vs-error decision is unit-testable without a live HTTP round-trip.
+fn classify_crate_response(
+    status: reqwest::StatusCode,
+    url: &str,
+    body: String,
+) -> Result<Option<String>> {
+    if status == reqwest::StatusCode::NOT_FOUND {
+        return Ok(None);
+    }
+    if !status.is_success() {
+        bail!("crates.io API GET {url} returned {status}: {body}");
+    }
+    Ok(Some(body))
+}
+
+/// Pick the research version from a crates.io body, or fall back to the latest
+/// published version when no `-research` prerelease exists. Toolchain crates
+/// with no `-research` publish yet keep their latest build so the snapshot still
+/// assembles; the multi-provider-critical crates (runner/setup/start) carry a
+/// `-research` build. The fallback is logged so silent staleness stays visible.
+fn research_or_fallback(crate_name: &str, body: &str) -> Result<String> {
+    match parse_crates_io_research_version(crate_name, body) {
+        Ok(version) => Ok(version),
+        Err(_) => {
+            let fallback = pick_highest_crates_io_version(crate_name, body, false)?;
+            eprintln!(
+                "note: `{crate_name}` has no -research publish; the research \
+                 toolchain falls back to latest `{fallback}`"
+            );
+            Ok(fallback)
         }
     }
 }
@@ -961,34 +1076,20 @@ impl CrateVersionResolver for CratesIoApiVersionResolver {
             return self.resolve_latest(crate_name);
         }
         let url = format!("{}/{}", self.base_url.trim_end_matches('/'), crate_name);
-        let response = self
-            .client
-            .get(&url)
-            .send()
-            .with_context(|| format!("failed to GET {url}"))?;
-        let status = response.status();
-        let body = response
-            .text()
-            .with_context(|| format!("failed to read body of {url}"))?;
-        if !status.is_success() {
-            bail!("crates.io API GET {url} returned {status}: {body}");
-        }
-        // Prefer the highest `-research` prerelease (multi-provider work lives on
-        // the research line). Toolchain crates with no `-research` publish yet
-        // (independent binaries: greentic-dev/operator/gui/mcp/…) fall back to the
-        // latest published version so the snapshot still assembles — the
-        // multi-provider-critical crates (runner/setup/start) MUST carry a
-        // `-research` build. The fallback is logged so silent staleness is visible.
-        match parse_crates_io_research_version(crate_name, &body) {
-            Ok(version) => Ok(version),
-            Err(_) => {
-                let fallback = pick_highest_crates_io_version(crate_name, &body, false)?;
-                eprintln!(
-                    "note: `{crate_name}` has no -research publish; the research \
-                     toolchain falls back to latest `{fallback}`"
-                );
-                Ok(fallback)
-            }
+        let body = self.fetch_crate_body(crate_name)?.ok_or_else(|| {
+            anyhow!("crates.io API GET {url} returned 404 Not Found (no published `{crate_name}`)")
+        })?;
+        research_or_fallback(crate_name, &body)
+    }
+
+    fn resolve_research_version(&self, crate_name: &str) -> Result<ResearchVersion> {
+        // A 404 means the `<name>-rnd` crate is simply not published — the tool
+        // ships no research build. Map it to `Absent` (a skip signal) instead of
+        // aborting, so `gtc-research install` / manifest assembly survives the
+        // ~10 of 13 toolchain crates that have no research line.
+        match self.fetch_crate_body(crate_name)? {
+            None => Ok(ResearchVersion::Absent),
+            Some(body) => research_or_fallback(crate_name, &body).map(ResearchVersion::Pinned),
         }
     }
 }
@@ -1009,7 +1110,9 @@ fn pick_highest_crates_io_version(
     let versions = payload
         .get("versions")
         .and_then(|v| v.as_array())
-        .ok_or_else(|| anyhow!("crates.io API for `{crate_name}` is missing the `versions` array"))?;
+        .ok_or_else(|| {
+            anyhow!("crates.io API for `{crate_name}` is missing the `versions` array")
+        })?;
     let mut best: Option<Version> = None;
     for entry in versions {
         if entry
@@ -1284,6 +1387,86 @@ mod tests {
             "versions":[{"num":"1.2.0-dev.123","yanked":false},{"num":"0.5.25","yanked":false}]}"#;
         let err = parse_crates_io_research_version("greentic-setup", body).unwrap_err();
         assert!(err.to_string().contains("no non-yanked `-research`"));
+    }
+
+    /// Mirrors the real fleet: only start/runner/setup ship `-research` crates,
+    /// so any `operator` crate resolves to `Absent` (a skip), everything else to
+    /// a pinned research version.
+    struct ResearchSkipResolver;
+
+    impl CrateVersionResolver for ResearchSkipResolver {
+        fn resolve_latest(&self, _crate_name: &str) -> Result<String> {
+            Ok("1.2.0-research.4".to_string())
+        }
+
+        fn resolve_research_version(&self, crate_name: &str) -> Result<ResearchVersion> {
+            if crate_name.contains("operator") {
+                Ok(ResearchVersion::Absent)
+            } else {
+                Ok(ResearchVersion::Pinned("1.2.0-research.4".to_string()))
+            }
+        }
+    }
+
+    #[test]
+    fn classify_crate_response_maps_404_to_absent() {
+        let outcome =
+            classify_crate_response(reqwest::StatusCode::NOT_FOUND, "url", "missing".to_string())
+                .unwrap();
+        assert!(outcome.is_none(), "404 must classify as absent (None)");
+    }
+
+    #[test]
+    fn classify_crate_response_returns_body_on_success() {
+        let outcome =
+            classify_crate_response(reqwest::StatusCode::OK, "url", "payload".to_string()).unwrap();
+        assert_eq!(outcome.as_deref(), Some("payload"));
+    }
+
+    #[test]
+    fn classify_crate_response_errors_on_other_status() {
+        let err = classify_crate_response(
+            reqwest::StatusCode::INTERNAL_SERVER_ERROR,
+            "url",
+            "boom".to_string(),
+        )
+        .unwrap_err();
+        assert!(err.to_string().contains("500"));
+    }
+
+    #[test]
+    fn snapshot_manifest_skips_crates_without_research_build() {
+        // The absent `operator` crate must be omitted, not abort the whole
+        // research manifest — the regression behind .github#212's install hang.
+        let manifest = snapshot_manifest(
+            "1.2.0-research.4",
+            ToolchainChannel::Rnd,
+            &ResearchSkipResolver,
+            None,
+        )
+        .unwrap();
+        assert!(
+            !manifest.packages.is_empty(),
+            "research-built tools must remain in the manifest"
+        );
+        assert!(
+            manifest.packages.len() < GREENTIC_TOOLCHAIN_PACKAGES.len(),
+            "at least one tool without a research build must be skipped"
+        );
+        assert!(
+            manifest
+                .packages
+                .iter()
+                .all(|package| !package.crate_name.contains("operator")),
+            "the absent `operator` crate must be omitted"
+        );
+        assert!(
+            manifest
+                .packages
+                .iter()
+                .all(|package| package.version == "1.2.0-research.4"),
+            "remaining research tools pin their resolved -research version"
+        );
     }
 
     #[test]

@@ -159,24 +159,37 @@ pub fn install_all_delegated_tools(latest: bool, locale: &str) -> Result<()> {
     // without an explicit `--version`, so for the Rnd channel we resolve the
     // latest research version per crate and pin it. Stable/Development publish
     // regular releases that binstall picks up without a version.
-    let resolver =
-        (channel == ToolchainChannel::Rnd).then(crate::release_cmd::CratesIoApiVersionResolver::default);
+    let resolver = (channel == ToolchainChannel::Rnd)
+        .then(crate::release_cmd::CratesIoApiVersionResolver::default);
     for package in GREENTIC_TOOLCHAIN_PACKAGES {
         let crate_name = delegated_binary_name_for_channel(package.crate_name, channel);
         let version: Option<String> = match resolver.as_ref() {
-            Some(resolver) => Some(
-                crate::release_cmd::CrateVersionResolver::resolve_latest_for_channel(
+            // Research channel: resolve the `-rnd` prerelease to pin. Tools with
+            // no research build (404) come back `Absent` — skip them with a note
+            // instead of aborting the whole install, since only start/runner/
+            // setup ship `-research` builds. Use the stable channel for the rest.
+            Some(resolver) => {
+                match crate::release_cmd::CrateVersionResolver::resolve_research_version(
                     resolver,
                     &crate_name,
-                    channel,
                 )
                 .with_context(|| {
                     format!(
                         "failed to resolve research version for `{crate_name}` \
                          (gtc-research install needs an explicit pre-release version)"
                     )
-                })?,
-            ),
+                })? {
+                    crate::release_cmd::ResearchVersion::Pinned(version) => Some(version),
+                    crate::release_cmd::ResearchVersion::Absent => {
+                        eprintln!(
+                            "note: `{crate_name}` has no research build on crates.io; \
+                             skipping it on the research toolchain (use the stable \
+                             channel for this tool)"
+                        );
+                        continue;
+                    }
+                }
+            }
             None => None,
         };
         for bin_name in package.bins {
