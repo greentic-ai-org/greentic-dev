@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "Vietinis įrankių grandinės manifesto JSON failas publikavimui",
   "cli.command.release.out": "Katalogas sugeneruotiems įrankių grandinės manifestams",
   "cli.command.release.promote.about": "Perkelti GHCR žymą į esamą Greentic įrankių grandinės leidimą",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Generuoti ir publikuoti Greentic įrankių grandinės leidimo manifestą",
   "cli.command.release.release": "Leidimo versija, kurią generuoti, publikuoti arba paaukštinti",
   "cli.command.release.repo": "GHCR įrankių grandinės manifesto saugykla",

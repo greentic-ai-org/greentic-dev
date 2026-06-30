@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "File JSON manifes toolchain lokal untuk dipublikasikan",
   "cli.command.release.out": "Direktori untuk manifes toolchain yang dihasilkan",
   "cli.command.release.promote.about": "Pindahkan tag GHCR ke rilis toolchain Greentic yang sudah ada",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Buat dan publikasikan manifes rilis toolchain Greentic",
   "cli.command.release.release": "Versi rilis untuk dibuat, dipublikasikan, atau dipromosikan",
   "cli.command.release.repo": "Repositori manifes toolchain GHCR",

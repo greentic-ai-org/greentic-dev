@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "പ്രസിദ്ധീകരിക്കാനുള്ള ലോക്കൽ ടൂൾചെയിൻ മാനിഫെസ്റ്റ് JSON ഫയൽ",
   "cli.command.release.out": "സൃഷ്ടിച്ച ടൂൾചെയിൻ മാനിഫെസ്റ്റുകൾക്കുള്ള ഡയറക്ടറി",
   "cli.command.release.promote.about": "ഒരു GHCR ടാഗ് നിലവിലുള്ള Greentic ടൂൾചെയിൻ റിലീസിലേക്ക് മാറ്റുക",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Greentic ടൂൾചെയിൻ റിലീസ് മാനിഫെസ്റ്റ് സൃഷ്ടിച്ച് പ്രസിദ്ധീകരിക്കുക",
   "cli.command.release.release": "സൃഷ്ടിക്കാനോ പ്രസിദ്ധീകരിക്കാനോ പ്രമോട്ട് ചെയ്യാനോ ഉള്ള റിലീസ് പതിപ്പ്",
   "cli.command.release.repo": "GHCR ടൂൾചെയിൻ മാനിഫെസ്റ്റ് റിപ്പോസിറ്ററി",

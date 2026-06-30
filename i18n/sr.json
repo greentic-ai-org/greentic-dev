@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "Lokalna JSON datoteka manifesta lanca alata za objavljivanje",
   "cli.command.release.out": "Direktorijum za generisane manifeste lanca alata",
   "cli.command.release.promote.about": "Premesti GHCR oznaku na postojeće izdanje Greentic lanca alata",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Generiši i objavi manifest izdanja Greentic lanca alata",
   "cli.command.release.release": "Verzija izdanja za generisanje, objavljivanje ili promovisanje",
   "cli.command.release.repo": "GHCR repozitorijum manifesta lanca alata",

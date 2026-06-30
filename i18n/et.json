@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "Avaldatav kohaliku tööriistaahela manifesti JSON-fail",
   "cli.command.release.out": "Genereeritud tööriistaahela manifestide kataloog",
   "cli.command.release.promote.about": "Teisalda GHCR-i silt olemasolevale Greenticu tööriistaahela väljalaskele",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Genereeri ja avalda Greenticu tööriistaahela väljalaskemanifest",
   "cli.command.release.release": "Väljalaske versioon, mida genereerida, avaldada või edendada",
   "cli.command.release.repo": "GHCR-i tööriistaahela manifesti hoidla",

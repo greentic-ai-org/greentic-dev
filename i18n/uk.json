@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "Локальний JSON-файл маніфесту набору інструментів для публікації",
   "cli.command.release.out": "Каталог для згенерованих маніфестів інструментарію",
   "cli.command.release.promote.about": "Перемістити тег GHCR до наявного випуску інструментарію Greentic",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Згенерувати та опублікувати маніфест випуску інструментарію Greentic",
   "cli.command.release.release": "Версія випуску для генерування, публікації або просування",
   "cli.command.release.repo": "Репозиторій маніфестів інструментарію GHCR",
