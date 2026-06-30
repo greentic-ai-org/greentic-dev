@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "Uñt’ayañataki local herramienta cadena manifest JSON qillqata",
   "cli.command.release.out": "Lurat toolchain manifests ukanakataki directorio",
   "cli.command.release.promote.about": "GHCR tag uk mä utjki uka Greentic toolchain release ukar apaña",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Greentic toolchain release manifest luraña ukhamarak uñtayaña",
   "cli.command.release.release": "Lurañataki, uñtayañataki jan ukax nayrar sartayañataki release versión",
   "cli.command.release.repo": "GHCR toolchain manifest repositorio",

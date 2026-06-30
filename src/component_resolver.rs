@@ -370,6 +370,12 @@ mod tests {
     }
 
     #[test]
+    fn whitespace_version_requirement_defaults_to_any() {
+        let req = parse_version_req("   ").unwrap();
+        assert!(req.matches(&Version::parse("9.9.9").unwrap()));
+    }
+
+    #[test]
     fn component_target_falls_back_to_short_name() {
         let dir = tempdir().unwrap();
         let short = dir.path().join("hello-world");
@@ -379,6 +385,14 @@ mod tests {
         match target {
             super::ComponentTarget::Path(path) => assert_eq!(path, short),
             _ => panic!("expected path target"),
+        }
+    }
+
+    #[test]
+    fn component_target_uses_direct_name_without_root() {
+        match component_target("ai.greentic.hello-world", None) {
+            super::ComponentTarget::Direct(id) => assert_eq!(id, "ai.greentic.hello-world"),
+            _ => panic!("expected direct target"),
         }
     }
 

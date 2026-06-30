@@ -34,6 +34,8 @@
   "cli.command.release.manifest": "Τοπικό αρχείο JSON μανιφέστου της εργαλειοθήκης προς δημοσίευση",
   "cli.command.release.out": "Κατάλογος για δημιουργημένα μανιφέστα αλυσίδας εργαλείων",
   "cli.command.release.promote.about": "Μετακίνηση ετικέτας GHCR σε υπάρχουσα έκδοση αλυσίδας εργαλείων Greentic",
+  "cli.command.release.snapshot.about": "Snapshot the latest crates.io versions for a channel into a new toolchain manifest and publish it",
+  "cli.command.release.snapshot.channel": "Toolchain channel to snapshot (`dev` for `<crate>-dev` aliases, `stable` for plain crate names)",
   "cli.command.release.publish.about": "Δημιουργία και δημοσίευση μανιφέστου έκδοσης αλυσίδας εργαλείων Greentic",
   "cli.command.release.release": "Έκδοση προς δημιουργία, δημοσίευση ή προώθηση",
   "cli.command.release.repo": "Αποθετήριο μανιφέστου αλυσίδας εργαλείων GHCR",
