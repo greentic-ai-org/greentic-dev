@@ -8,7 +8,22 @@ use std::collections::{BTreeMap, btree_map::Entry};
 
 use crate::path_safety::normalize_under_root;
 
-pub fn doctor(target: &str, json: bool) -> Result<()> {
+pub fn doctor(target: Option<&str>, json: bool) -> Result<()> {
+    let Some(target) = target else {
+        // No tool map supplied: report only generator + wasm toolchain readiness.
+        let generator = GeneratorStatus::detect();
+        if json {
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&generator)
+                    .context("failed to encode JSON report")?
+            );
+        } else {
+            print_generator_status(&generator);
+        }
+        return Ok(());
+    };
+
     let workspace_root = std::env::current_dir()
         .context("failed to resolve workspace root")?
         .canonicalize()
@@ -307,12 +322,16 @@ fn print_report(report: &ToolMapReport) {
             println!("  - {warning}");
         }
     }
+    print_generator_status(&report.generator);
+}
+
+fn print_generator_status(generator: &GeneratorStatus) {
     let locale = crate::i18n::select_locale(None);
     println!(
         "{}",
         crate::i18n::t(&locale, "cli.command.mcp.doctor.generator.header")
     );
-    match (&report.generator.resolved_path, &report.generator.version) {
+    match (&generator.resolved_path, &generator.version) {
         (Some(path), Some(version)) => println!(
             "  {}",
             crate::i18n::tf(
@@ -334,21 +353,20 @@ fn print_report(report: &ToolMapReport) {
             crate::i18n::t(&locale, "cli.command.mcp.doctor.generator.missing")
         ),
     }
-    let toolchain_ready =
-        report.generator.cargo_available && report.generator.wasm_target_installed;
+    let toolchain_ready = generator.cargo_available && generator.wasm_target_installed;
     if toolchain_ready {
         println!(
             "  {}",
             crate::i18n::t(&locale, "cli.command.mcp.doctor.toolchain.ready")
         );
     }
-    if !toolchain_ready && !report.generator.cargo_available {
+    if !toolchain_ready && !generator.cargo_available {
         println!(
             "  {}",
             crate::i18n::t(&locale, "cli.command.mcp.doctor.toolchain.cargo_missing")
         );
     }
-    if !toolchain_ready && !report.generator.wasm_target_installed {
+    if !toolchain_ready && !generator.wasm_target_installed {
         println!(
             "  {}",
             crate::i18n::t(&locale, "cli.command.mcp.doctor.toolchain.wasm_missing")
@@ -376,6 +394,14 @@ mod generator_tests {
         assert!(json.get("version").is_some());
         assert!(json.get("cargo_available").is_some());
         assert!(json.get("wasm_target_installed").is_some());
+    }
+
+    #[test]
+    fn doctor_without_toolmap_returns_ok() {
+        // No toolmap: doctor must succeed, printing only the generator/toolchain
+        // section (best-effort detect never hard-errors).
+        assert!(super::doctor(None, true).is_ok());
+        assert!(super::doctor(None, false).is_ok());
     }
 }
 

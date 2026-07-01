@@ -75,7 +75,7 @@ fn main() -> Result<()> {
         }
         Command::Cbor(args) => cbor_cmd::run(args),
         Command::Mcp(mcp) => match mcp {
-            McpCommand::Doctor(args) => mcp_cmd::doctor(&args.provider, args.json),
+            McpCommand::Doctor(args) => mcp_cmd::doctor(args.provider.as_deref(), args.json),
             McpCommand::Gen(args) => {
                 let bin = greentic_dev::passthrough::resolve_external_tool("greentic-mcp-gen")
                     .map_err(|_| {

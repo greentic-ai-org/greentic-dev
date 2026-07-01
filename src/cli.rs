@@ -538,7 +538,7 @@ pub enum McpCommand {
 #[derive(Args, Debug)]
 pub struct McpDoctorArgs {
     /// cli.command.mcp.doctor.provider
-    pub provider: String,
+    pub provider: Option<String>,
     /// cli.command.mcp.doctor.json
     #[arg(long = "json")]
     pub json: bool,
