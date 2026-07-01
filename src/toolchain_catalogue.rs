@@ -64,6 +64,16 @@ pub const GREENTIC_TOOLCHAIN_PACKAGES: &[ToolchainPackageSpec] = &[
     },
 ];
 
+/// External tools distributed as their own single, unsuffixed binary
+/// (not part of the Greentic channel-suffixed toolchain). Resolved and
+/// installed by plain name — never with a `-dev`/`-rnd` suffix.
+pub const GREENTIC_EXTERNAL_TOOL_PACKAGES: &[ToolchainPackageSpec] = &[
+    ToolchainPackageSpec {
+        crate_name: "greentic-mcp-generator",
+        bins: &["greentic-mcp-gen"],
+    },
+];
+
 pub const GREENTIC_EXTENSION_PACK_PACKAGES: &[OciPackageSpec] = &[
     OciPackageSpec {
         package: "packs/demos/cards-demo",
@@ -338,11 +348,17 @@ pub const GREENTIC_COMPONENT_PACKAGES: &[OciPackageSpec] = &[
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        GREENTIC_COMPONENT_PACKAGES, GREENTIC_EXTENSION_PACK_PACKAGES, GREENTIC_TOOLCHAIN_PACKAGES,
-        OciPackageSpec,
-    };
+    use super::*;
     use std::collections::BTreeSet;
+
+    #[test]
+    fn external_packages_include_mcp_generator() {
+        let found = GREENTIC_EXTERNAL_TOOL_PACKAGES.iter().find(|pkg| {
+            pkg.crate_name == "greentic-mcp-generator"
+        });
+        let pkg = found.expect("generator must be registered as an external tool");
+        assert_eq!(pkg.bins, &["greentic-mcp-gen"]);
+    }
 
     #[test]
     fn catalogue_contains_expected_public_toolchain() {

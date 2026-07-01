@@ -5,7 +5,7 @@ use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitStatus, Stdio};
 
-use crate::toolchain_catalogue::GREENTIC_TOOLCHAIN_PACKAGES;
+use crate::toolchain_catalogue::{GREENTIC_EXTERNAL_TOOL_PACKAGES, GREENTIC_TOOLCHAIN_PACKAGES};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ToolchainChannel {
@@ -209,6 +209,12 @@ pub fn install_all_delegated_tools(latest: bool, locale: &str) -> Result<()> {
                 latest,
                 locale,
             )?;
+        }
+    }
+    // External tools ship a single unsuffixed binary — install by plain name.
+    for package in GREENTIC_EXTERNAL_TOOL_PACKAGES {
+        for bin_name in package.bins {
+            install_with_binstall(package.crate_name, bin_name, latest, locale)?;
         }
     }
     Ok(())
