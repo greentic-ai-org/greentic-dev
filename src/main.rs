@@ -76,6 +76,17 @@ fn main() -> Result<()> {
         Command::Cbor(args) => cbor_cmd::run(args),
         Command::Mcp(mcp) => match mcp {
             McpCommand::Doctor(args) => mcp_cmd::doctor(&args.provider, args.json),
+            McpCommand::Gen(args) => {
+                let bin = greentic_dev::passthrough::resolve_external_tool("greentic-mcp-gen")
+                    .map_err(|_| {
+                        anyhow::anyhow!(greentic_dev::i18n::t(
+                            &selected_locale,
+                            "runtime.mcp.gen.error.not_installed"
+                        ))
+                    })?;
+                let status = run_passthrough(&bin, &args.args, false)?;
+                std::process::exit(status.code().unwrap_or(1));
+            }
         },
         Command::Tools(command) => match command {
             ToolsCommand::Install(args) => tools::install(args.latest, &selected_locale),
