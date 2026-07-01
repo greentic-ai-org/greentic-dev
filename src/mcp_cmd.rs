@@ -15,8 +15,7 @@ pub fn doctor(target: Option<&str>, json: bool) -> Result<()> {
         if json {
             println!(
                 "{}",
-                serde_json::to_string_pretty(&generator)
-                    .context("failed to encode JSON report")?
+                serde_json::to_string_pretty(&generator).context("failed to encode JSON report")?
             );
         } else {
             print_generator_status(&generator);
