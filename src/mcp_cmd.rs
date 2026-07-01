@@ -1,5 +1,6 @@
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::Command as ProcessCommand;
 
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
@@ -46,6 +47,69 @@ struct ToolRef {
 #[derive(Debug, Clone, Deserialize)]
 struct ToolMapConfig {
     tools: Vec<ToolRef>,
+}
+
+#[derive(Debug, Serialize)]
+struct GeneratorStatus {
+    binary_name: String,
+    resolved_path: Option<String>,
+    version: Option<String>,
+    cargo_available: bool,
+    wasm_target_installed: bool,
+}
+
+impl GeneratorStatus {
+    fn absent() -> Self {
+        Self {
+            binary_name: "greentic-mcp-gen".to_string(),
+            resolved_path: None,
+            version: None,
+            cargo_available: cargo_available(),
+            wasm_target_installed: wasm_target_installed(),
+        }
+    }
+
+    fn detect() -> Self {
+        match crate::passthrough::resolve_external_tool("greentic-mcp-gen") {
+            Ok(path) => {
+                let version = ProcessCommand::new(&path)
+                    .arg("--version")
+                    .output()
+                    .ok()
+                    .filter(|out| out.status.success())
+                    .map(|out| String::from_utf8_lossy(&out.stdout).trim().to_string())
+                    .filter(|s| !s.is_empty());
+                Self {
+                    binary_name: "greentic-mcp-gen".to_string(),
+                    resolved_path: Some(path.display().to_string()),
+                    version,
+                    cargo_available: cargo_available(),
+                    wasm_target_installed: wasm_target_installed(),
+                }
+            }
+            Err(_) => Self::absent(),
+        }
+    }
+}
+
+/// Best-effort: is `cargo` invokable?
+fn cargo_available() -> bool {
+    ProcessCommand::new("cargo")
+        .arg("--version")
+        .output()
+        .map(|out| out.status.success())
+        .unwrap_or(false)
+}
+
+/// Best-effort: is the `wasm32-wasip2` target installed?
+fn wasm_target_installed() -> bool {
+    ProcessCommand::new("rustup")
+        .args(["target", "list", "--installed"])
+        .output()
+        .ok()
+        .filter(|out| out.status.success())
+        .map(|out| String::from_utf8_lossy(&out.stdout).contains("wasm32-wasip2"))
+        .unwrap_or(false)
 }
 
 #[derive(Debug, Clone)]
@@ -140,6 +204,7 @@ struct ToolMapReport {
     tool_count: usize,
     tools: Vec<ToolHealth>,
     warnings: Vec<String>,
+    generator: GeneratorStatus,
 }
 
 #[derive(Debug, Serialize)]
@@ -197,6 +262,7 @@ impl ToolMapReport {
             tool_count: tools.len(),
             tools,
             warnings,
+            generator: GeneratorStatus::detect(),
         }
     }
 }
@@ -240,6 +306,60 @@ fn print_report(report: &ToolMapReport) {
         for warning in &report.warnings {
             println!("  - {warning}");
         }
+    }
+    let locale = crate::i18n::select_locale(None);
+    println!("{}", crate::i18n::t(&locale, "cli.command.mcp.doctor.generator.header"));
+    match (&report.generator.resolved_path, &report.generator.version) {
+        (Some(path), Some(version)) => println!(
+            "  {}",
+            crate::i18n::tf(
+                &locale,
+                "cli.command.mcp.doctor.generator.found",
+                &[("path", path.clone()), ("version", version.clone())],
+            )
+        ),
+        (Some(path), None) => println!(
+            "  {}",
+            crate::i18n::tf(
+                &locale,
+                "cli.command.mcp.doctor.generator.found",
+                &[("path", path.clone()), ("version", "unknown".to_string())],
+            )
+        ),
+        _ => println!("  {}", crate::i18n::t(&locale, "cli.command.mcp.doctor.generator.missing")),
+    }
+    if report.generator.cargo_available && report.generator.wasm_target_installed {
+        println!("  {}", crate::i18n::t(&locale, "cli.command.mcp.doctor.toolchain.ready"));
+    } else {
+        if !report.generator.cargo_available {
+            println!("  {}", crate::i18n::t(&locale, "cli.command.mcp.doctor.toolchain.cargo_missing"));
+        }
+        if !report.generator.wasm_target_installed {
+            println!("  {}", crate::i18n::t(&locale, "cli.command.mcp.doctor.toolchain.wasm_missing"));
+        }
+    }
+}
+
+#[cfg(test)]
+mod generator_tests {
+    use super::*;
+
+    #[test]
+    fn absent_generator_status_has_no_path_or_version() {
+        let status = GeneratorStatus::absent();
+        assert_eq!(status.binary_name, "greentic-mcp-gen");
+        assert!(status.resolved_path.is_none());
+        assert!(status.version.is_none());
+    }
+
+    #[test]
+    fn generator_status_serializes_expected_fields() {
+        let json = serde_json::to_value(GeneratorStatus::absent()).unwrap();
+        assert!(json.get("binary_name").is_some());
+        assert!(json.get("resolved_path").is_some()); // present as null
+        assert!(json.get("version").is_some());
+        assert!(json.get("cargo_available").is_some());
+        assert!(json.get("wasm_target_installed").is_some());
     }
 }
 
