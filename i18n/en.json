@@ -186,5 +186,7 @@
   "cli.command.security.security_severity": "Comma-separated security severity filter, such as critical,high,medium,low",
   "cli.command.security.state": "Comma-separated GitHub alert state filter: open,dismissed,fixed,resolved,auto_dismissed",
   "cli.command.security.repo": "GitHub repository as OWNER/REPO; defaults to origin",
-  "cli.command.security.branch": "Git branch name for code scanning alerts; defaults to the current branch"
+  "cli.command.security.branch": "Git branch name for code scanning alerts; defaults to the current branch",
+  "cli.command.mcp.gen.about": "Generate an MCP router component from an OpenAPI/Swagger spec (passthrough to greentic-mcp-gen)",
+  "runtime.mcp.gen.error.not_installed": "greentic-mcp-gen was not found. Install it with `cargo binstall greentic-mcp-generator` (set GITHUB_TOKEN for the private repo) or run `greentic-dev install`."
 }
