@@ -111,6 +111,53 @@ pub fn resolve_binary_for_channel(name: &str, channel: ToolchainChannel) -> Resu
     )
 }
 
+/// Environment-override key for an external tool, e.g. `greentic-mcp-gen`
+/// → `GREENTIC_DEV_BIN_GREENTIC_MCP_GEN`.
+pub(crate) fn external_tool_env_key(name: &str) -> String {
+    format!("GREENTIC_DEV_BIN_{}", name.replace('-', "_").to_uppercase())
+}
+
+/// Resolve an external (non-Greentic-channel) tool binary by its plain name.
+///
+/// Unlike [`resolve_binary`], this never appends the toolchain channel suffix
+/// (`-dev`/`-rnd`): external tools such as `greentic-mcp-gen` ship a single,
+/// unsuffixed binary. Resolution order: `GREENTIC_DEV_BIN_<NAME>` env override,
+/// then `PATH`.
+pub fn resolve_external_tool(name: &str) -> Result<PathBuf> {
+    let locale = crate::i18n::select_locale(None);
+    let env_key = external_tool_env_key(name);
+    if let Ok(path) = env::var(&env_key) {
+        let pb = PathBuf::from(path);
+        if pb.exists() {
+            return Ok(pb);
+        }
+        bail!(
+            "{}",
+            crate::i18n::tf(
+                &locale,
+                "runtime.passthrough.error.env_binary_missing",
+                &[
+                    ("env_key", env_key.clone()),
+                    ("path", pb.display().to_string()),
+                ],
+            )
+        );
+    }
+
+    if let Ok(path) = which::which(name) {
+        return Ok(path);
+    }
+
+    bail!(
+        "{}",
+        crate::i18n::tf(
+            &locale,
+            "runtime.passthrough.error.binary_not_found",
+            &[("name", name.to_string()), ("env_key", env_key)],
+        )
+    )
+}
+
 pub fn run_passthrough(bin: &Path, args: &[OsString], verbose: bool) -> Result<ExitStatus> {
     let locale = crate::i18n::select_locale(None);
     if verbose {
@@ -379,7 +426,8 @@ fn parse_latest_cargo_binstall_version(stdout: &str) -> Result<Version> {
 mod tests {
     use super::{
         ToolchainChannel, binstall_args, delegated_binary_name_for_channel,
-        parse_installed_cargo_binstall_version, parse_latest_cargo_binstall_version,
+        external_tool_env_key, parse_installed_cargo_binstall_version,
+        parse_latest_cargo_binstall_version, resolve_external_tool,
     };
     use crate::toolchain_catalogue::GREENTIC_TOOLCHAIN_PACKAGES;
 
@@ -489,5 +537,24 @@ mod tests {
         )
         .expect("parse should succeed");
         assert_eq!(parsed.to_string(), "1.15.7");
+    }
+
+    #[test]
+    fn external_tool_env_key_is_plain_uppercase_no_channel_suffix() {
+        // The key derives from the plain binary name; it must never carry a
+        // `-dev`/`-rnd` channel suffix.
+        assert_eq!(
+            external_tool_env_key("greentic-mcp-gen"),
+            "GREENTIC_DEV_BIN_GREENTIC_MCP_GEN"
+        );
+    }
+
+    #[test]
+    fn resolve_external_tool_errors_with_plain_name_when_absent() {
+        // A name that is not on PATH and has no env override resolves to an error
+        // that mentions the plain (unsuffixed) name.
+        let err = resolve_external_tool("greentic-mcp-gen-absent-xyz")
+            .expect_err("expected resolution to fail");
+        assert!(err.to_string().contains("greentic-mcp-gen-absent-xyz"));
     }
 }
