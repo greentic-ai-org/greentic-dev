@@ -328,15 +328,16 @@ fn print_report(report: &ToolMapReport) {
         ),
         _ => println!("  {}", crate::i18n::t(&locale, "cli.command.mcp.doctor.generator.missing")),
     }
-    if report.generator.cargo_available && report.generator.wasm_target_installed {
+    let toolchain_ready =
+        report.generator.cargo_available && report.generator.wasm_target_installed;
+    if toolchain_ready {
         println!("  {}", crate::i18n::t(&locale, "cli.command.mcp.doctor.toolchain.ready"));
-    } else {
-        if !report.generator.cargo_available {
-            println!("  {}", crate::i18n::t(&locale, "cli.command.mcp.doctor.toolchain.cargo_missing"));
-        }
-        if !report.generator.wasm_target_installed {
-            println!("  {}", crate::i18n::t(&locale, "cli.command.mcp.doctor.toolchain.wasm_missing"));
-        }
+    }
+    if !toolchain_ready && !report.generator.cargo_available {
+        println!("  {}", crate::i18n::t(&locale, "cli.command.mcp.doctor.toolchain.cargo_missing"));
+    }
+    if !toolchain_ready && !report.generator.wasm_target_installed {
+        println!("  {}", crate::i18n::t(&locale, "cli.command.mcp.doctor.toolchain.wasm_missing"));
     }
 }
 
