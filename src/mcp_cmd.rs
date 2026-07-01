@@ -308,7 +308,10 @@ fn print_report(report: &ToolMapReport) {
         }
     }
     let locale = crate::i18n::select_locale(None);
-    println!("{}", crate::i18n::t(&locale, "cli.command.mcp.doctor.generator.header"));
+    println!(
+        "{}",
+        crate::i18n::t(&locale, "cli.command.mcp.doctor.generator.header")
+    );
     match (&report.generator.resolved_path, &report.generator.version) {
         (Some(path), Some(version)) => println!(
             "  {}",
@@ -326,18 +329,30 @@ fn print_report(report: &ToolMapReport) {
                 &[("path", path.clone()), ("version", "unknown".to_string())],
             )
         ),
-        _ => println!("  {}", crate::i18n::t(&locale, "cli.command.mcp.doctor.generator.missing")),
+        _ => println!(
+            "  {}",
+            crate::i18n::t(&locale, "cli.command.mcp.doctor.generator.missing")
+        ),
     }
     let toolchain_ready =
         report.generator.cargo_available && report.generator.wasm_target_installed;
     if toolchain_ready {
-        println!("  {}", crate::i18n::t(&locale, "cli.command.mcp.doctor.toolchain.ready"));
+        println!(
+            "  {}",
+            crate::i18n::t(&locale, "cli.command.mcp.doctor.toolchain.ready")
+        );
     }
     if !toolchain_ready && !report.generator.cargo_available {
-        println!("  {}", crate::i18n::t(&locale, "cli.command.mcp.doctor.toolchain.cargo_missing"));
+        println!(
+            "  {}",
+            crate::i18n::t(&locale, "cli.command.mcp.doctor.toolchain.cargo_missing")
+        );
     }
     if !toolchain_ready && !report.generator.wasm_target_installed {
-        println!("  {}", crate::i18n::t(&locale, "cli.command.mcp.doctor.toolchain.wasm_missing"));
+        println!(
+            "  {}",
+            crate::i18n::t(&locale, "cli.command.mcp.doctor.toolchain.wasm_missing")
+        );
     }
 }
 

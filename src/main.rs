@@ -153,9 +153,12 @@ fn maybe_delegate_mcp_passthrough(argv: &[OsString]) -> Result<()> {
         );
         // Safe: `mcp_gen_args` returns Some here because argv[1]=="mcp" && argv[2]=="gen".
         let forwarded = mcp_gen_args(argv).unwrap_or_default();
-        let bin = greentic_dev::passthrough::resolve_external_tool("greentic-mcp-gen")
-            .map_err(|_| {
-                anyhow::anyhow!(greentic_dev::i18n::t(&locale, "runtime.mcp.gen.error.not_installed"))
+        let bin =
+            greentic_dev::passthrough::resolve_external_tool("greentic-mcp-gen").map_err(|_| {
+                anyhow::anyhow!(greentic_dev::i18n::t(
+                    &locale,
+                    "runtime.mcp.gen.error.not_installed"
+                ))
             })?;
         let status = run_passthrough(&bin, &forwarded, false)?;
         std::process::exit(status.code().unwrap_or(1));
@@ -357,7 +360,15 @@ mod tests {
 
     #[test]
     fn mcp_gen_args_captures_everything_after_gen() {
-        let a = argv(&["greentic-dev", "mcp", "gen", "--spec", "./api.yaml", "--output-dir", "./out"]);
+        let a = argv(&[
+            "greentic-dev",
+            "mcp",
+            "gen",
+            "--spec",
+            "./api.yaml",
+            "--output-dir",
+            "./out",
+        ]);
         let forwarded = mcp_gen_args(&a).expect("mcp gen should be recognized");
         assert_eq!(
             forwarded,
@@ -367,7 +378,15 @@ mod tests {
 
     #[test]
     fn mcp_gen_args_forwards_subcommand_style_args_verbatim() {
-        let a = argv(&["greentic-dev", "mcp", "gen", "discovery", "--url", "https://x/y", "--dry-run"]);
+        let a = argv(&[
+            "greentic-dev",
+            "mcp",
+            "gen",
+            "discovery",
+            "--url",
+            "https://x/y",
+            "--dry-run",
+        ]);
         let forwarded = mcp_gen_args(&a).expect("mcp gen should be recognized");
         assert_eq!(
             forwarded,

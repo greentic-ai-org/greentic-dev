@@ -431,9 +431,9 @@ fn parse_latest_cargo_binstall_version(stdout: &str) -> Result<Version> {
 #[cfg(test)]
 mod tests {
     use super::{
-        ToolchainChannel, binstall_args, delegated_binary_name_for_channel,
-        external_tool_env_key, parse_installed_cargo_binstall_version,
-        parse_latest_cargo_binstall_version, resolve_external_tool,
+        ToolchainChannel, binstall_args, delegated_binary_name_for_channel, external_tool_env_key,
+        parse_installed_cargo_binstall_version, parse_latest_cargo_binstall_version,
+        resolve_external_tool,
     };
     use crate::toolchain_catalogue::GREENTIC_TOOLCHAIN_PACKAGES;
 
