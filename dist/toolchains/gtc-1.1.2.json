@@ -66,7 +66,7 @@
       "bins": [
         "greentic-pack"
       ],
-      "version": "1.1.4"
+      "version": "1.1.5"
     },
     {
       "crate": "greentic-runner",
