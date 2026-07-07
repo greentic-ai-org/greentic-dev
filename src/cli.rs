@@ -836,7 +836,7 @@ pub enum WizardSubcommand {
 
 #[derive(Args, Debug, Clone)]
 pub struct WizardLaunchArgs {
-    /// cli.command.wizard.answers (local path or http/https URL)
+    /// cli.command.wizard.answers (local path, http/https URL, or oci://|ghcr:// reference)
     #[arg(long = "answers")]
     pub answers: Option<String>,
     /// cli.command.wizard.frontend
@@ -879,7 +879,7 @@ pub struct WizardLaunchArgs {
 
 #[derive(Args, Debug, Clone)]
 pub struct WizardValidateArgs {
-    /// cli.command.wizard.answers (local path or http/https URL)
+    /// cli.command.wizard.answers (local path, http/https URL, or oci://|ghcr:// reference)
     #[arg(long = "answers")]
     pub answers: String,
     /// cli.command.wizard.frontend
@@ -904,7 +904,7 @@ pub struct WizardValidateArgs {
 
 #[derive(Args, Debug, Clone)]
 pub struct WizardApplyArgs {
-    /// cli.command.wizard.answers (local path or http/https URL)
+    /// cli.command.wizard.answers (local path, http/https URL, or oci://|ghcr:// reference)
     #[arg(long = "answers")]
     pub answers: String,
     /// cli.command.wizard.frontend
