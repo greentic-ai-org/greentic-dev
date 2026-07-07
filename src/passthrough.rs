@@ -252,7 +252,7 @@ pub fn install_all_delegated_tools(latest: bool, locale: &str) -> Result<()> {
     // External tools ship a single unsuffixed binary — install by plain name.
     for package in GREENTIC_EXTERNAL_TOOL_PACKAGES {
         for bin_name in package.bins {
-            install_with_binstall(package.crate_name, bin_name, latest, locale)?;
+            install_with_binstall(package.crate_name, bin_name, latest, None, locale)?;
         }
     }
     Ok(())
