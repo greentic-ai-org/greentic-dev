@@ -31,7 +31,7 @@
       "bins": [
         "greentic-setup"
       ],
-      "version": "1.1.5"
+      "version": "1.1.7"
     },
     {
       "crate": "greentic-start",
@@ -45,7 +45,7 @@
       "bins": [
         "greentic-deployer"
       ],
-      "version": "1.1.2"
+      "version": "1.1.6"
     },
     {
       "crate": "greentic-component",
@@ -59,14 +59,14 @@
       "bins": [
         "greentic-flow"
       ],
-      "version": "1.1.1"
+      "version": "1.1.4"
     },
     {
       "crate": "greentic-pack",
       "bins": [
         "greentic-pack"
       ],
-      "version": "1.1.3"
+      "version": "1.1.4"
     },
     {
       "crate": "greentic-runner",
@@ -87,7 +87,7 @@
       "bins": [
         "greentic-secrets"
       ],
-      "version": "1.1.1"
+      "version": "1.1.4"
     },
     {
       "crate": "greentic-mcp",
