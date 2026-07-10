@@ -17,7 +17,7 @@
       "bins": [
         "greentic-operator"
       ],
-      "version": "1.1.1"
+      "version": "1.1.2"
     },
     {
       "crate": "greentic-bundle",
@@ -45,7 +45,7 @@
       "bins": [
         "greentic-deployer"
       ],
-      "version": "1.1.10"
+      "version": "1.1.11"
     },
     {
       "crate": "greentic-component",
