@@ -1,3 +1,4 @@
+mod answers_oci;
 mod confirm;
 mod executor;
 mod persistence;
@@ -695,7 +696,10 @@ fn read_answer_document(path: &Path) -> Result<AnswerDocument> {
 }
 
 fn read_answer_document_from_path_or_url(path_or_url: &str) -> Result<AnswerDocument> {
-    let raw = if path_or_url.starts_with("http://") || path_or_url.starts_with("https://") {
+    let raw = if answers_oci::is_oci_reference(path_or_url) {
+        // Pull the answer document from an OCI registry (oci:// or ghcr://).
+        answers_oci::fetch_oci_answers_text(path_or_url)?
+    } else if path_or_url.starts_with("http://") || path_or_url.starts_with("https://") {
         // Fetch from remote URL
         let client = reqwest::blocking::Client::builder()
             .timeout(std::time::Duration::from_secs(30))
