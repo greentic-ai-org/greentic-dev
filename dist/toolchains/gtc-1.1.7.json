@@ -31,14 +31,14 @@
       "bins": [
         "greentic-setup"
       ],
-      "version": "1.1.19"
+      "version": "1.1.21"
     },
     {
       "crate": "greentic-start",
       "bins": [
         "greentic-start"
       ],
-      "version": "1.1.24"
+      "version": "1.1.25"
     },
     {
       "crate": "greentic-deployer",
@@ -336,7 +336,7 @@
     },
     {
       "id": "packs/messaging/messaging-slack",
-      "version": "0.5.17"
+      "version": "0.5.18"
     },
     {
       "id": "packs/messaging/messaging-teams",
@@ -344,7 +344,7 @@
     },
     {
       "id": "packs/messaging/messaging-telegram",
-      "version": "0.5.7"
+      "version": "0.5.8"
     },
     {
       "id": "packs/messaging/messaging-webchat",
@@ -356,7 +356,7 @@
     },
     {
       "id": "packs/messaging/messaging-webex",
-      "version": "0.5.15"
+      "version": "0.5.16"
     },
     {
       "id": "packs/messaging/messaging-websocket",
