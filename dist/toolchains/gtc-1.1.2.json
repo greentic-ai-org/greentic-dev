@@ -336,7 +336,7 @@
     },
     {
       "id": "packs/messaging/messaging-slack",
-      "version": "0.5.17"
+      "version": "0.5.18"
     },
     {
       "id": "packs/messaging/messaging-teams",
@@ -356,7 +356,7 @@
     },
     {
       "id": "packs/messaging/messaging-webex",
-      "version": "0.5.15"
+      "version": "0.5.16"
     },
     {
       "id": "packs/messaging/messaging-websocket",
