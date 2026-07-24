@@ -658,6 +658,9 @@ pub struct ReleasePublishArgs {
     /// cli.command.release.force
     #[arg(long = "force")]
     pub force: bool,
+    /// cli.command.release.no_notify_updater
+    #[arg(long = "no-notify-updater")]
+    pub no_notify_updater: bool,
 }
 
 #[derive(Args, Debug)]
@@ -726,6 +729,9 @@ pub struct ReleasePromoteArgs {
     /// cli.command.release.dry_run
     #[arg(long = "dry-run")]
     pub dry_run: bool,
+    /// cli.command.release.no_notify_updater
+    #[arg(long = "no-notify-updater")]
+    pub no_notify_updater: bool,
 }
 
 #[derive(Args, Debug)]
@@ -757,6 +763,9 @@ pub struct ReleaseSnapshotArgs {
     /// cli.command.release.force
     #[arg(long = "force")]
     pub force: bool,
+    /// cli.command.release.no_notify_updater
+    #[arg(long = "no-notify-updater")]
+    pub no_notify_updater: bool,
 }
 
 #[derive(Args, Debug)]
