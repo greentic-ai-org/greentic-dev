@@ -1,0 +1,351 @@
+name: Publish Update Plans
+
+# Publishes DSSE-signed binary-update plans covering ALL toolchain packages
+# to every registered environment on the plan server, triggered by a
+# coordinated toolchain release (OCI manifest push to GHCR).
+#
+# This workflow MUST live on the DEFAULT branch (main) for repository_dispatch
+# to reach it.
+#
+# Trigger: the `greentic-dev release publish|snapshot|promote` CLI fires a
+# repository_dispatch after a successful GHCR push (stable-lane only).
+# Manual fallback: workflow_dispatch with a version input.
+#
+# Required repo secrets:
+#   UPDATER_CI_SIGNING_KEY_PEM  - PKCS#8 Ed25519 private key PEM (CI-only)
+#   PLAN_UPLOAD_TOKEN           - plan-server upload credential
+#   BROADCAST_UPLOAD_TOKEN      - plan-server credential for the `_` broadcast
+#                                 namespace (optional; broadcast step skipped
+#                                 if absent)
+#
+# Required repo variables (Settings > Variables, NOT secrets):
+#   PLAN_SERVER_URL             - base URL of the plan server
+#   UPDATER_TRUST_ROOT_JSON     - trust-root.json content (public keys only)
+
+on:
+  repository_dispatch:
+    types: [toolchain-release-published]
+
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version to publish plans for (e.g. 1.1.2)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: publish-update-plans
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish plans to all environments
+    runs-on: ubuntu-24.04
+    steps:
+      # ── 1. Config guard ─────────────────────────────────────────────────
+      # The workflow lands on main before the signing key and plan server are
+      # configured. Until they are, an automatic run skips gracefully; a
+      # manual dispatch fails loudly.
+      - name: Check configuration
+        id: config
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PLAN_SERVER_URL: ${{ vars.PLAN_SERVER_URL }}
+          HAS_SIGNING_KEY: ${{ secrets.UPDATER_CI_SIGNING_KEY_PEM != '' }}
+          HAS_BROADCAST: ${{ secrets.BROADCAST_UPLOAD_TOKEN != '' }}
+        run: |
+          set -euo pipefail
+          if [ -n "${PLAN_SERVER_URL}" ] && [ "${HAS_SIGNING_KEY}" = "true" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "has_broadcast=${HAS_BROADCAST}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "configured=false" >> "$GITHUB_OUTPUT"
+          echo "has_broadcast=false" >> "$GITHUB_OUTPUT"
+          msg="update-plan publishing is not configured — set vars.PLAN_SERVER_URL and secrets.UPDATER_CI_SIGNING_KEY_PEM"
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
+            echo "::error::${msg}"
+            exit 1
+          fi
+          echo "::notice::Skipping — ${msg}"
+          echo "Skipped — ${msg}" >> "$GITHUB_STEP_SUMMARY"
+
+      # ── 2. Resolve version ──────────────────────────────────────────────
+      - name: Resolve version
+        id: version
+        if: steps.config.outputs.configured == 'true'
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ inputs.version }}
+          DISPATCH_RELEASE: ${{ github.event.client_payload.release }}
+        run: |
+          set -euo pipefail
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
+            version="${INPUT_VERSION}"
+          else
+            version="${DISPATCH_RELEASE}"
+          fi
+          if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid version '${version}' — expected X.Y.Z"
+            exit 1
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "### Resolved version: ${version}" >> "$GITHUB_STEP_SUMMARY"
+
+      # ── 3. Pull toolchain manifest from GHCR ───────────────────────────
+      - name: Pull toolchain manifest
+        id: manifest
+        if: steps.config.outputs.configured == 'true'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version="${{ steps.version.outputs.version }}"
+          repo="greenticai/greentic-versions/gtc"
+          manifest_file="${RUNNER_TEMP}/toolchain-manifest.json"
+
+          # Token exchange
+          ghcr_token=$(curl -fsSL \
+            -u "oauth2:${GITHUB_TOKEN}" \
+            "https://ghcr.io/token?service=ghcr.io&scope=repository:${repo}:pull" \
+            | jq -r '.token')
+
+          # GET the OCI manifest for this tag
+          oci_manifest=$(curl -fsSL \
+            -H "Authorization: Bearer ${ghcr_token}" \
+            -H "Accept: application/vnd.oci.image.manifest.v1+json" \
+            "https://ghcr.io/v2/${repo}/manifests/${version}")
+
+          # Select the toolchain layer by mediaType
+          layer_digest=$(echo "${oci_manifest}" | jq -r \
+            '.layers[] | select(.mediaType == "application/vnd.greentic.toolchain.manifest.v1+json") | .digest')
+
+          if [ -z "${layer_digest}" ]; then
+            echo "::error::Toolchain manifest layer not found in OCI manifest for tag ${version}"
+            exit 1
+          fi
+
+          # GET the blob
+          curl -fsSL \
+            -H "Authorization: Bearer ${ghcr_token}" \
+            "https://ghcr.io/v2/${repo}/blobs/${layer_digest}" \
+            -o "${manifest_file}"
+
+          echo "manifest_file=${manifest_file}" >> "$GITHUB_OUTPUT"
+          echo "Pulled toolchain manifest for ${version}"
+
+      # ── 3b. Stable-lane hard gate ───────────────────────────────────────
+      # The update server must ONLY receive stable-lane content. This gate
+      # holds even for a hand-dispatched run naming a dev-channel tag.
+      - name: Validate stable-lane manifest
+        if: steps.config.outputs.configured == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          manifest_file="${{ steps.manifest.outputs.manifest_file }}"
+
+          channel=$(jq -r '.channel // empty' "${manifest_file}")
+          if [ "${channel}" != "stable" ]; then
+            echo "::error::Manifest channel is '${channel}', not 'stable' — refusing to publish non-stable content"
+            exit 1
+          fi
+
+          # Reject any package whose crate name carries a -dev suffix
+          dev_crates=$(jq -r '[.packages[] | select(.crate | endswith("-dev"))] | length' "${manifest_file}")
+          if [ "${dev_crates}" -gt 0 ]; then
+            echo "::error::Manifest contains ${dev_crates} crate(s) with -dev suffix — not a stable manifest"
+            exit 1
+          fi
+
+          # Reject any package version that is not a plain X.Y.Z
+          bad_versions=$(jq -r '[.packages[] | select(.version | test("^[0-9]+\\.[0-9]+\\.[0-9]+$") | not)] | length' "${manifest_file}")
+          if [ "${bad_versions}" -gt 0 ]; then
+            jq -r '.packages[] | select(.version | test("^[0-9]+\\.[0-9]+\\.[0-9]+$") | not) | "  \(.crate) = \(.version)"' "${manifest_file}"
+            echo "::error::${bad_versions} package(s) have non-stable versions (pre-release or run-id)"
+            exit 1
+          fi
+
+          echo "Stable-lane validation passed (channel=${channel})"
+
+      # ── 4. Build release-specs.json ─────────────────────────────────────
+      - name: Build release specs
+        id: specs
+        if: steps.config.outputs.configured == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ steps.version.outputs.version }}"
+          manifest_file="${{ steps.manifest.outputs.manifest_file }}"
+          specs_file="${RUNNER_TEMP}/release-specs.json"
+
+          # 13 manifest packages + the gtc meta-entry
+          jq --arg release "${version}" '
+            [
+              (.packages[] | {
+                name: .bins[0],
+                version: .version,
+                repo: ("greenticai/" + .crate),
+                tag: ("v" + .version)
+              }),
+              {
+                name: "gtc",
+                version: $release,
+                repo: "greenticai/greentic",
+                tag: ("v" + $release),
+                archive_prefix: "gtc-",
+                checksums_asset: ("gtc-" + $release + "-checksums.txt")
+              }
+            ]
+          ' "${manifest_file}" > "${specs_file}"
+
+          echo "specs_file=${specs_file}" >> "$GITHUB_OUTPUT"
+
+          echo "### Release specs" >> "$GITHUB_STEP_SUMMARY"
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          cat "${specs_file}" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      # ── 5. Verify all GitHub releases exist ─────────────────────────────
+      # A partial plan reads to clients as "those packages are unchanged",
+      # which is a silent correctness hazard — fail if ANY release is missing.
+      - name: Verify GitHub releases
+        if: steps.config.outputs.configured == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          specs_file="${{ steps.specs.outputs.specs_file }}"
+          count=$(jq -r 'length' "${specs_file}")
+          echo "Verifying ${count} GitHub releases ..."
+
+          missing=0
+          for i in $(seq 0 $((count - 1))); do
+            repo=$(jq -r ".[$i].repo" "${specs_file}")
+            tag=$(jq -r ".[$i].tag" "${specs_file}")
+            name=$(jq -r ".[$i].name" "${specs_file}")
+            if gh release view "${tag}" --repo "${repo}" > /dev/null 2>&1; then
+              echo "  OK: ${name} ${tag} (${repo})"
+            else
+              echo "::error::Missing GitHub release: ${repo} ${tag}"
+              missing=$((missing + 1))
+            fi
+          done
+
+          if [ "${missing}" -gt 0 ]; then
+            echo "::error::${missing} GitHub release(s) missing — cannot publish a partial plan"
+            exit 1
+          fi
+          echo "All ${count} releases verified"
+
+      # ── 6. Install deployer ─────────────────────────────────────────────
+      - name: Install cargo-binstall
+        if: steps.config.outputs.configured == 'true'
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: Install greentic-deployer
+        if: steps.config.outputs.configured == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Floor is 1.1.27: the first stable release carrying --release-specs-file
+          cargo binstall -y --force 'greentic-deployer@>=1.1.27'
+          echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> "$GITHUB_PATH"
+
+      # ── 7. Write signing key + trust root ───────────────────────────────
+      - name: Write signing key
+        id: key
+        if: steps.config.outputs.configured == 'true'
+        shell: bash
+        env:
+          CI_SIGNING_KEY: ${{ secrets.UPDATER_CI_SIGNING_KEY_PEM }}
+        run: |
+          set -euo pipefail
+          echo "::add-mask::${CI_SIGNING_KEY}"
+          key_file="${RUNNER_TEMP}/ci-signing-key.pem"
+          printf '%s\n' "${CI_SIGNING_KEY}" > "${key_file}"
+          chmod 600 "${key_file}"
+          echo "key_file=${key_file}" >> "$GITHUB_OUTPUT"
+
+      - name: Write trust root
+        id: trust
+        if: steps.config.outputs.configured == 'true'
+        shell: bash
+        env:
+          TRUST_ROOT_JSON: ${{ vars.UPDATER_TRUST_ROOT_JSON }}
+        run: |
+          set -euo pipefail
+          trust_file="${RUNNER_TEMP}/trust-root.json"
+          printf '%s\n' "${TRUST_ROOT_JSON}" > "${trust_file}"
+          echo "trust_file=${trust_file}" >> "$GITHUB_OUTPUT"
+
+      # ── 8. Publish to all registered environments ───────────────────────
+      - name: Publish update plans (all envs)
+        if: steps.config.outputs.configured == 'true'
+        shell: bash
+        env:
+          GREENTIC_PLAN_UPLOAD_TOKEN: ${{ secrets.PLAN_UPLOAD_TOKEN }}
+          PLAN_SERVER_URL: ${{ vars.PLAN_SERVER_URL }}
+        run: |
+          set -euo pipefail
+          specs_file="${{ steps.specs.outputs.specs_file }}"
+          key_file="${{ steps.key.outputs.key_file }}"
+          trust_file="${{ steps.trust.outputs.trust_file }}"
+
+          greentic-deployer op updates publish \
+            --all-envs \
+            --release-specs-file "${specs_file}" \
+            --signing-key "${key_file}" \
+            --trust-root "${trust_file}" \
+            --plan-server-url "${PLAN_SERVER_URL}" \
+            --min-runtime 1.1.12
+          # --min-runtime is the fixed capability floor, NOT the release version.
+          # Setting it to the release version would make the very runtimes that
+          # need the update reject the plan.
+
+      # ── 9. Publish to broadcast channel ─────────────────────────────────
+      - name: Publish update plans (broadcast)
+        if: steps.config.outputs.configured == 'true' && steps.config.outputs.has_broadcast == 'true'
+        shell: bash
+        env:
+          GREENTIC_PLAN_UPLOAD_TOKEN: ${{ secrets.BROADCAST_UPLOAD_TOKEN }}
+          PLAN_SERVER_URL: ${{ vars.PLAN_SERVER_URL }}
+        run: |
+          set -euo pipefail
+          specs_file="${{ steps.specs.outputs.specs_file }}"
+          key_file="${{ steps.key.outputs.key_file }}"
+          trust_file="${{ steps.trust.outputs.trust_file }}"
+
+          # The `_` broadcast namespace uses a separate token; the update
+          # server never falls back to the regular token for `_`.
+          greentic-deployer op updates publish \
+            _ \
+            --release-specs-file "${specs_file}" \
+            --signing-key "${key_file}" \
+            --trust-root "${trust_file}" \
+            --plan-server-url "${PLAN_SERVER_URL}" \
+            --min-runtime 1.1.12
+
+      # ── 10. Cleanup ────────────────────────────────────────────────────
+      - name: Cleanup signing key
+        if: always()
+        shell: bash
+        run: rm -f "${RUNNER_TEMP}/ci-signing-key.pem"
+
+  notify-failure:
+    name: Notify on failure
+    needs: [publish]
+    if: failure()
+    uses: greenticai/.github/.github/workflows/notify-failure.yml@main
+    with:
+      workflow-name: Publish Update Plans
+      repo: ${{ github.repository }}
+      run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit

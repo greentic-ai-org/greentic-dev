@@ -197,6 +197,12 @@ pub fn publish(args: ReleasePublishArgs) -> Result<()> {
     if let Some(tag) = &args.tag {
         println!("Updated {}", toolchain_ref(&args.repo, tag));
     }
+
+    if !args.no_notify_updater {
+        let channel = manifest.channel.as_deref().unwrap_or("");
+        notify_updater_dispatch(&release, channel, args.token.as_deref());
+    }
+
     Ok(())
 }
 
@@ -328,6 +334,32 @@ pub fn promote(args: ReleasePromoteArgs) -> Result<()> {
         toolchain_ref(&args.repo, &args.release),
         toolchain_ref(&args.repo, &args.tag)
     );
+
+    if !args.no_notify_updater {
+        // Promote copies the OCI manifest (tag alias) but does not load the
+        // toolchain layer. Load it now to read the channel for the stable-lane
+        // gate. If loading fails, skip the dispatch — the workflow has its own
+        // channel guard as a backstop.
+        let channel = block_on_maybe_runtime(load_source_manifest(
+            &args.repo,
+            &args.release,
+            args.token.as_deref(),
+        ))
+        .ok()
+        .flatten()
+        .and_then(|m| m.channel);
+        match channel.as_deref() {
+            Some(ch) => notify_updater_dispatch(&args.release, ch, args.token.as_deref()),
+            None => {
+                eprintln!(
+                    "Skipping updater dispatch: could not determine channel \
+                     for {} (use workflow_dispatch as fallback)",
+                    toolchain_ref(&args.repo, &args.release)
+                );
+            }
+        }
+    }
+
     Ok(())
 }
 
@@ -383,6 +415,12 @@ pub fn snapshot(args: ReleaseSnapshotArgs) -> Result<()> {
     if let Some(tag) = &args.tag {
         println!("Updated {}", toolchain_ref(&args.repo, tag));
     }
+
+    if !args.no_notify_updater {
+        let ch = channel_tag(channel);
+        notify_updater_dispatch(&args.release, ch, args.token.as_deref());
+    }
+
     Ok(())
 }
 
@@ -1239,6 +1277,94 @@ fn oci_client() -> Client {
     })
 }
 
+// ---------------------------------------------------------------------------
+// Updater dispatch — notify the coordinated update-plan workflow
+// ---------------------------------------------------------------------------
+
+/// Returns `true` when `version` is a plain `X.Y.Z` (no pre-release, no build
+/// metadata) AND `channel` is `"stable"`. The update server must only ever
+/// receive stable-lane content; everything else (dev, rnd, run-id versions)
+/// is silently skipped.
+fn should_notify_updater(version: &str, channel: &str) -> bool {
+    if channel != "stable" {
+        return false;
+    }
+    match Version::parse(version) {
+        Ok(v) => v.pre.is_empty() && v.build.is_empty(),
+        Err(_) => false,
+    }
+}
+
+/// Fire a `repository_dispatch` to trigger the coordinated update-plan
+/// publisher workflow. Failure is a warning, never fatal — the GHCR manifest
+/// push already succeeded, and the workflow has a manual `workflow_dispatch`
+/// fallback.
+fn notify_updater_dispatch(version: &str, channel: &str, raw_token: Option<&str>) {
+    if !should_notify_updater(version, channel) {
+        eprintln!(
+            "Skipping updater dispatch: version `{version}` / channel `{channel}` \
+             is not a stable-lane release"
+        );
+        return;
+    }
+
+    let token = match resolve_registry_token(raw_token)
+        .ok()
+        .flatten()
+        .or_else(|| std::env::var("GHCR_TOKEN").ok())
+        .or_else(|| std::env::var("GITHUB_TOKEN").ok())
+    {
+        Some(t) if !t.trim().is_empty() => t,
+        _ => {
+            eprintln!(
+                "Warning: skipping updater dispatch — no token available \
+                 (pass --token or set GHCR_TOKEN/GITHUB_TOKEN)"
+            );
+            return;
+        }
+    };
+
+    let client = match reqwest::blocking::Client::builder()
+        .user_agent("greentic-dev-cli")
+        .build()
+    {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("Warning: failed to build HTTP client for updater dispatch: {e}");
+            return;
+        }
+    };
+
+    let body = serde_json::json!({
+        "event_type": "toolchain-release-published",
+        "client_payload": {
+            "release": version,
+            "channel": channel,
+        }
+    });
+
+    let url = "https://api.github.com/repos/greenticai/greentic-dev/dispatches";
+    match client
+        .post(url)
+        .header("Accept", "application/vnd.github+json")
+        .bearer_auth(&token)
+        .json(&body)
+        .send()
+    {
+        Ok(resp) if resp.status().is_success() || resp.status().as_u16() == 204 => {
+            eprintln!("Dispatched toolchain-release-published for {version} (channel={channel})");
+        }
+        Ok(resp) => {
+            let status = resp.status();
+            let text = resp.text().unwrap_or_default();
+            eprintln!("Warning: updater dispatch returned HTTP {status}: {text}");
+        }
+        Err(e) => {
+            eprintln!("Warning: updater dispatch failed: {e}");
+        }
+    }
+}
+
 fn registry_auth(raw_token: Option<&str>) -> Result<RegistryAuth> {
     let token = resolve_registry_token(raw_token)?
         .or_else(|| std::env::var("GHCR_TOKEN").ok())
@@ -1980,6 +2106,7 @@ mod tests {
             out: dir.path().to_path_buf(),
             dry_run: true,
             force: true,
+            no_notify_updater: true,
         };
         let (release, loaded, source_path) = publish_manifest_input(&args).unwrap();
         assert_eq!(release, "1.0.12");
@@ -2006,6 +2133,7 @@ mod tests {
             out: dir.path().to_path_buf(),
             dry_run: true,
             force: true,
+            no_notify_updater: true,
         };
         let (release, loaded, source_path) = publish_manifest_input(&args).unwrap();
         assert_eq!(release, "1.0.13");
@@ -2268,6 +2396,7 @@ mod tests {
             out: dir.path().to_path_buf(),
             dry_run: true,
             force: false,
+            no_notify_updater: true,
         })
         .unwrap();
     }
@@ -2291,6 +2420,7 @@ mod tests {
             repo: "ghcr.io/greenticai/greentic-versions/gtc".to_string(),
             token: None,
             dry_run: true,
+            no_notify_updater: true,
         })
         .unwrap();
     }
@@ -2301,5 +2431,61 @@ mod tests {
             toolchain_ref("ghcr.io/greenticai/greentic-versions/gtc", "stable"),
             "ghcr.io/greenticai/greentic-versions/gtc:stable"
         );
+    }
+
+    // -----------------------------------------------------------------------
+    // should_notify_updater — stable-lane gate tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn notify_gate_accepts_stable_plain_version() {
+        assert!(should_notify_updater("1.1.2", "stable"));
+    }
+
+    #[test]
+    fn notify_gate_accepts_stable_zero_version() {
+        assert!(should_notify_updater("0.1.0", "stable"));
+    }
+
+    #[test]
+    fn notify_gate_rejects_dev_channel() {
+        assert!(!should_notify_updater("1.1.2", "dev"));
+    }
+
+    #[test]
+    fn notify_gate_rejects_rnd_channel() {
+        assert!(!should_notify_updater("1.1.2", "rnd"));
+    }
+
+    #[test]
+    fn notify_gate_rejects_prerelease_version() {
+        assert!(!should_notify_updater("1.2.0-dev.3", "stable"));
+    }
+
+    #[test]
+    fn notify_gate_rejects_run_id_version_on_dev_channel() {
+        // Run-id versions (e.g. 1.1.14995680637) are dev-lane artifacts and
+        // always carry channel "dev". The channel check catches them.
+        assert!(!should_notify_updater("1.1.14995680637", "dev"));
+    }
+
+    #[test]
+    fn notify_gate_rejects_research_prerelease() {
+        assert!(!should_notify_updater("1.3.0-research.1", "stable"));
+    }
+
+    #[test]
+    fn notify_gate_rejects_build_metadata() {
+        assert!(!should_notify_updater("1.1.2+build.42", "stable"));
+    }
+
+    #[test]
+    fn notify_gate_rejects_empty_channel() {
+        assert!(!should_notify_updater("1.1.2", ""));
+    }
+
+    #[test]
+    fn notify_gate_rejects_unparseable_version() {
+        assert!(!should_notify_updater("not-a-version", "stable"));
     }
 }
