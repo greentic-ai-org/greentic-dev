@@ -45,6 +45,15 @@ jobs:
   publish:
     name: Publish plans to all environments
     runs-on: ubuntu-24.04
+    outputs:
+      # Only true when plans were actually uploaded. A run that skips because
+      # the credentials are absent still succeeds, and must NOT announce a
+      # publish that never happened.
+      published: ${{ steps.publish_all.outputs.published }}
+      release: ${{ steps.version.outputs.version }}
+      env_count: ${{ steps.publish_all.outputs.env_count }}
+      pkg_count: ${{ steps.publish_all.outputs.pkg_count }}
+      broadcast: ${{ steps.publish_broadcast.outcome }}
     steps:
       # ── 1. Config guard ─────────────────────────────────────────────────
       # The workflow lands on main before the signing key and plan server are
@@ -291,6 +300,7 @@ jobs:
 
       # ── 8. Publish to all registered environments ───────────────────────
       - name: Publish update plans (all envs)
+        id: publish_all
         if: steps.config.outputs.configured == 'true'
         shell: bash
         env:
@@ -301,6 +311,7 @@ jobs:
           specs_file="${{ steps.specs.outputs.specs_file }}"
           key_file="${{ steps.key.outputs.key_file }}"
           trust_file="${{ steps.trust.outputs.trust_file }}"
+          out_file="${RUNNER_TEMP}/publish-all-envs.json"
 
           greentic-deployer op updates publish \
             --all-envs \
@@ -308,13 +319,28 @@ jobs:
             --signing-key "${key_file}" \
             --trust-root "${trust_file}" \
             --plan-server-url "${PLAN_SERVER_URL}" \
-            --min-runtime 1.1.12
+            --min-runtime 1.1.12 | tee "${out_file}"
           # --min-runtime is the fixed capability floor, NOT the release version.
           # Setting it to the release version would make the very runtimes that
           # need the update reject the plan.
 
+          # Summarise for the Slack notification. The command already failed the
+          # step on a non-zero exit (pipefail), so these counts describe a
+          # publish that actually happened.
+          env_count="$(jq -r '.result.published | length' "${out_file}" 2>/dev/null || echo 0)"
+          pkg_count="$(jq -r 'length' "${{ steps.specs.outputs.specs_file }}" 2>/dev/null || echo 0)"
+          echo "env_count=${env_count}" >> "$GITHUB_OUTPUT"
+          echo "pkg_count=${pkg_count}" >> "$GITHUB_OUTPUT"
+          echo "published=true" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Published"
+            echo "- environments: ${env_count}"
+            echo "- packages: ${pkg_count}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       # ── 9. Publish to broadcast channel ─────────────────────────────────
       - name: Publish update plans (broadcast)
+        id: publish_broadcast
         if: steps.config.outputs.configured == 'true' && steps.config.outputs.has_broadcast == 'true'
         shell: bash
         env:
@@ -351,4 +377,22 @@ jobs:
       workflow-name: Publish Update Plans
       repo: ${{ github.repository }}
       run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  # Announce only a publish that actually uploaded plans. Gated on the
+  # `published` output rather than job success, because the config guard makes
+  # an unconfigured run finish green without publishing anything — announcing
+  # that to Slack would be a lie.
+  notify-success:
+    name: Notify on success
+    needs: [publish]
+    if: success() && needs.publish.outputs.published == 'true'
+    uses: greenticai/.github/.github/workflows/notify-success.yml@main
+    with:
+      workflow-name: Publish Update Plans
+      details: |
+        Release *${{ needs.publish.outputs.release }}* published to the update server.
+        • environments: ${{ needs.publish.outputs.env_count }}
+        • packages per plan: ${{ needs.publish.outputs.pkg_count }}
+        • broadcast channel `_`: ${{ needs.publish.outputs.broadcast }}
     secrets: inherit
