@@ -157,10 +157,13 @@ jobs:
             exit 1
           fi
 
-          # Reject any package whose crate name carries a -dev suffix
-          dev_crates=$(jq -r '[.packages[] | select(.crate | endswith("-dev"))] | length' "${manifest_file}")
+          # Reject dev-lane bifurcated crate names (`<crate>-dev`). `greentic-dev`
+          # is a real toolchain crate that happens to end in -dev, so it is exempt;
+          # its own dev-lane name is `greentic-dev-dev`, which this still catches.
+          dev_crates=$(jq -r '[.packages[] | select(.crate | endswith("-dev")) | select(.crate != "greentic-dev")] | length' "${manifest_file}")
           if [ "${dev_crates}" -gt 0 ]; then
-            echo "::error::Manifest contains ${dev_crates} crate(s) with -dev suffix — not a stable manifest"
+            jq -r '.packages[] | select(.crate | endswith("-dev")) | select(.crate != "greentic-dev") | "  \(.crate)"' "${manifest_file}"
+            echo "::error::Manifest contains ${dev_crates} dev-lane crate(s) — not a stable manifest"
             exit 1
           fi
 
