@@ -1,58 +1,58 @@
 {
   "schema": "greentic.toolchain-manifest.v1",
   "toolchain": "gtc",
-  "version": "1.1.7",
+  "version": "1.1.13",
   "channel": "stable",
-  "created_at": "2026-07-16T08:31:36.268379407Z",
+  "created_at": "2026-07-27T12:47:06.536201657Z",
   "packages": [
     {
       "crate": "greentic-dev",
       "bins": [
         "greentic-dev"
       ],
-      "version": "1.1.2"
+      "version": "1.1.3"
     },
     {
       "crate": "greentic-operator",
       "bins": [
         "greentic-operator"
       ],
-      "version": "1.1.4"
+      "version": "1.1.6"
     },
     {
       "crate": "greentic-bundle",
       "bins": [
         "greentic-bundle"
       ],
-      "version": "1.1.1"
+      "version": "1.1.2"
     },
     {
       "crate": "greentic-setup",
       "bins": [
         "greentic-setup"
       ],
-      "version": "1.1.25"
+      "version": "1.1.28"
     },
     {
       "crate": "greentic-start",
       "bins": [
         "greentic-start"
       ],
-      "version": "1.1.28"
+      "version": "1.1.36"
     },
     {
       "crate": "greentic-deployer",
       "bins": [
         "greentic-deployer"
       ],
-      "version": "1.1.16"
+      "version": "1.1.30"
     },
     {
       "crate": "greentic-component",
       "bins": [
         "greentic-component"
       ],
-      "version": "1.1.0"
+      "version": "1.1.1"
     },
     {
       "crate": "greentic-flow",
@@ -73,7 +73,7 @@
       "bins": [
         "greentic-runner"
       ],
-      "version": "1.1.7"
+      "version": "1.1.8"
     },
     {
       "crate": "greentic-gui",
@@ -87,7 +87,7 @@
       "bins": [
         "greentic-secrets"
       ],
-      "version": "1.1.5"
+      "version": "1.1.6"
     },
     {
       "crate": "greentic-mcp",
@@ -336,11 +336,11 @@
     },
     {
       "id": "packs/messaging/messaging-slack",
-      "version": "0.5.18"
+      "version": "0.5.21"
     },
     {
       "id": "packs/messaging/messaging-teams",
-      "version": "0.5.22"
+      "version": "0.5.24"
     },
     {
       "id": "packs/messaging/messaging-telegram",
@@ -352,7 +352,7 @@
     },
     {
       "id": "packs/messaging/messaging-webchat-gui",
-      "version": "0.5.10"
+      "version": "0.5.11"
     },
     {
       "id": "packs/messaging/messaging-webex",
@@ -364,7 +364,7 @@
     },
     {
       "id": "packs/messaging/messaging-whatsapp",
-      "version": "0.5.4"
+      "version": "0.5.5"
     },
     {
       "id": "packs/oauth/oauth-github",
