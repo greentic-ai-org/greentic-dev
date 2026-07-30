@@ -16,6 +16,70 @@ jobs:
     with:
       variant: host
 
+  # A pin bump in dist/toolchains/*.json can outrun the release build it points
+  # at: greentic-setup 1.1.31 was pinned and pushed to :stable ~20 minutes
+  # before its Release Binaries run created the GitHub release, leaving
+  # `gtc install` resolving binaries that did not exist. `release publish
+  # --dry-run` runs the same gate the real publish does, so the PR goes red
+  # while the builds are still running instead of after :stable has moved.
+  toolchain-manifest-pins:
+    name: Verify toolchain manifest pins are released
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Collect changed toolchain manifests
+        id: changed
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          # Three-dot: compare against the merge base, not the tip of main.
+          files=$(git diff --name-only --diff-filter=d "${BASE_SHA}...${HEAD_SHA}" \
+            -- 'dist/toolchains/*.json' | tr '\n' ' ')
+          echo "files=${files}" >> "$GITHUB_OUTPUT"
+          if [ -z "${files}" ]; then
+            echo "No toolchain manifest changed — nothing to verify."
+          else
+            echo "Changed manifests: ${files}"
+          fi
+
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.changed.outputs.files != ''
+
+      - uses: Swatinem/rust-cache@v2
+        if: steps.changed.outputs.files != ''
+
+      - name: Verify every pinned version has a complete GitHub release
+        if: steps.changed.outputs.files != ''
+        env:
+          # Lifts the API rate limit; the release reads themselves need no auth.
+          GITHUB_TOKEN: ${{ github.token }}
+          FILES: ${{ steps.changed.outputs.files }}
+        run: |
+          set -euo pipefail
+          cargo build --quiet --bin greentic-dev
+          failed=0
+          for file in ${FILES}; do
+            echo "::group::${file}"
+            # --tag stable forces the gate on regardless of the manifest's
+            # recorded channel, matching how these files are published.
+            if ! ./target/debug/greentic-dev release publish \
+                 --manifest "${file}" --tag stable --dry-run; then
+              echo "::error file=${file}::pinned version(s) have no complete GitHub release yet"
+              failed=$((failed + 1))
+            fi
+            echo "::endgroup::"
+          done
+          if [ "${failed}" -gt 0 ]; then
+            echo "::error::${failed} toolchain manifest(s) pin unreleased versions"
+            exit 1
+          fi
+
   # pack-smoke moved to nightly.yml (plans/binary-bifurcation.md Phase A).
   # The job installs delegated tool binaries and runs a workspace release
   # build — ~40 minutes on every PR is too expensive for the signal (release

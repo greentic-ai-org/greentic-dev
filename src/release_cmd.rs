@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -152,7 +152,17 @@ fn bootstrap_source_manifest<R: CrateVersionResolver>(
 }
 
 pub fn publish(args: ReleasePublishArgs) -> Result<()> {
+    let checker = default_release_checker(args.token.as_deref());
+    publish_with_checker(args, &checker)
+}
+
+fn publish_with_checker(args: ReleasePublishArgs, checker: &dyn ReleaseAssetChecker) -> Result<()> {
     let (release, manifest, source) = publish_manifest_input(&args)?;
+
+    // Gate before the dry-run return, so `publish --manifest <file> --dry-run`
+    // doubles as the CI check on a pin bump: it answers "is this manifest
+    // publishable?" without pushing anything.
+    verify_manifest_releases(&manifest, args.tag.as_deref(), checker)?;
 
     if args.dry_run {
         println!(
@@ -197,6 +207,12 @@ pub fn publish(args: ReleasePublishArgs) -> Result<()> {
     if let Some(tag) = &args.tag {
         println!("Updated {}", toolchain_ref(&args.repo, tag));
     }
+
+    if !args.no_notify_updater {
+        let channel = manifest.channel.as_deref().unwrap_or("");
+        notify_updater_dispatch(&release, channel, args.token.as_deref());
+    }
+
     Ok(())
 }
 
@@ -298,6 +314,32 @@ pub fn promote(args: ReleasePromoteArgs) -> Result<()> {
         return Ok(());
     }
 
+    // Promote copies the OCI manifest (a tag alias) and never reads the
+    // toolchain layer, so load it up front: the stable-lane gate needs the pins
+    // to refuse moving `:stable` onto binaries that are not downloadable yet,
+    // and the updater dispatch below needs the channel.
+    let source = block_on_maybe_runtime(load_source_manifest(
+        &args.repo,
+        &args.release,
+        args.token.as_deref(),
+    ))
+    .ok()
+    .flatten();
+    match source.as_ref() {
+        Some(manifest) => {
+            let checker = default_release_checker(args.token.as_deref());
+            verify_manifest_releases(manifest, Some(args.tag.as_str()), &checker)?;
+        }
+        // Fail closed: moving the tag `gtc install` resolves without being able
+        // to read its pins would reintroduce the exact hazard the gate exists
+        // for. Other tags stay non-fatal, as before.
+        None if args.tag == "stable" => bail!(
+            "cannot read the toolchain pins of `{}` — refusing to move `:stable` unverified",
+            toolchain_ref(&args.repo, &args.release)
+        ),
+        None => {}
+    }
+
     let auth = registry_auth(args.token.as_deref())?;
     block_on_maybe_runtime(async {
         let client = oci_client();
@@ -328,6 +370,23 @@ pub fn promote(args: ReleasePromoteArgs) -> Result<()> {
         toolchain_ref(&args.repo, &args.release),
         toolchain_ref(&args.repo, &args.tag)
     );
+
+    if !args.no_notify_updater {
+        // Reuses the manifest loaded before the push. If loading failed, skip
+        // the dispatch — the workflow has its own channel guard as a backstop.
+        let channel = source.and_then(|m| m.channel);
+        match channel.as_deref() {
+            Some(ch) => notify_updater_dispatch(&args.release, ch, args.token.as_deref()),
+            None => {
+                eprintln!(
+                    "Skipping updater dispatch: could not determine channel \
+                     for {} (use workflow_dispatch as fallback)",
+                    toolchain_ref(&args.repo, &args.release)
+                );
+            }
+        }
+    }
+
     Ok(())
 }
 
@@ -339,9 +398,24 @@ pub fn promote(args: ReleasePromoteArgs) -> Result<()> {
 /// a weekly release — without the promote-vs-snapshot conflation that bit
 /// callers of `publish --from dev`.
 pub fn snapshot(args: ReleaseSnapshotArgs) -> Result<()> {
+    let checker = default_release_checker(args.token.as_deref());
+    snapshot_with_checker(args, &checker)
+}
+
+fn snapshot_with_checker(
+    args: ReleaseSnapshotArgs,
+    checker: &dyn ReleaseAssetChecker,
+) -> Result<()> {
     let channel = parse_channel(&args.channel)?;
     let resolver = CratesIoApiVersionResolver::default();
     let manifest = snapshot_manifest(&args.release, channel, &resolver, Some(created_at_now()?))?;
+
+    // Snapshot resolves pins from crates.io, which does NOT imply a finished
+    // release build. Most repos gate `publish_crates` on `needs: [release]`, but
+    // greentic-pack's `crates-publish.yml` fires independently on `push: tags:
+    // ["v*"]` — so its crates.io version and its GitHub release race, and a
+    // stable snapshot could pin the winner of that race. Same gate as publish.
+    verify_manifest_releases(&manifest, args.tag.as_deref(), checker)?;
 
     if args.dry_run {
         println!("{}", serde_json::to_string_pretty(&manifest)?);
@@ -383,6 +457,12 @@ pub fn snapshot(args: ReleaseSnapshotArgs) -> Result<()> {
     if let Some(tag) = &args.tag {
         println!("Updated {}", toolchain_ref(&args.repo, tag));
     }
+
+    if !args.no_notify_updater {
+        let ch = channel_tag(channel);
+        notify_updater_dispatch(&args.release, ch, args.token.as_deref());
+    }
+
     Ok(())
 }
 
@@ -767,6 +847,214 @@ pub fn validate_manifest(manifest: &ToolchainManifest) -> Result<()> {
 
 pub fn toolchain_ref(repo: &str, tag: &str) -> String {
     format!("{repo}:{tag}")
+}
+
+// ---------------------------------------------------------------------------
+// Stable-lane release gate — a published manifest must never pin a version
+// whose binaries are not downloadable yet
+// ---------------------------------------------------------------------------
+
+const GITHUB_API_BASE: &str = "https://api.github.com";
+/// Every toolchain package's crate name doubles as its repo name under this org.
+const TOOLCHAIN_RELEASE_OWNER: &str = "greenticai";
+/// Archive extensions the shared `release-binaries.yml` workflow attaches.
+const RELEASE_ARCHIVE_SUFFIXES: [&str; 2] = [".tgz", ".zip"];
+
+/// Reads the asset names of one package's GitHub release. Injected so the gate
+/// is testable without a network round-trip, mirroring [`CrateVersionResolver`].
+trait ReleaseAssetChecker {
+    /// `Ok(None)` when the release does not exist, `Ok(Some(names))` otherwise.
+    fn release_assets(&self, repo: &str, tag: &str) -> Result<Option<Vec<String>>>;
+}
+
+#[derive(Deserialize)]
+struct GithubReleaseAssets {
+    #[serde(default)]
+    assets: Vec<GithubReleaseAsset>,
+}
+
+#[derive(Deserialize)]
+struct GithubReleaseAsset {
+    name: String,
+}
+
+struct GithubReleaseAssetChecker {
+    base_url: String,
+    token: Option<String>,
+    client: reqwest::blocking::Client,
+}
+
+impl GithubReleaseAssetChecker {
+    fn new(base_url: impl Into<String>, token: Option<String>) -> Self {
+        let client = reqwest::blocking::Client::builder()
+            .user_agent(format!("greentic-dev/{}", env!("CARGO_PKG_VERSION")))
+            .build()
+            .expect("failed to build GitHub API client");
+        Self {
+            base_url: base_url.into(),
+            token,
+            client,
+        }
+    }
+}
+
+impl ReleaseAssetChecker for GithubReleaseAssetChecker {
+    fn release_assets(&self, repo: &str, tag: &str) -> Result<Option<Vec<String>>> {
+        let url = format!(
+            "{}/repos/{TOOLCHAIN_RELEASE_OWNER}/{repo}/releases/tags/{tag}",
+            self.base_url.trim_end_matches('/')
+        );
+        let mut request = self
+            .client
+            .get(&url)
+            .header(reqwest::header::ACCEPT, "application/vnd.github+json");
+        if let Some(token) = &self.token {
+            request = request.bearer_auth(token);
+        }
+        let response = request
+            .send()
+            .with_context(|| format!("failed to GET {url}"))?;
+        let status = response.status();
+        let body = response
+            .text()
+            .with_context(|| format!("failed to read body of {url}"))?;
+        let Some(body) = classify_release_response(status, &url, body)? else {
+            return Ok(None);
+        };
+        let release: GithubReleaseAssets = serde_json::from_str(&body)
+            .with_context(|| format!("failed to parse release metadata from {url}"))?;
+        Ok(Some(
+            release.assets.into_iter().map(|asset| asset.name).collect(),
+        ))
+    }
+}
+
+/// The gate's production checker: real GitHub API, ambient token when one is
+/// available. Release reads on these public repos work unauthenticated; the
+/// token only lifts the rate limit.
+fn default_release_checker(raw_token: Option<&str>) -> GithubReleaseAssetChecker {
+    GithubReleaseAssetChecker::new(GITHUB_API_BASE, ambient_github_token(raw_token))
+}
+
+/// Classify a GitHub release-by-tag response: `Ok(None)` for a 404 (no such
+/// release), `Ok(Some(body))` on success, `Err` otherwise. Pure so the
+/// 404-vs-error decision is unit-testable without a live HTTP round-trip.
+fn classify_release_response(
+    status: reqwest::StatusCode,
+    url: &str,
+    body: String,
+) -> Result<Option<String>> {
+    if status == reqwest::StatusCode::NOT_FOUND {
+        return Ok(None);
+    }
+    if !status.is_success() {
+        bail!("GitHub API GET {url} returned {status}: {body}");
+    }
+    Ok(Some(body))
+}
+
+/// True when a push affects what `gtc install` resolves: either the manifest
+/// declares the stable channel, or the push moves the `stable` tag itself.
+///
+/// The tag half is not redundant. `generate_manifest` records `channel: <the
+/// --from value>`, and `--from` defaults to `latest`, so `publish --tag stable`
+/// routinely ships a manifest whose channel is `"latest"` while still moving the
+/// tag users install from. Gating on the channel alone would wave it through.
+fn affects_stable_channel(manifest: &ToolchainManifest, target_tag: Option<&str>) -> bool {
+    manifest.channel.as_deref() == Some("stable") || target_tag == Some("stable")
+}
+
+/// Refuse to publish a stable-lane manifest that pins a package version whose
+/// GitHub release is missing or still uploading.
+///
+/// The toolchain manifest is what `gtc install` resolves, so a pin that outruns
+/// its release build leaves `:stable` pointing at binaries nobody can download.
+/// The dev and research lanes publish on their own cadence and are never gated.
+fn verify_manifest_releases(
+    manifest: &ToolchainManifest,
+    target_tag: Option<&str>,
+    checker: &dyn ReleaseAssetChecker,
+) -> Result<()> {
+    if !affects_stable_channel(manifest, target_tag) {
+        return Ok(());
+    }
+    let mut problems = Vec::new();
+    for package in &manifest.packages {
+        let tag = format!("v{}", package.version);
+        match checker.release_assets(&package.crate_name, &tag)? {
+            None => problems.push(format!(
+                "{} {tag}: no GitHub release (build not finished)",
+                package.crate_name
+            )),
+            Some(assets) => {
+                if let Err(reason) = check_release_assets(&assets, &package.version) {
+                    problems.push(format!("{} {tag}: {reason}", package.crate_name));
+                }
+            }
+        }
+    }
+    if !problems.is_empty() {
+        bail!(
+            "refusing to publish toolchain manifest {}: {} pinned package(s) are not \
+             downloadable yet:\n  {}\nWait for the release builds to finish, then retry.",
+            manifest.version,
+            problems.len(),
+            problems.join("\n  ")
+        );
+    }
+    Ok(())
+}
+
+/// A release is usable once it carries at least one versioned archive and every
+/// versioned archive has its `.sha256` sibling. The `ensure-release` action
+/// creates the release and *then* uploads the assets, so a half-populated
+/// release is an observed state rather than a theoretical one.
+///
+/// Only assets embedding `-v<version>-` count. `greentic-pack` also attaches
+/// unversioned `greentic-pack-<target>.tgz` aliases that carry no checksums —
+/// deliberate `binstall` shims, not a half-finished upload — and demanding a
+/// `.sha256` for those would reject every pack release ever published.
+///
+/// KNOWN LIMITATION: this cannot detect a release whose upload is partway
+/// through its *first* target, because it has no notion of the expected target
+/// matrix. Nothing available makes that knowable cheaply — `ensure-release`
+/// creates the release without `--draft` (so there is no atomic publish
+/// marker), the target set varies per package (`include-macos-intel`), and the
+/// manifest's `bins` holds the delegated binary name, not the archive prefix
+/// (greentic-mcp declares `greentic-mcp` but ships `greentic-mcp-exec-*` and
+/// `greentic-mcp-generator-*`), so it cannot drive a per-binary check either.
+/// The residual window is one `gh release upload` invocation — all assets go up
+/// in a single call — against the 35-45 minutes of build time this does cover.
+fn check_release_assets(assets: &[String], version: &str) -> Result<(), String> {
+    let names: BTreeSet<&str> = assets.iter().map(String::as_str).collect();
+    let version_marker = format!("-v{version}-");
+    let archives: Vec<&str> = names
+        .iter()
+        .copied()
+        .filter(|name| {
+            name.contains(&version_marker)
+                && RELEASE_ARCHIVE_SUFFIXES
+                    .iter()
+                    .any(|suffix| name.ends_with(suffix))
+        })
+        .collect();
+    if archives.is_empty() {
+        return Err(format!(
+            "release has no v{version} archives yet (upload in progress)"
+        ));
+    }
+    let unchecksummed: Vec<&str> = archives
+        .iter()
+        .copied()
+        .filter(|name| !names.contains(format!("{name}.sha256").as_str()))
+        .collect();
+    if !unchecksummed.is_empty() {
+        return Err(format!(
+            "archives missing .sha256 (upload in progress): {}",
+            unchecksummed.join(", ")
+        ));
+    }
+    Ok(())
 }
 
 fn source_version_map(source: Option<&ToolchainManifest>) -> BTreeMap<String, String> {
@@ -1237,6 +1525,98 @@ fn oci_client() -> Client {
         protocol: ClientProtocol::Https,
         ..Default::default()
     })
+}
+
+// ---------------------------------------------------------------------------
+// Updater dispatch — notify the coordinated update-plan workflow
+// ---------------------------------------------------------------------------
+
+/// Returns `true` when `version` is a plain `X.Y.Z` (no pre-release, no build
+/// metadata) AND `channel` is `"stable"`. The update server must only ever
+/// receive stable-lane content; everything else (dev, rnd, run-id versions)
+/// is silently skipped.
+fn should_notify_updater(version: &str, channel: &str) -> bool {
+    if channel != "stable" {
+        return false;
+    }
+    match Version::parse(version) {
+        Ok(v) => v.pre.is_empty() && v.build.is_empty(),
+        Err(_) => false,
+    }
+}
+
+/// Resolve a GitHub token from `--token`, then the ambient CI environment. An
+/// empty or whitespace-only value counts as absent. Reads of public release
+/// metadata work without one; only the dispatch strictly needs it.
+fn ambient_github_token(raw_token: Option<&str>) -> Option<String> {
+    resolve_registry_token(raw_token)
+        .ok()
+        .flatten()
+        .or_else(|| std::env::var("GHCR_TOKEN").ok())
+        .or_else(|| std::env::var("GITHUB_TOKEN").ok())
+        .filter(|token| !token.trim().is_empty())
+}
+
+/// Fire a `repository_dispatch` to trigger the coordinated update-plan
+/// publisher workflow. Failure is a warning, never fatal — the GHCR manifest
+/// push already succeeded, and the workflow has a manual `workflow_dispatch`
+/// fallback.
+fn notify_updater_dispatch(version: &str, channel: &str, raw_token: Option<&str>) {
+    if !should_notify_updater(version, channel) {
+        eprintln!(
+            "Skipping updater dispatch: version `{version}` / channel `{channel}` \
+             is not a stable-lane release"
+        );
+        return;
+    }
+
+    let Some(token) = ambient_github_token(raw_token) else {
+        eprintln!(
+            "Warning: skipping updater dispatch — no token available \
+             (pass --token or set GHCR_TOKEN/GITHUB_TOKEN)"
+        );
+        return;
+    };
+
+    let client = match reqwest::blocking::Client::builder()
+        .user_agent("greentic-dev-cli")
+        .build()
+    {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("Warning: failed to build HTTP client for updater dispatch: {e}");
+            return;
+        }
+    };
+
+    let body = serde_json::json!({
+        "event_type": "toolchain-release-published",
+        "client_payload": {
+            "release": version,
+            "channel": channel,
+        }
+    });
+
+    let url = "https://api.github.com/repos/greenticai/greentic-dev/dispatches";
+    match client
+        .post(url)
+        .header("Accept", "application/vnd.github+json")
+        .bearer_auth(&token)
+        .json(&body)
+        .send()
+    {
+        Ok(resp) if resp.status().is_success() || resp.status().as_u16() == 204 => {
+            eprintln!("Dispatched toolchain-release-published for {version} (channel={channel})");
+        }
+        Ok(resp) => {
+            let status = resp.status();
+            let text = resp.text().unwrap_or_default();
+            eprintln!("Warning: updater dispatch returned HTTP {status}: {text}");
+        }
+        Err(e) => {
+            eprintln!("Warning: updater dispatch failed: {e}");
+        }
+    }
 }
 
 fn registry_auth(raw_token: Option<&str>) -> Result<RegistryAuth> {
@@ -1980,6 +2360,7 @@ mod tests {
             out: dir.path().to_path_buf(),
             dry_run: true,
             force: true,
+            no_notify_updater: true,
         };
         let (release, loaded, source_path) = publish_manifest_input(&args).unwrap();
         assert_eq!(release, "1.0.12");
@@ -2006,6 +2387,7 @@ mod tests {
             out: dir.path().to_path_buf(),
             dry_run: true,
             force: true,
+            no_notify_updater: true,
         };
         let (release, loaded, source_path) = publish_manifest_input(&args).unwrap();
         assert_eq!(release, "1.0.13");
@@ -2258,18 +2640,274 @@ mod tests {
         let manifest = generate_manifest("1.0.12", "latest", None, &FixedResolver, None).unwrap();
         fs::write(&path, serde_json::to_vec_pretty(&manifest).unwrap()).unwrap();
 
-        publish(ReleasePublishArgs {
-            release: None,
-            from: None,
-            tag: Some("stable".to_string()),
-            manifest: Some(path),
-            repo: "ghcr.io/greenticai/greentic-versions/gtc".to_string(),
-            token: None,
-            out: dir.path().to_path_buf(),
-            dry_run: true,
-            force: false,
-        })
+        // `--tag stable` puts this dry run inside the stable gate, so it needs a
+        // checker; a live one would reach for github.com from a unit test.
+        let checker = StubReleaseChecker::complete_for(&manifest);
+        publish_with_checker(
+            ReleasePublishArgs {
+                release: None,
+                from: None,
+                tag: Some("stable".to_string()),
+                manifest: Some(path),
+                repo: "ghcr.io/greenticai/greentic-versions/gtc".to_string(),
+                token: None,
+                out: dir.path().to_path_buf(),
+                dry_run: true,
+                force: false,
+                no_notify_updater: true,
+            },
+            &checker,
+        )
         .unwrap();
+    }
+
+    // -----------------------------------------------------------------------
+    // verify_manifest_releases — stable-lane release gate
+    // -----------------------------------------------------------------------
+
+    /// Maps `"<crate>@<tag>"` to that release's asset names. An absent key means
+    /// the release does not exist.
+    struct StubReleaseChecker(BTreeMap<String, Vec<String>>);
+
+    impl ReleaseAssetChecker for StubReleaseChecker {
+        fn release_assets(&self, repo: &str, tag: &str) -> Result<Option<Vec<String>>> {
+            Ok(self.0.get(&format!("{repo}@{tag}")).cloned())
+        }
+    }
+
+    impl StubReleaseChecker {
+        /// Every package in `manifest` present with a complete asset set.
+        fn complete_for(manifest: &ToolchainManifest) -> Self {
+            Self(
+                manifest
+                    .packages
+                    .iter()
+                    .map(|package| {
+                        (
+                            format!("{}@v{}", package.crate_name, package.version),
+                            complete_assets(&package.crate_name, &package.version),
+                        )
+                    })
+                    .collect(),
+            )
+        }
+
+        fn with(entries: &[(&str, Vec<String>)]) -> Self {
+            Self(
+                entries
+                    .iter()
+                    .map(|(key, assets)| ((*key).to_string(), assets.clone()))
+                    .collect(),
+            )
+        }
+    }
+
+    /// One archive plus its checksum — the shape `ensure-release` ends up with.
+    fn complete_assets(crate_name: &str, version: &str) -> Vec<String> {
+        let archive = format!("{crate_name}-v{version}-x86_64-unknown-linux-gnu.tgz");
+        vec![format!("{archive}.sha256"), archive]
+    }
+
+    fn manifest_with_channel(
+        channel: Option<&str>,
+        packages: &[(&str, &str)],
+    ) -> ToolchainManifest {
+        ToolchainManifest {
+            schema: TOOLCHAIN_MANIFEST_SCHEMA.to_string(),
+            toolchain: TOOLCHAIN_NAME.to_string(),
+            version: "1.1.13".to_string(),
+            channel: channel.map(str::to_string),
+            created_at: None,
+            packages: packages
+                .iter()
+                .map(|(crate_name, version)| ToolchainPackage {
+                    crate_name: (*crate_name).to_string(),
+                    bins: vec![(*crate_name).to_string()],
+                    version: (*version).to_string(),
+                })
+                .collect(),
+            extension_packs: None,
+            components: None,
+        }
+    }
+
+    #[test]
+    fn release_gate_skips_dev_channel() {
+        let manifest = manifest_with_channel(Some("dev"), &[("greentic-setup", "1.2.30516109579")]);
+        // Empty checker: every release is "missing", so a firing gate would fail.
+        verify_manifest_releases(&manifest, Some("dev"), &StubReleaseChecker::with(&[])).unwrap();
+    }
+
+    #[test]
+    fn release_gate_skips_manifest_without_channel_or_stable_tag() {
+        let manifest = manifest_with_channel(None, &[("greentic-setup", "1.1.31")]);
+        verify_manifest_releases(&manifest, None, &StubReleaseChecker::with(&[])).unwrap();
+    }
+
+    #[test]
+    fn release_gate_accepts_complete_stable_releases() {
+        let manifest = manifest_with_channel(
+            Some("stable"),
+            &[("greentic-setup", "1.1.31"), ("greentic-start", "1.1.38")],
+        );
+        let checker = StubReleaseChecker::complete_for(&manifest);
+        verify_manifest_releases(&manifest, Some("stable"), &checker).unwrap();
+    }
+
+    /// The regression this gate exists for: greentic-setup 1.1.31 was pinned
+    /// while its release build was still running, so `:stable` moved onto a
+    /// binary nobody could download.
+    #[test]
+    fn release_gate_rejects_pin_whose_release_does_not_exist() {
+        let manifest = manifest_with_channel(
+            Some("stable"),
+            &[("greentic-setup", "1.1.31"), ("greentic-start", "1.1.38")],
+        );
+        let checker = StubReleaseChecker::with(&[(
+            "greentic-start@v1.1.38",
+            complete_assets("greentic-start", "1.1.38"),
+        )]);
+        let error = verify_manifest_releases(&manifest, Some("stable"), &checker)
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("greentic-setup v1.1.31"), "{error}");
+        assert!(error.contains("no GitHub release"), "{error}");
+        assert!(!error.contains("greentic-start"), "{error}");
+    }
+
+    /// A `--from latest` manifest records `channel: "latest"`, yet `--tag stable`
+    /// still moves the tag `gtc install` resolves. It must be gated.
+    #[test]
+    fn release_gate_fires_on_stable_tag_despite_latest_channel() {
+        let manifest = manifest_with_channel(Some("latest"), &[("greentic-setup", "1.1.31")]);
+        let error =
+            verify_manifest_releases(&manifest, Some("stable"), &StubReleaseChecker::with(&[]))
+                .unwrap_err()
+                .to_string();
+        assert!(error.contains("greentic-setup v1.1.31"), "{error}");
+    }
+
+    #[test]
+    fn release_gate_rejects_release_with_no_archives_yet() {
+        let manifest = manifest_with_channel(Some("stable"), &[("greentic-setup", "1.1.31")]);
+        let checker = StubReleaseChecker::with(&[("greentic-setup@v1.1.31", Vec::new())]);
+        let error = verify_manifest_releases(&manifest, Some("stable"), &checker)
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("no v1.1.31 archives yet"), "{error}");
+    }
+
+    #[test]
+    fn release_gate_rejects_archive_missing_its_checksum() {
+        let manifest = manifest_with_channel(Some("stable"), &[("greentic-setup", "1.1.31")]);
+        let checker = StubReleaseChecker::with(&[(
+            "greentic-setup@v1.1.31",
+            vec![
+                "greentic-setup-v1.1.31-x86_64-unknown-linux-gnu.tgz".to_string(),
+                "greentic-setup-v1.1.31-x86_64-unknown-linux-gnu.tgz.sha256".to_string(),
+                "greentic-setup-v1.1.31-aarch64-apple-darwin.tgz".to_string(),
+            ],
+        )]);
+        let error = verify_manifest_releases(&manifest, Some("stable"), &checker)
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("missing .sha256"), "{error}");
+        assert!(error.contains("aarch64-apple-darwin"), "{error}");
+    }
+
+    /// Multi-binary repos (greentic-mcp ships two) attach several archives per
+    /// target; the rule is per-archive, not a fixed asset count.
+    #[test]
+    fn release_gate_accepts_multi_binary_release() {
+        let manifest = manifest_with_channel(Some("stable"), &[("greentic-mcp", "1.1.1")]);
+        let checker = StubReleaseChecker::with(&[(
+            "greentic-mcp@v1.1.1",
+            vec![
+                "greentic-mcp-v1.1.1-x86_64-unknown-linux-gnu.tgz".to_string(),
+                "greentic-mcp-v1.1.1-x86_64-unknown-linux-gnu.tgz.sha256".to_string(),
+                "greentic-mcp-generator-v1.1.1-x86_64-pc-windows-msvc.zip".to_string(),
+                "greentic-mcp-generator-v1.1.1-x86_64-pc-windows-msvc.zip.sha256".to_string(),
+            ],
+        )]);
+        verify_manifest_releases(&manifest, Some("stable"), &checker).unwrap();
+    }
+
+    /// `snapshot --channel stable` passes no `--tag`, so the channel half of the
+    /// predicate is what gates it. crates.io presence does not imply a finished
+    /// release: greentic-pack publishes crates on its own `push: tags` trigger,
+    /// independent of the release job.
+    #[test]
+    fn release_gate_fires_on_stable_channel_without_a_target_tag() {
+        let manifest = manifest_with_channel(Some("stable"), &[("greentic-pack", "1.1.5")]);
+        let error = verify_manifest_releases(&manifest, None, &StubReleaseChecker::with(&[]))
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("greentic-pack v1.1.5"), "{error}");
+        assert!(error.contains("no GitHub release"), "{error}");
+    }
+
+    /// greentic-pack attaches unversioned `greentic-pack-<target>.tgz` binstall
+    /// aliases with no checksums next to the canonical versioned set. Requiring
+    /// a `.sha256` for every archive rejected every real pack release.
+    #[test]
+    fn release_gate_ignores_unversioned_binstall_aliases() {
+        let manifest = manifest_with_channel(Some("stable"), &[("greentic-pack", "1.1.5")]);
+        let checker = StubReleaseChecker::with(&[(
+            "greentic-pack@v1.1.5",
+            vec![
+                "greentic-pack-v1.1.5-x86_64-unknown-linux-gnu.tgz".to_string(),
+                "greentic-pack-v1.1.5-x86_64-unknown-linux-gnu.tgz.sha256".to_string(),
+                // Alias, no checksum — must not be read as an unfinished upload.
+                "greentic-pack-x86_64-unknown-linux-gnu.tgz".to_string(),
+            ],
+        )]);
+        verify_manifest_releases(&manifest, Some("stable"), &checker).unwrap();
+    }
+
+    /// ...but aliases alone are not a usable release: binstall resolves the
+    /// versioned names.
+    #[test]
+    fn release_gate_rejects_release_with_only_unversioned_aliases() {
+        let manifest = manifest_with_channel(Some("stable"), &[("greentic-pack", "1.1.5")]);
+        let checker = StubReleaseChecker::with(&[(
+            "greentic-pack@v1.1.5",
+            vec!["greentic-pack-x86_64-unknown-linux-gnu.tgz".to_string()],
+        )]);
+        let error = verify_manifest_releases(&manifest, Some("stable"), &checker)
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("no v1.1.5 archives yet"), "{error}");
+    }
+
+    #[test]
+    fn release_response_404_means_absent() {
+        assert_eq!(
+            classify_release_response(reqwest::StatusCode::NOT_FOUND, "url", "{}".to_string())
+                .unwrap(),
+            None
+        );
+    }
+
+    #[test]
+    fn release_response_success_returns_body() {
+        assert_eq!(
+            classify_release_response(reqwest::StatusCode::OK, "url", "{}".to_string()).unwrap(),
+            Some("{}".to_string())
+        );
+    }
+
+    #[test]
+    fn release_response_server_error_is_fatal() {
+        // A 5xx must never be mistaken for "release absent" — that would let a
+        // GitHub outage wave a bad manifest straight through the gate.
+        assert!(
+            classify_release_response(
+                reqwest::StatusCode::INTERNAL_SERVER_ERROR,
+                "url",
+                "boom".to_string()
+            )
+            .is_err()
+        );
     }
 
     #[test]
@@ -2291,6 +2929,7 @@ mod tests {
             repo: "ghcr.io/greenticai/greentic-versions/gtc".to_string(),
             token: None,
             dry_run: true,
+            no_notify_updater: true,
         })
         .unwrap();
     }
@@ -2301,5 +2940,61 @@ mod tests {
             toolchain_ref("ghcr.io/greenticai/greentic-versions/gtc", "stable"),
             "ghcr.io/greenticai/greentic-versions/gtc:stable"
         );
+    }
+
+    // -----------------------------------------------------------------------
+    // should_notify_updater — stable-lane gate tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn notify_gate_accepts_stable_plain_version() {
+        assert!(should_notify_updater("1.1.2", "stable"));
+    }
+
+    #[test]
+    fn notify_gate_accepts_stable_zero_version() {
+        assert!(should_notify_updater("0.1.0", "stable"));
+    }
+
+    #[test]
+    fn notify_gate_rejects_dev_channel() {
+        assert!(!should_notify_updater("1.1.2", "dev"));
+    }
+
+    #[test]
+    fn notify_gate_rejects_rnd_channel() {
+        assert!(!should_notify_updater("1.1.2", "rnd"));
+    }
+
+    #[test]
+    fn notify_gate_rejects_prerelease_version() {
+        assert!(!should_notify_updater("1.2.0-dev.3", "stable"));
+    }
+
+    #[test]
+    fn notify_gate_rejects_run_id_version_on_dev_channel() {
+        // Run-id versions (e.g. 1.1.14995680637) are dev-lane artifacts and
+        // always carry channel "dev". The channel check catches them.
+        assert!(!should_notify_updater("1.1.14995680637", "dev"));
+    }
+
+    #[test]
+    fn notify_gate_rejects_research_prerelease() {
+        assert!(!should_notify_updater("1.3.0-research.1", "stable"));
+    }
+
+    #[test]
+    fn notify_gate_rejects_build_metadata() {
+        assert!(!should_notify_updater("1.1.2+build.42", "stable"));
+    }
+
+    #[test]
+    fn notify_gate_rejects_empty_channel() {
+        assert!(!should_notify_updater("1.1.2", ""));
+    }
+
+    #[test]
+    fn notify_gate_rejects_unparseable_version() {
+        assert!(!should_notify_updater("not-a-version", "stable"));
     }
 }
