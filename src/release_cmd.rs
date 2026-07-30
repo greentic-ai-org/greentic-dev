@@ -152,10 +152,7 @@ fn bootstrap_source_manifest<R: CrateVersionResolver>(
 }
 
 pub fn publish(args: ReleasePublishArgs) -> Result<()> {
-    let checker = GithubReleaseAssetChecker::new(
-        GITHUB_API_BASE,
-        ambient_github_token(args.token.as_deref()),
-    );
+    let checker = default_release_checker(args.token.as_deref());
     publish_with_checker(args, &checker)
 }
 
@@ -330,10 +327,7 @@ pub fn promote(args: ReleasePromoteArgs) -> Result<()> {
     .flatten();
     match source.as_ref() {
         Some(manifest) => {
-            let checker = GithubReleaseAssetChecker::new(
-                GITHUB_API_BASE,
-                ambient_github_token(args.token.as_deref()),
-            );
+            let checker = default_release_checker(args.token.as_deref());
             verify_manifest_releases(manifest, Some(args.tag.as_str()), &checker)?;
         }
         // Fail closed: moving the tag `gtc install` resolves without being able
@@ -404,9 +398,24 @@ pub fn promote(args: ReleasePromoteArgs) -> Result<()> {
 /// a weekly release — without the promote-vs-snapshot conflation that bit
 /// callers of `publish --from dev`.
 pub fn snapshot(args: ReleaseSnapshotArgs) -> Result<()> {
+    let checker = default_release_checker(args.token.as_deref());
+    snapshot_with_checker(args, &checker)
+}
+
+fn snapshot_with_checker(
+    args: ReleaseSnapshotArgs,
+    checker: &dyn ReleaseAssetChecker,
+) -> Result<()> {
     let channel = parse_channel(&args.channel)?;
     let resolver = CratesIoApiVersionResolver::default();
     let manifest = snapshot_manifest(&args.release, channel, &resolver, Some(created_at_now()?))?;
+
+    // Snapshot resolves pins from crates.io, which does NOT imply a finished
+    // release build. Most repos gate `publish_crates` on `needs: [release]`, but
+    // greentic-pack's `crates-publish.yml` fires independently on `push: tags:
+    // ["v*"]` — so its crates.io version and its GitHub release race, and a
+    // stable snapshot could pin the winner of that race. Same gate as publish.
+    verify_manifest_releases(&manifest, args.tag.as_deref(), checker)?;
 
     if args.dry_run {
         println!("{}", serde_json::to_string_pretty(&manifest)?);
@@ -920,6 +929,13 @@ impl ReleaseAssetChecker for GithubReleaseAssetChecker {
     }
 }
 
+/// The gate's production checker: real GitHub API, ambient token when one is
+/// available. Release reads on these public repos work unauthenticated; the
+/// token only lifts the rate limit.
+fn default_release_checker(raw_token: Option<&str>) -> GithubReleaseAssetChecker {
+    GithubReleaseAssetChecker::new(GITHUB_API_BASE, ambient_github_token(raw_token))
+}
+
 /// Classify a GitHub release-by-tag response: `Ok(None)` for a 404 (no such
 /// release), `Ok(Some(body))` on success, `Err` otherwise. Pure so the
 /// 404-vs-error decision is unit-testable without a live HTTP round-trip.
@@ -998,6 +1014,17 @@ fn verify_manifest_releases(
 /// unversioned `greentic-pack-<target>.tgz` aliases that carry no checksums —
 /// deliberate `binstall` shims, not a half-finished upload — and demanding a
 /// `.sha256` for those would reject every pack release ever published.
+///
+/// KNOWN LIMITATION: this cannot detect a release whose upload is partway
+/// through its *first* target, because it has no notion of the expected target
+/// matrix. Nothing available makes that knowable cheaply — `ensure-release`
+/// creates the release without `--draft` (so there is no atomic publish
+/// marker), the target set varies per package (`include-macos-intel`), and the
+/// manifest's `bins` holds the delegated binary name, not the archive prefix
+/// (greentic-mcp declares `greentic-mcp` but ships `greentic-mcp-exec-*` and
+/// `greentic-mcp-generator-*`), so it cannot drive a per-binary check either.
+/// The residual window is one `gh release upload` invocation — all assets go up
+/// in a single call — against the 35-45 minutes of build time this does cover.
 fn check_release_assets(assets: &[String], version: &str) -> Result<(), String> {
     let names: BTreeSet<&str> = assets.iter().map(String::as_str).collect();
     let version_marker = format!("-v{version}-");
@@ -2803,6 +2830,20 @@ mod tests {
             ],
         )]);
         verify_manifest_releases(&manifest, Some("stable"), &checker).unwrap();
+    }
+
+    /// `snapshot --channel stable` passes no `--tag`, so the channel half of the
+    /// predicate is what gates it. crates.io presence does not imply a finished
+    /// release: greentic-pack publishes crates on its own `push: tags` trigger,
+    /// independent of the release job.
+    #[test]
+    fn release_gate_fires_on_stable_channel_without_a_target_tag() {
+        let manifest = manifest_with_channel(Some("stable"), &[("greentic-pack", "1.1.5")]);
+        let error = verify_manifest_releases(&manifest, None, &StubReleaseChecker::with(&[]))
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("greentic-pack v1.1.5"), "{error}");
+        assert!(error.contains("no GitHub release"), "{error}");
     }
 
     /// greentic-pack attaches unversioned `greentic-pack-<target>.tgz` binstall
