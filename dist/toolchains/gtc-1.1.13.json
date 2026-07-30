@@ -3,7 +3,7 @@
   "toolchain": "gtc",
   "version": "1.1.13",
   "channel": "stable",
-  "created_at": "2026-07-30T07:42:45.803059Z",
+  "created_at": "2026-07-30T13:37:15.078681Z",
   "packages": [
     {
       "crate": "greentic-dev",
@@ -31,14 +31,14 @@
       "bins": [
         "greentic-setup"
       ],
-      "version": "1.1.31"
+      "version": "1.1.32"
     },
     {
       "crate": "greentic-start",
       "bins": [
         "greentic-start"
       ],
-      "version": "1.1.38"
+      "version": "1.1.40"
     },
     {
       "crate": "greentic-deployer",
