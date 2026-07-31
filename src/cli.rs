@@ -139,6 +139,9 @@ pub fn localized_help_command(locale: &str) -> clap::Command {
                             arg.help(crate::i18n::t(locale, "cli.command.mcp.doctor.json"))
                         })
                 })
+                .mut_subcommand("gen", |sub| {
+                    sub.about(crate::i18n::t(locale, "cli.command.mcp.gen.about"))
+                })
         })
         .mut_subcommand("tools", |sub| {
             sub.about(crate::i18n::t(locale, "cli.command.tools.about"))
@@ -528,12 +531,14 @@ pub struct PassthroughArgs {
 pub enum McpCommand {
     /// cli.command.mcp.doctor.about
     Doctor(McpDoctorArgs),
+    /// cli.command.mcp.gen.about
+    Gen(PassthroughArgs),
 }
 
 #[derive(Args, Debug)]
 pub struct McpDoctorArgs {
     /// cli.command.mcp.doctor.provider
-    pub provider: String,
+    pub provider: Option<String>,
     /// cli.command.mcp.doctor.json
     #[arg(long = "json")]
     pub json: bool,
