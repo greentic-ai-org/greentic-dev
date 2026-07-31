@@ -188,5 +188,13 @@
   "runtime.dw.error.sha_mismatch": "artifact sha256 mismatch: expected {expected}, got {actual}",
   "runtime.dw.error.create_out_dir": "failed to create output directory {path}",
   "runtime.dw.error.write_artifact": "failed to write artifact to {path}",
-  "runtime.dw.install.success": "installed {path} (sha256 {sha})"
+  "runtime.dw.install.success": "installed {path} (sha256 {sha})",
+  "cli.command.mcp.gen.about": "Generate an MCP router component from an OpenAPI/Swagger spec (passthrough to greentic-mcp-gen)",
+  "runtime.mcp.gen.error.not_installed": "greentic-mcp-gen was not found. Install it with `cargo binstall greentic-mcp-generator` (set GITHUB_TOKEN for the private repo) or run `greentic-dev install`.",
+  "cli.command.mcp.doctor.generator.header": "MCP generator (greentic-mcp-gen):",
+  "cli.command.mcp.doctor.generator.found": "found: {path} ({version})",
+  "cli.command.mcp.doctor.generator.missing": "not installed — run `greentic-dev install` or `cargo binstall greentic-mcp-generator`",
+  "cli.command.mcp.doctor.toolchain.ready": "wasm toolchain ready (cargo + wasm32-wasip2)",
+  "cli.command.mcp.doctor.toolchain.cargo_missing": "cargo not found on PATH",
+  "cli.command.mcp.doctor.toolchain.wasm_missing": "wasm32-wasip2 target missing — run: rustup target add wasm32-wasip2"
 }
