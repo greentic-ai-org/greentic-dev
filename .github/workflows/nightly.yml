@@ -99,10 +99,30 @@ jobs:
         # rust-cache) marks them present. ~/.cargo/bin can be missing the
         # actual binary while metadata says installed, in which case binstall
         # short-circuits and `cargo <tool>` then fails with "no such command".
+        #
+        # GITHUB_TOKEN: without it binstall queries api.github.com anonymously,
+        # which is rate-limited per runner IP. A 403 is not fatal for binstall —
+        # it silently falls back to building from source, costing ~11 minutes of
+        # pointless compilation. Root-caused in greenticai/greentic-cap#39.
+        #
+        # --disable-strategies compile turns that silent degradation into a hard
+        # failure for the two crates whose releases carry target-triple-named
+        # prebuilt archives. tomlq (cryptaliagy/tomlq) is deliberately left
+        # alone: its release assets are named `tomlq.amd64.tgz` etc., not by
+        # target triple, so binstall's prebuilt resolution for it is unverified
+        # and the source fallback is the working path.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cargo binstall --locked --force -y tomlq
-          cargo binstall --locked --force -y cargo-llvm-cov
-          cargo binstall --locked --force -y cargo-nextest
+          cargo binstall --locked --force --disable-strategies compile -y cargo-llvm-cov
+          cargo binstall --locked --force --disable-strategies compile -y cargo-nextest
+
+          # Fail loudly here rather than in a later step with "no such command".
+          # The tomlq crate installs its binary as `tq`, not `tomlq`.
+          command -v tq
+          command -v cargo-llvm-cov
+          command -v cargo-nextest
 
       - name: Build + Test (full, conformance on)
         run: |
