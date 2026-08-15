@@ -322,6 +322,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
 
 [[package]]
+name = "base64"
+version = "0.23.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ac07cdecf99051d9a5238b80f35af32cdeba5b336e55d957b318b50137e18da5"
+
+[[package]]
 name = "base64ct"
 version = "1.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1778,12 +1784,12 @@ dependencies = [
 
 [[package]]
 name = "greentic-component"
-version = "1.2.0-dev.31666803566"
+version = "1.2.0-dev.31815342560"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "914ccd65e113a68d2316865ead43bcbe49f4f2833a2216c68f3d7c2391d55149"
+checksum = "d73af5ea49e4091e50d9b5bd3e7e3123f244bc6e49893a97ac014e2d0659221f"
 dependencies = [
  "anyhow",
- "base64 0.22.1",
+ "base64 0.23.1",
  "blake3",
  "bytes",
  "ciborium",
@@ -1802,7 +1808,7 @@ dependencies = [
  "hex",
  "ignore",
  "include_dir",
- "jsonschema 0.46.4",
+ "jsonschema 0.49.4",
  "miette",
  "oci-distribution",
  "once_cell",
@@ -1826,21 +1832,21 @@ dependencies = [
  "walkdir",
  "wasm-encoder 0.248.0",
  "wasm-metadata 0.248.0",
- "wasmparser 0.248.0",
+ "wasmparser 0.256.0",
  "wasmtime",
  "wasmtime-wasi",
- "wit-component 0.247.0",
- "wit-parser 0.247.0",
+ "wit-component 0.256.0",
+ "wit-parser 0.256.0",
 ]
 
 [[package]]
 name = "greentic-component-manifest"
-version = "1.2.0-dev.31666803566"
+version = "1.2.0-dev.31815342560"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43bae70672af163213c687d9e23e161b705e2b8eee276c14d384ac5bd88af744"
+checksum = "f8fdc95d2a21513a05df188c774e429f55762fa059210955effd91f62cc850b5"
 dependencies = [
  "greentic-types",
- "jsonschema 0.46.4",
+ "jsonschema 0.49.4",
  "regex",
  "schemars 1.2.1",
  "semver",
@@ -1918,9 +1924,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-distributor-client"
-version = "1.2.0-dev.31667121447"
+version = "1.2.0-dev.31769723111"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "771340f4fbab3e9421339e9c842920cf9819f0684f5691a6518203926d4885ff"
+checksum = "aac7e091d059433ade0821532ee769b84f1eea1d7da85c97d26a3f2bcfae9f04"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1948,9 +1954,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-flow"
-version = "1.2.0-dev.31667590882"
+version = "1.2.0-dev.31770004413"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8ad806b26cb94813f5b65543464710bbcca578f0c56528ce015ae0e1d181104"
+checksum = "4b00d0e246d803b94021284ca663d7298193eb8f7bdcd76f83f8509c22b2859a"
 dependencies = [
  "anyhow",
  "blake3",
@@ -2063,9 +2069,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-pack-lib"
-version = "1.2.0-dev.31668906907"
+version = "1.2.0-dev.31771037667"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c25633ecbec034f5317d5a3ab59fdf67c55ffbadef5689851d2fc1204626cc0b"
+checksum = "90963e60cfc8661102baf9baaa3dc9e34a0cd1859b6347e050186d4a3c97164d"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -2110,9 +2116,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-secrets-api"
-version = "1.2.0-dev.31667677391"
+version = "1.2.0-dev.31770187054"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df3083dbeee289ce58309184d903880eda28f9003abddc8a5a08d5cbec7c1368"
+checksum = "2ac6a4f84af672f75f5889e200cee477d16b79c126223e0d79090f6fbf523812"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2121,9 +2127,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-secrets-core"
-version = "1.2.0-dev.31667677391"
+version = "1.2.0-dev.31770187054"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9709defb52261446420a39b9c6f7830d39f6d1abcb92b3a5669d9e2b1773e56"
+checksum = "1cf231a0a196c82253c4b8740418fd5523fa535b38a0479aec25f45f01b145ef"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2149,9 +2155,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-secrets-lib"
-version = "1.2.0-dev.31667677391"
+version = "1.2.0-dev.31770187054"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3bdfd11098ac131d32667ab6a9b07026211e448f1ba4ea1038cffe1e526c2cc"
+checksum = "b5c92ef918674b2bc9c5fe2305c812293366211bcef468b0944064209d00472d"
 dependencies = [
  "async-trait",
  "greentic-secrets-api",
@@ -2163,9 +2169,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-secrets-provider-dev"
-version = "1.2.0-dev.31667677391"
+version = "1.2.0-dev.31770187054"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ccbc8ab796313c14c55033cb758e0828fe411b11564c2bd758e25b9da4b73f87"
+checksum = "d8b15e08cf9371aa1b0e48717e437e503dcbc9402ac8bd7375cc6cbf8a77fc1f"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -2181,9 +2187,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-secrets-spec"
-version = "1.2.0-dev.31667677391"
+version = "1.2.0-dev.31770187054"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9777205178d437fc68cbf211fb4fe200b7a83cb0b2da608f34685abdc7a213a"
+checksum = "88be002df612578e1747e0235fd10d4c5387d515440f81e8206d6b77516f1a98"
 dependencies = [
  "async-trait",
  "greentic-types",
@@ -2983,12 +2989,43 @@ dependencies = [
  "getrandom 0.3.4",
  "idna",
  "itoa",
- "jsonschema-regex",
- "jsonschema-value",
+ "jsonschema-regex 0.48.5",
+ "jsonschema-value 0.48.5",
  "num-cmp",
  "num-traits",
  "percent-encoding",
  "referencing 0.48.5",
+ "regex",
+ "reqwest 0.13.3",
+ "rustls",
+ "serde",
+ "serde_json",
+ "strum",
+ "unicode-general-category",
+ "uuid-simd",
+]
+
+[[package]]
+name = "jsonschema"
+version = "0.49.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "257549c093d8f3d043337ba0d507e8eeace2447dfae3f0ee37eb0f57d3df7655"
+dependencies = [
+ "ahash",
+ "bytecount",
+ "data-encoding",
+ "email_address",
+ "fancy-regex",
+ "fraction",
+ "getrandom 0.3.4",
+ "idna",
+ "itoa",
+ "jsonschema-regex 0.49.9",
+ "jsonschema-value 0.49.9",
+ "num-cmp",
+ "num-traits",
+ "percent-encoding",
+ "referencing 0.49.9",
  "regex",
  "reqwest 0.13.3",
  "rustls",
@@ -3009,10 +3046,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "jsonschema-regex"
+version = "0.49.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "91994f45017ed5e66aa8e59b8415f4cb033a6380d7200387b7cf117595fbdf85"
+dependencies = [
+ "regex-syntax",
+]
+
+[[package]]
 name = "jsonschema-value"
 version = "0.48.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fd8c04ab4ce60e42c4e302d3bd9d184652bb56f212495d2eea23573bcbf72556"
+dependencies = [
+ "ahash",
+ "bytecount",
+ "fraction",
+ "num-cmp",
+ "num-traits",
+ "serde_json",
+]
+
+[[package]]
+name = "jsonschema-value"
+version = "0.49.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ec7637f83e510868ae6ed625f7ebfbbde4554ee8ce49854caa5126a8b9b9ecb"
 dependencies = [
  "ahash",
  "bytecount",
@@ -3847,7 +3907,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "27c6023962132f4b30eb4c172c91ce92d933da334c59c23cddee82358ddafb0b"
 dependencies = [
  "anyhow",
- "itertools 0.14.0",
+ "itertools 0.13.0",
  "proc-macro2",
  "quote",
  "syn",
@@ -4140,6 +4200,23 @@ name = "referencing"
 version = "0.48.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "980e77f5cfffc592c0e7dfb6d20770a0b96a6ab94d403de7454ed9799505e4ba"
+dependencies = [
+ "ahash",
+ "fluent-uri",
+ "getrandom 0.3.4",
+ "hashbrown 0.17.0",
+ "itoa",
+ "micromap",
+ "parking_lot",
+ "percent-encoding",
+ "serde_json",
+]
+
+[[package]]
+name = "referencing"
+version = "0.49.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6efa2154ea6f5ce0fdecdd2a8d18f2fa1a39a8fbba91564f555a592e4dce8278"
 dependencies = [
  "ahash",
  "fluent-uri",
@@ -5761,6 +5838,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "wasm-encoder"
+version = "0.256.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ec1492381bfd5ea51c2a99a919b676662559925cb8d7490547ec2e14c1ad3eb1"
+dependencies = [
+ "leb128fmt",
+ "wasmparser 0.256.0",
+]
+
+[[package]]
 name = "wasm-metadata"
 version = "0.244.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5801,6 +5888,18 @@ dependencies = [
  "url",
  "wasm-encoder 0.248.0",
  "wasmparser 0.248.0",
+]
+
+[[package]]
+name = "wasm-metadata"
+version = "0.256.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d6187f9fce741db43bea48f1ec42174897d763b8cdea7df726f2dd05561848d7"
+dependencies = [
+ "anyhow",
+ "indexmap 2.14.0",
+ "wasm-encoder 0.256.0",
+ "wasmparser 0.256.0",
 ]
 
 [[package]]
@@ -5862,6 +5961,19 @@ dependencies = [
  "bitflags",
  "hashbrown 0.17.0",
  "indexmap 2.14.0",
+ "serde",
+]
+
+[[package]]
+name = "wasmparser"
+version = "0.256.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "60bd825ffedc6cba8a642924ba7ae424afbc47811cffbcb7b92031ec24e59b4c"
+dependencies = [
+ "bitflags",
+ "hashbrown 0.17.0",
+ "indexmap 2.14.0",
+ "semver",
  "serde",
 ]
 
@@ -6715,6 +6827,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "wit-component"
+version = "0.256.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c3d537ec182eed18f560184b870287cf443c4eccc315af178db3eae8811c3b6c"
+dependencies = [
+ "anyhow",
+ "bitflags",
+ "indexmap 2.14.0",
+ "log",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "wasm-encoder 0.256.0",
+ "wasm-metadata 0.256.0",
+ "wasmparser 0.256.0",
+ "wit-parser 0.256.0",
+]
+
+[[package]]
 name = "wit-parser"
 version = "0.244.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6768,6 +6899,25 @@ dependencies = [
  "serde_json",
  "unicode-xid",
  "wasmparser 0.248.0",
+]
+
+[[package]]
+name = "wit-parser"
+version = "0.256.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fa073dadefba859cb03f689a0c2e3efc51f883bf86b907eaa9709bfd9e3a00a9"
+dependencies = [
+ "anyhow",
+ "hashbrown 0.17.0",
+ "id-arena",
+ "indexmap 2.14.0",
+ "log",
+ "semver",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "unicode-ident",
+ "wasmparser 0.256.0",
 ]
 
 [[package]]
