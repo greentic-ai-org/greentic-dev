@@ -250,9 +250,30 @@ pub fn install_all_delegated_tools(latest: bool, locale: &str) -> Result<()> {
         }
     }
     // External tools ship a single unsuffixed binary — install by plain name.
+    //
+    // A failure here MUST NOT abort the run. `greentic-mcp-generator` is not
+    // published to crates.io at all — it ships as a private GitHub release and
+    // reaches a customer through `install --tenant` — so `cargo binstall` can
+    // never resolve it and exits 76 every time. With `?`, that took the whole
+    // command down, including `install --tenant`, which calls this before
+    // fetching a single tenant artifact: every tenant install failed having
+    // installed nothing, and the error named a crate the operator could do
+    // nothing about.
+    //
+    // The core toolchain above stays fatal on purpose — those binaries are
+    // required. These are optional, and an operator who needs one gets it from
+    // the tenant install path that is designed to carry it.
     for package in GREENTIC_EXTERNAL_TOOL_PACKAGES {
         for bin_name in package.bins {
-            install_with_binstall(package.crate_name, bin_name, latest, None, locale)?;
+            if let Err(err) =
+                install_with_binstall(package.crate_name, bin_name, latest, None, locale)
+            {
+                eprintln!(
+                    "note: optional external tool `{bin_name}` (crate `{}`) is unavailable; \
+                     skipping it: {err}",
+                    package.crate_name
+                );
+            }
         }
     }
     Ok(())

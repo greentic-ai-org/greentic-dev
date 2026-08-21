@@ -239,6 +239,19 @@ struct TenantInstallManifest {
     tools: Vec<TenantToolDescriptor>,
     #[serde(default)]
     docs: Vec<TenantDocDescriptor>,
+    /// Declared by the tenant manifest and NOT installed by this tool. Modelled
+    /// only so the entries can be reported instead of vanishing: there is no
+    /// `deny_unknown_fields` here, so before this they decoded cleanly and were
+    /// dropped with nothing logged, and an operator could not tell a store pack
+    /// that failed to install from one that was never attempted.
+    #[serde(default)]
+    store_assets: Vec<StoreAssetRef>,
+}
+
+/// Only the id is modelled — the entries are reported, never fetched.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+struct StoreAssetRef {
+    id: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -543,6 +556,20 @@ where
                 installed_doc_entries.push((doc.id.clone(), path.clone()));
                 installed_docs.push(path.display().to_string());
             }
+        }
+
+        if !manifest.store_assets.is_empty() {
+            let ids: Vec<&str> = manifest
+                .store_assets
+                .iter()
+                .map(|asset| asset.id.as_str())
+                .collect();
+            eprintln!(
+                "warning: tenant `{tenant}` declares {} store asset(s) that greentic-dev does \
+                 not install; skipping: {}",
+                ids.len(),
+                ids.join(", ")
+            );
         }
 
         let manifest_path = self.env.manifests_dir.join(format!("tenant-{tenant}.json"));
@@ -1488,6 +1515,7 @@ mod tests {
             schema: Some("https://raw.githubusercontent.com/greenticai/customers-tools/main/schemas/tenant-tools.schema.json".to_string()),
             schema_version: "1".to_string(),
             tenant: "acme".to_string(),
+            store_assets: Vec::new(),
             tools: vec![TenantToolDescriptor::Expanded(TenantToolEntry {
                 schema: Some(
                     "https://raw.githubusercontent.com/greenticai/customers-tools/main/schemas/tool.schema.json".to_string(),
@@ -1531,6 +1559,7 @@ mod tests {
             schema: Some("https://raw.githubusercontent.com/greenticai/customers-tools/main/schemas/tenant-tools.schema.json".to_string()),
             schema_version: "1".to_string(),
             tenant: "acme".to_string(),
+            store_assets: Vec::new(),
             tools: vec![TenantToolDescriptor::Ref(RemoteManifestRef {
                 id: "greentic-x-cli".to_string(),
                 url: tool_manifest_url.to_string(),
@@ -1906,6 +1935,7 @@ mod tests {
             schema: None,
             schema_version: "1".to_string(),
             tenant: "acme".to_string(),
+            store_assets: Vec::new(),
             tools: vec![TenantToolDescriptor::Expanded(TenantToolEntry {
                 schema: None,
                 id: "greentic-x-cli".to_string(),
@@ -1983,6 +2013,7 @@ mod tests {
             schema: None,
             schema_version: "1".to_string(),
             tenant: "3point".to_string(),
+            store_assets: Vec::new(),
             tools: vec![TenantToolDescriptor::Simple(SimpleTenantToolEntry {
                 id: "greentic-fast2flow".to_string(),
                 binary_name: None,
