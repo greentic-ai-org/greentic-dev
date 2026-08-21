@@ -1515,6 +1515,7 @@ mod tests {
             schema: Some("https://raw.githubusercontent.com/greenticai/customers-tools/main/schemas/tenant-tools.schema.json".to_string()),
             schema_version: "1".to_string(),
             tenant: "acme".to_string(),
+            store_assets: Vec::new(),
             tools: vec![TenantToolDescriptor::Expanded(TenantToolEntry {
                 schema: Some(
                     "https://raw.githubusercontent.com/greenticai/customers-tools/main/schemas/tool.schema.json".to_string(),
@@ -1558,6 +1559,7 @@ mod tests {
             schema: Some("https://raw.githubusercontent.com/greenticai/customers-tools/main/schemas/tenant-tools.schema.json".to_string()),
             schema_version: "1".to_string(),
             tenant: "acme".to_string(),
+            store_assets: Vec::new(),
             tools: vec![TenantToolDescriptor::Ref(RemoteManifestRef {
                 id: "greentic-x-cli".to_string(),
                 url: tool_manifest_url.to_string(),
@@ -1933,6 +1935,7 @@ mod tests {
             schema: None,
             schema_version: "1".to_string(),
             tenant: "acme".to_string(),
+            store_assets: Vec::new(),
             tools: vec![TenantToolDescriptor::Expanded(TenantToolEntry {
                 schema: None,
                 id: "greentic-x-cli".to_string(),
@@ -2010,6 +2013,7 @@ mod tests {
             schema: None,
             schema_version: "1".to_string(),
             tenant: "3point".to_string(),
+            store_assets: Vec::new(),
             tools: vec![TenantToolDescriptor::Simple(SimpleTenantToolEntry {
                 id: "greentic-fast2flow".to_string(),
                 binary_name: None,
