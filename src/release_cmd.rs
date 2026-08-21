@@ -495,6 +495,7 @@ fn resolve_manifest_version<R: CrateVersionResolver>(
     resolver: &R,
     crate_in_manifest: &str,
     channel: ToolchainChannel,
+    lane: Option<(u64, u64)>,
 ) -> Result<Option<String>> {
     if channel == ToolchainChannel::Rnd {
         match resolver
@@ -511,6 +512,20 @@ fn resolve_manifest_version<R: CrateVersionResolver>(
                 Ok(None)
             }
         }
+    } else if let (ToolchainChannel::Development, Some(lane)) = (channel, lane) {
+        // Stay inside the release's own minor line. Without this the dev
+        // manifest pins whatever sorts highest across ALL lanes, which is how
+        // an abandoned 1.3 research build kept winning over active 1.2 dev
+        // builds and froze the dev channel.
+        resolver
+            .resolve_latest_in_lane(crate_in_manifest, lane)
+            .with_context(|| {
+                format!(
+                    "failed to resolve a {}.{} version for `{crate_in_manifest}`",
+                    lane.0, lane.1
+                )
+            })
+            .map(Some)
     } else {
         resolver
             .resolve_latest_for_channel(crate_in_manifest, channel)
@@ -529,7 +544,9 @@ pub fn snapshot_manifest<R: CrateVersionResolver>(
     let mut packages = Vec::new();
     for package in GREENTIC_TOOLCHAIN_PACKAGES {
         let crate_in_manifest = manifest_crate_name_for_source(from, package.crate_name);
-        let Some(version) = resolve_manifest_version(resolver, &crate_in_manifest, channel)? else {
+        let Some(version) =
+            resolve_manifest_version(resolver, &crate_in_manifest, channel, lane_of(release))?
+        else {
             continue;
         };
         packages.push(ToolchainPackage {
@@ -710,6 +727,7 @@ where
                 resolver,
                 &crate_in_manifest,
                 channel_from_source_tag(from),
+                lane_of(release),
             )?,
         };
         let Some(version) = version else {
@@ -1121,6 +1139,16 @@ pub trait CrateVersionResolver {
         self.resolve_latest(crate_name)
     }
 
+    /// Resolve the latest version INSIDE a `(major, minor)` lane.
+    ///
+    /// The dev channel needs this: greentic versions its lanes by minor (1.2.x
+    /// dev, 1.3.x research), so "highest overall" lets an abandoned research
+    /// build outrank an active dev one. The default ignores the lane, which is
+    /// correct for resolvers that serve a single lane (the test fakes).
+    fn resolve_latest_in_lane(&self, crate_name: &str, _lane: (u64, u64)) -> Result<String> {
+        self.resolve_latest(crate_name)
+    }
+
     /// Resolve the research (`-rnd`) version, distinguishing an unpublished
     /// crate (HTTP 404 → [`ResearchVersion::Absent`]) from a genuine resolution
     /// error. The default treats every resolvable crate as
@@ -1370,6 +1398,14 @@ impl CrateVersionResolver for CratesIoApiVersionResolver {
         research_or_fallback(crate_name, &body)
     }
 
+    fn resolve_latest_in_lane(&self, crate_name: &str, lane: (u64, u64)) -> Result<String> {
+        let url = format!("{}/{}", self.base_url.trim_end_matches('/'), crate_name);
+        let body = self.fetch_crate_body(crate_name)?.ok_or_else(|| {
+            anyhow!("crates.io API GET {url} returned 404 Not Found (no published `{crate_name}`)")
+        })?;
+        pick_highest_in_lane(crate_name, &body, lane)
+    }
+
     fn resolve_research_version(&self, crate_name: &str) -> Result<ResearchVersion> {
         // A 404 means the `<name>-rnd` crate is simply not published — the tool
         // ships no research build. Map it to `Absent` (a skip signal) instead of
@@ -1388,6 +1424,65 @@ impl CrateVersionResolver for CratesIoApiVersionResolver {
 /// `max_stable_version` skips). Otherwise picks the highest semver of ANY
 /// channel — the fallback for toolchain crates with no `-research` build, which
 /// keeps them at their latest dev build instead of regressing to old stable.
+/// The `(major, minor)` lane a release belongs to. greentic versions its
+/// toolchain lanes by minor: 1.2.x is dev, 1.3.x is research.
+fn lane_of(release: &str) -> Option<(u64, u64)> {
+    let mut parts = release.split('.');
+    let major = parts.next()?.parse().ok()?;
+    let minor = parts.next()?.parse().ok()?;
+    Some((major, minor))
+}
+
+/// Highest non-yanked version of `crate_name` INSIDE `lane`.
+///
+/// The dev channel must not leave its own minor line. Picking the highest
+/// version overall lets an abandoned lane outrank an active one purely on
+/// semver ordering — `greentic-setup-dev` stopped publishing 1.3 in July while
+/// the dev lane kept shipping 1.2.<run_id>, so every later dev manifest pinned
+/// the July build and the channel froze without anyone doing anything wrong.
+///
+/// An empty lane is an error rather than a fallback: falling back to another
+/// lane is the behaviour this function exists to prevent.
+fn pick_highest_in_lane(crate_name: &str, body: &str, lane: (u64, u64)) -> Result<String> {
+    let payload: serde_json::Value = serde_json::from_str(body)
+        .with_context(|| format!("crates.io API for `{crate_name}` returned invalid JSON"))?;
+    let versions = payload
+        .get("versions")
+        .and_then(|v| v.as_array())
+        .ok_or_else(|| {
+            anyhow!("crates.io API for `{crate_name}` is missing the `versions` array")
+        })?;
+    let mut best: Option<Version> = None;
+    for entry in versions {
+        if entry
+            .get("yanked")
+            .and_then(serde_json::Value::as_bool)
+            .unwrap_or(false)
+        {
+            continue;
+        }
+        let Some(num) = entry.get("num").and_then(|n| n.as_str()) else {
+            continue;
+        };
+        let Ok(parsed) = Version::parse(num) else {
+            continue;
+        };
+        if (parsed.major, parsed.minor) != lane {
+            continue;
+        }
+        if best.as_ref().is_none_or(|current| parsed > *current) {
+            best = Some(parsed);
+        }
+    }
+    best.map(|v| v.to_string()).ok_or_else(|| {
+        anyhow!(
+            "crates.io has no non-yanked `{crate_name}` in the {}.{} lane",
+            lane.0,
+            lane.1
+        )
+    })
+}
+
 fn pick_highest_crates_io_version(
     crate_name: &str,
     body: &str,
@@ -2136,6 +2231,65 @@ mod tests {
         );
         assert_eq!(parse_channel("stable").unwrap(), ToolchainChannel::Stable);
         assert!(parse_channel("rc").is_err());
+    }
+
+    /// The dev channel must stay inside its own minor line.
+    ///
+    /// greentic uses 1.2.x for the dev lane and 1.3.x for research. Picking the
+    /// highest version overall makes an ABANDONED research build outrank an
+    /// active dev one: `greentic-setup-dev` published 1.3.29488015798 in July
+    /// and nothing since, while the dev lane kept shipping 1.2.<run_id>. Every
+    /// dev manifest generated after that pinned the July build, which is how
+    /// the dev channel silently froze.
+    #[test]
+    fn the_dev_lane_ignores_a_higher_research_minor() {
+        let body = r#"{"versions":[
+            {"num":"1.2.32329835532","yanked":false},
+            {"num":"1.2.32374877786","yanked":false},
+            {"num":"1.3.29293243074","yanked":false},
+            {"num":"1.3.29488015798","yanked":false}
+        ]}"#;
+
+        assert_eq!(
+            pick_highest_in_lane("greentic-setup-dev", body, (1, 2)).unwrap(),
+            "1.2.32374877786",
+            "the newest 1.2 build must win over any 1.3"
+        );
+        assert_eq!(
+            pick_highest_in_lane("greentic-setup-dev", body, (1, 3)).unwrap(),
+            "1.3.29488015798",
+            "asking for the 1.3 lane still resolves inside 1.3"
+        );
+    }
+
+    /// A yanked build must never be pinned, lane or not.
+    #[test]
+    fn a_yanked_build_is_not_pinned_in_lane() {
+        let body = r#"{"versions":[
+            {"num":"1.2.100","yanked":false},
+            {"num":"1.2.200","yanked":true}
+        ]}"#;
+        assert_eq!(pick_highest_in_lane("c", body, (1, 2)).unwrap(), "1.2.100");
+    }
+
+    /// A crate with nothing in the lane is an error the caller can report,
+    /// not a silent fall back to another lane — falling back is the bug.
+    #[test]
+    fn an_empty_lane_is_an_error_not_a_fallback() {
+        let body = r#"{"versions":[{"num":"1.3.5","yanked":false}]}"#;
+        let err = pick_highest_in_lane("c", body, (1, 2)).unwrap_err();
+        assert!(
+            err.to_string().contains("1.2"),
+            "the error must name the lane it searched; got {err}"
+        );
+    }
+
+    /// `--release 1.2.1` means the 1.2 lane.
+    #[test]
+    fn the_lane_comes_from_the_release_being_generated() {
+        assert_eq!(lane_of("1.2.1"), Some((1, 2)));
+        assert_eq!(lane_of("1.2.32374413367"), Some((1, 2)));
+        assert_eq!(lane_of("nonsense"), None);
     }
 
     #[test]
