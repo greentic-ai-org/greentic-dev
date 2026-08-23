@@ -857,10 +857,34 @@ fn strip_version_suffix(name: &str) -> String {
         return name.to_string();
     };
     if is_version_segment(last) {
-        prefix.to_string()
+        return prefix.to_string();
+    }
+    // A prerelease identifier sits AFTER the version (`…-v1.2.49-dev`), so the
+    // version is one segment further left and the single strip above misses it.
+    //
+    // That mattered: `greentic-admin-v1.2.49-dev` did not reduce to
+    // `greentic-admin`, so `extract_tar_gz_binary` never matched a file by that
+    // name and fell through to "first file in the archive" — which happened to
+    // be the binary. It worked by luck of ordering; an archive that listed
+    // LICENSE first would have installed LICENSE as the binary, executable bit
+    // and all. Every tool pinned to a `-dev` or `-research` tag was exposed.
+    let Some((head, version)) = prefix.rsplit_once('-') else {
+        return name.to_string();
+    };
+    if is_version_segment(version) && is_prerelease_segment(last) {
+        head.to_string()
     } else {
         name.to_string()
     }
+}
+
+/// A semver prerelease identifier — `dev`, `research`, `rc1`.
+///
+/// Deliberately narrower than "any word": it is only ever consulted when the
+/// segment to its LEFT is already a version, so it cannot swallow the tail of a
+/// binary whose name simply ends in one (`greentic-mcp-gen` stays intact).
+fn is_prerelease_segment(segment: &str) -> bool {
+    !segment.is_empty() && segment.chars().all(|ch| ch.is_ascii_alphanumeric())
 }
 
 fn is_version_segment(segment: &str) -> bool {
@@ -2058,6 +2082,22 @@ mod tests {
             "https://github.com/greentic-biz/greentic-fast2flow/releases/download/v0.4.1/greentic-fast2flow-v0.4.1-x86_64-unknown-linux-gnu.tar.gz",
         );
         assert_eq!(name, "greentic-fast2flow");
+    }
+
+    #[test]
+    fn expected_binary_name_strips_a_prerelease_version() {
+        let name = expected_binary_name(
+            "greentic-admin",
+            "https://github.com/greentic-biz/greentic-admin/releases/download/v1.2.49-dev/greentic-admin-v1.2.49-dev-x86_64-unknown-linux-gnu.tar.gz",
+        );
+        assert_eq!(name, "greentic-admin");
+    }
+
+    #[test]
+    fn strip_version_suffix_keeps_a_trailing_word_that_is_not_a_prerelease() {
+        // `gen` is part of the binary's own name, and the segment to its left is
+        // not a version — so nothing may be stripped here.
+        assert_eq!(strip_version_suffix("greentic-mcp-gen"), "greentic-mcp-gen");
     }
 
     #[test]
