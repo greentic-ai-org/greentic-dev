@@ -190,7 +190,7 @@
   "cli.command.security.repo": "GitHub repository as OWNER/REPO; defaults to origin",
   "cli.command.security.branch": "Git branch name for code scanning alerts; defaults to the current branch",
   "cli.command.mcp.gen.about": "Generate an MCP router component from an OpenAPI/Swagger spec (passthrough to greentic-mcp-gen)",
-  "runtime.mcp.gen.error.not_installed": "greentic-mcp-gen was not found. Install it with `cargo binstall greentic-mcp-generator` (set GITHUB_TOKEN for the private repo) or run `greentic-dev install`.",
+  "runtime.mcp.gen.error.not_installed": "greentic-mcp-gen was not found. It is not published to crates.io, so `cargo binstall` cannot fetch it \u2014 it ships with your tenant's authorized tools. Install it with `gtc install --tenant <TENANT> --key <KEY>`.",
   "cli.command.mcp.doctor.generator.header": "MCP generator (greentic-mcp-gen):",
   "cli.command.mcp.doctor.generator.found": "found: {path} ({version})",
   "cli.command.mcp.doctor.generator.missing": "not installed — run `greentic-dev install` or `cargo binstall greentic-mcp-generator`",
