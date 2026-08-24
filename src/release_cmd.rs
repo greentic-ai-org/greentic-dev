@@ -44,6 +44,24 @@ pub struct ToolchainManifest {
     pub extension_packs: Option<Vec<ExtensionPackRef>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub components: Option<Vec<ComponentRef>>,
+    /// The gtc binary this manifest pins, named per target.
+    ///
+    /// gtc used to rebuild these names from the version using the STABLE
+    /// convention (`gtc-<target>.tgz`) — while the dev lane publishes
+    /// `gtc-dev-v<version>-<target>.tgz`. One convention in the consumer, two
+    /// publishers: every dev self-update fetched a 404. Stating the name here
+    /// removes the guess.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub gtc: Option<Vec<GtcArtifactRef>>,
+}
+
+/// One gtc release artifact, exactly as GitHub reports it.
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub struct GtcArtifactRef {
+    pub target: String,
+    pub url: String,
+    /// Hex sha256 without the `sha256:` prefix.
+    pub sha256: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -157,12 +175,22 @@ pub fn publish(args: ReleasePublishArgs) -> Result<()> {
 }
 
 fn publish_with_checker(args: ReleasePublishArgs, checker: &dyn ReleaseAssetChecker) -> Result<()> {
-    let (release, manifest, source) = publish_manifest_input(&args)?;
+    let (release, mut manifest, source) = publish_manifest_input(&args)?;
 
     // Gate before the dry-run return, so `publish --manifest <file> --dry-run`
     // doubles as the CI check on a pin bump: it answers "is this manifest
     // publishable?" without pushing anything.
     verify_manifest_releases(&manifest, args.tag.as_deref(), checker)?;
+
+    // State the gtc artifacts rather than leaving the consumer to rebuild their
+    // names. Deliberately NOT gated on the stable-channel check above: dev is
+    // the lane whose names cannot be reconstructed, so it needs this most.
+    // Best-effort — an unreadable release leaves the field absent and the
+    // consumer falls back exactly as it does today. A manifest file that
+    // already names them is left alone.
+    if manifest.gtc.is_none() {
+        manifest.gtc = gtc_artifacts_for(&manifest.version, checker)?;
+    }
 
     if args.dry_run {
         println!(
@@ -408,7 +436,8 @@ fn snapshot_with_checker(
 ) -> Result<()> {
     let channel = parse_channel(&args.channel)?;
     let resolver = CratesIoApiVersionResolver::default();
-    let manifest = snapshot_manifest(&args.release, channel, &resolver, Some(created_at_now()?))?;
+    let mut manifest =
+        snapshot_manifest(&args.release, channel, &resolver, Some(created_at_now()?))?;
 
     // Snapshot resolves pins from crates.io, which does NOT imply a finished
     // release build. Most repos gate `publish_crates` on `needs: [release]`, but
@@ -416,6 +445,10 @@ fn snapshot_with_checker(
     // ["v*"]` — so its crates.io version and its GitHub release race, and a
     // stable snapshot could pin the winner of that race. Same gate as publish.
     verify_manifest_releases(&manifest, args.tag.as_deref(), checker)?;
+
+    if manifest.gtc.is_none() {
+        manifest.gtc = gtc_artifacts_for(&manifest.version, checker)?;
+    }
 
     if args.dry_run {
         println!("{}", serde_json::to_string_pretty(&manifest)?);
@@ -564,6 +597,7 @@ pub fn snapshot_manifest<R: CrateVersionResolver>(
         packages,
         extension_packs: None,
         components: None,
+        gtc: None,
     })
 }
 
@@ -643,6 +677,7 @@ fn latest_manifest(created_at: Option<String>) -> ToolchainManifest {
                 })
                 .collect(),
         ),
+        gtc: None,
     }
 }
 
@@ -748,6 +783,7 @@ where
         packages,
         extension_packs: Some(extension_pack_refs_for_release(source, artifact_resolver)?),
         components: Some(component_refs_for_release(source, artifact_resolver)?),
+        gtc: None,
     })
 }
 
@@ -883,6 +919,15 @@ const RELEASE_ARCHIVE_SUFFIXES: [&str; 2] = [".tgz", ".zip"];
 trait ReleaseAssetChecker {
     /// `Ok(None)` when the release does not exist, `Ok(Some(names))` otherwise.
     fn release_assets(&self, repo: &str, tag: &str) -> Result<Option<Vec<String>>>;
+
+    /// The same release, with each asset's URL and digest.
+    ///
+    /// Defaulted to `None` so the existing test doubles — which model asset
+    /// NAMES only, because that is all the publish gate ever needed — keep
+    /// compiling and keep exercising that gate unchanged.
+    fn release_artifacts(&self, _repo: &str, _tag: &str) -> Result<Option<Vec<ReleaseArtifact>>> {
+        Ok(None)
+    }
 }
 
 #[derive(Deserialize)]
@@ -894,6 +939,19 @@ struct GithubReleaseAssets {
 #[derive(Deserialize)]
 struct GithubReleaseAsset {
     name: String,
+    /// GitHub reports `sha256:<hex>`; absent on older releases.
+    #[serde(default)]
+    digest: Option<String>,
+    #[serde(default)]
+    browser_download_url: Option<String>,
+}
+
+/// A release asset with the download URL and digest GitHub itself reports —
+/// so nothing downstream has to reconstruct either.
+pub(crate) struct ReleaseArtifact {
+    pub name: String,
+    pub url: Option<String>,
+    pub sha256: Option<String>,
 }
 
 struct GithubReleaseAssetChecker {
@@ -916,8 +974,9 @@ impl GithubReleaseAssetChecker {
     }
 }
 
-impl ReleaseAssetChecker for GithubReleaseAssetChecker {
-    fn release_assets(&self, repo: &str, tag: &str) -> Result<Option<Vec<String>>> {
+impl GithubReleaseAssetChecker {
+    /// One GET, shared by both trait methods.
+    fn fetch_assets(&self, repo: &str, tag: &str) -> Result<Option<Vec<GithubReleaseAsset>>> {
         let url = format!(
             "{}/repos/{TOOLCHAIN_RELEASE_OWNER}/{repo}/releases/tags/{tag}",
             self.base_url.trim_end_matches('/')
@@ -941,9 +1000,28 @@ impl ReleaseAssetChecker for GithubReleaseAssetChecker {
         };
         let release: GithubReleaseAssets = serde_json::from_str(&body)
             .with_context(|| format!("failed to parse release metadata from {url}"))?;
-        Ok(Some(
-            release.assets.into_iter().map(|asset| asset.name).collect(),
-        ))
+        Ok(Some(release.assets))
+    }
+}
+
+impl ReleaseAssetChecker for GithubReleaseAssetChecker {
+    fn release_assets(&self, repo: &str, tag: &str) -> Result<Option<Vec<String>>> {
+        Ok(self
+            .fetch_assets(repo, tag)?
+            .map(|assets| assets.into_iter().map(|asset| asset.name).collect()))
+    }
+
+    fn release_artifacts(&self, repo: &str, tag: &str) -> Result<Option<Vec<ReleaseArtifact>>> {
+        Ok(self.fetch_assets(repo, tag)?.map(|assets| {
+            assets
+                .into_iter()
+                .map(|asset| ReleaseArtifact {
+                    name: asset.name,
+                    url: asset.browser_download_url,
+                    sha256: asset.digest,
+                })
+                .collect()
+        }))
     }
 }
 
@@ -988,6 +1066,57 @@ fn affects_stable_channel(manifest: &ToolchainManifest, target_tag: Option<&str>
 /// The toolchain manifest is what `gtc install` resolves, so a pin that outruns
 /// its release build leaves `:stable` pointing at binaries nobody can download.
 /// The dev and research lanes publish on their own cadence and are never gated.
+/// gtc lives in its own repository, not one named after a pinned crate, so it
+/// is absent from `manifest.packages` and needs its own lookup.
+const GTC_RELEASE_REPO: &str = "greentic";
+
+/// Every target gtc is ever built for. A lane that builds a subset simply has
+/// no asset for the rest, and those are skipped — the manifest states what was
+/// actually published, never what should have been.
+const GTC_TARGETS: &[&str] = &[
+    "x86_64-unknown-linux-gnu",
+    "aarch64-unknown-linux-gnu",
+    "x86_64-apple-darwin",
+    "aarch64-apple-darwin",
+    "x86_64-pc-windows-msvc",
+    "aarch64-pc-windows-msvc",
+];
+
+/// Name the gtc artifacts for `version`, straight from the release.
+///
+/// `Ok(None)` when the release cannot be read or names nothing usable: the
+/// manifest then carries no `gtc` field and the consumer falls back to
+/// reconstruction, which is what every manifest published so far does.
+fn gtc_artifacts_for(
+    version: &str,
+    checker: &dyn ReleaseAssetChecker,
+) -> Result<Option<Vec<GtcArtifactRef>>> {
+    let tag = format!("v{version}");
+    let Some(artifacts) = checker.release_artifacts(GTC_RELEASE_REPO, &tag)? else {
+        return Ok(None);
+    };
+    let mut named = Vec::new();
+    for target in GTC_TARGETS {
+        let tgz = format!("-{target}.tgz");
+        let zip = format!("-{target}.zip");
+        let Some(found) = artifacts
+            .iter()
+            .find(|artifact| artifact.name.ends_with(&tgz) || artifact.name.ends_with(&zip))
+        else {
+            continue;
+        };
+        let (Some(url), Some(digest)) = (found.url.as_deref(), found.sha256.as_deref()) else {
+            continue;
+        };
+        named.push(GtcArtifactRef {
+            target: (*target).to_string(),
+            url: url.to_string(),
+            sha256: digest.trim_start_matches("sha256:").to_string(),
+        });
+    }
+    Ok((!named.is_empty()).then_some(named))
+}
+
 fn verify_manifest_releases(
     manifest: &ToolchainManifest,
     target_tag: Option<&str>,
@@ -2093,6 +2222,7 @@ mod tests {
             }],
             extension_packs: None,
             components: None,
+            gtc: None,
         };
         let manifest =
             generate_manifest("1.0.5", "latest", Some(&source), &FixedResolver, None).unwrap();
@@ -2115,6 +2245,7 @@ mod tests {
             packages: Vec::new(),
             extension_packs: None,
             components: None,
+            gtc: None,
         };
         let manifest =
             generate_manifest("1.0.16", "dev", Some(&source), &FixedResolver, None).unwrap();
@@ -2307,6 +2438,7 @@ mod tests {
             }],
             extension_packs: None,
             components: None,
+            gtc: None,
         };
         assert!(source_manifest_has_concrete_pins(&with_pins));
 
@@ -2563,6 +2695,7 @@ mod tests {
             packages: Vec::new(),
             extension_packs: None,
             components: None,
+            gtc: None,
         };
         assert_eq!(manifest_file_name(&manifest), "gtc-1.0.12.json");
     }
@@ -2637,6 +2770,7 @@ mod tests {
                 id: "components/component-adaptive-card".to_string(),
                 version: "0.5.8".to_string(),
             }]),
+            gtc: None,
         };
 
         let manifest =
@@ -2708,6 +2842,7 @@ mod tests {
             }],
             extension_packs: None,
             components: None,
+            gtc: None,
         };
 
         let versions = source_version_map(Some(&source));
@@ -2829,6 +2964,91 @@ mod tests {
         }
     }
 
+    /// A checker that answers `release_artifacts` — the stub above deliberately
+    /// does not, so it also proves the trait default keeps working.
+    struct StubArtifactChecker(Vec<ReleaseArtifact>);
+
+    impl ReleaseAssetChecker for StubArtifactChecker {
+        fn release_assets(&self, _repo: &str, _tag: &str) -> Result<Option<Vec<String>>> {
+            Ok(Some(self.0.iter().map(|a| a.name.clone()).collect()))
+        }
+
+        fn release_artifacts(&self, repo: &str, tag: &str) -> Result<Option<Vec<ReleaseArtifact>>> {
+            assert_eq!(repo, GTC_RELEASE_REPO, "gtc is looked up in its own repo");
+            assert_eq!(tag, "v1.2.3");
+            Ok(Some(
+                self.0
+                    .iter()
+                    .map(|a| ReleaseArtifact {
+                        name: a.name.clone(),
+                        url: a.url.clone(),
+                        sha256: a.sha256.clone(),
+                    })
+                    .collect(),
+            ))
+        }
+    }
+
+    fn artifact(name: &str, digest: Option<&str>) -> ReleaseArtifact {
+        ReleaseArtifact {
+            name: name.to_string(),
+            url: Some(format!(
+                "https://github.com/greenticai/greentic/releases/download/v1.2.3/{name}"
+            )),
+            sha256: digest.map(str::to_string),
+        }
+    }
+
+    #[test]
+    fn gtc_artifacts_are_taken_from_the_release_not_rebuilt() {
+        // Dev-lane naming: the very shape the consumer could not reconstruct.
+        let checker = StubArtifactChecker(vec![
+            artifact(
+                "gtc-dev-v1.2.3-x86_64-unknown-linux-gnu.tgz",
+                Some(&format!("sha256:{}", "a".repeat(64))),
+            ),
+            artifact(
+                "gtc-dev-v1.2.3-x86_64-unknown-linux-gnu.tgz.sha256",
+                Some(&format!("sha256:{}", "b".repeat(64))),
+            ),
+        ]);
+
+        let named = gtc_artifacts_for("1.2.3", &checker)
+            .expect("lookup")
+            .expect("some");
+        assert_eq!(named.len(), 1, "the .sha256 sidecar is not an artifact");
+        assert_eq!(named[0].target, "x86_64-unknown-linux-gnu");
+        assert!(
+            named[0]
+                .url
+                .ends_with("gtc-dev-v1.2.3-x86_64-unknown-linux-gnu.tgz")
+        );
+        // Stored bare, matching the checksums-manifest shape the other path uses.
+        assert_eq!(named[0].sha256, "a".repeat(64));
+    }
+
+    #[test]
+    fn an_asset_without_a_digest_is_skipped_rather_than_published_unverifiable() {
+        let checker = StubArtifactChecker(vec![artifact(
+            "gtc-dev-v1.2.3-aarch64-apple-darwin.tgz",
+            None,
+        )]);
+        assert!(
+            gtc_artifacts_for("1.2.3", &checker)
+                .expect("lookup")
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn a_checker_that_reports_no_artifacts_leaves_the_field_absent() {
+        // The trait default. Absent means the consumer reconstructs, exactly as
+        // every manifest published before this field existed.
+        let manifest = latest_manifest(None);
+        let stub = StubReleaseChecker::complete_for(&manifest);
+        assert!(gtc_artifacts_for("1.2.3", &stub).expect("lookup").is_none());
+    }
+
     impl StubReleaseChecker {
         /// Every package in `manifest` present with a complete asset set.
         fn complete_for(manifest: &ToolchainManifest) -> Self {
@@ -2882,6 +3102,7 @@ mod tests {
                 .collect(),
             extension_packs: None,
             components: None,
+            gtc: None,
         }
     }
 
