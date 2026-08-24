@@ -23,7 +23,7 @@ jobs:
   dev-prepare:
     uses: greenticai/.github/.github/workflows/dev-prepare.yml@main
     with:
-      setup-script: "if ! command -v cargo-binstall >/dev/null 2>&1; then cargo install cargo-binstall --locked; fi && cargo binstall -y greentic-flow greentic-component greentic-pack --force"
+      setup-script: "if ! command -v cargo-binstall >/dev/null 2>&1; then curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash; fi && cargo binstall -y greentic-flow greentic-component greentic-pack --force"
       require-pre-release: true
 
   dev-binaries-greentic-dev:
@@ -40,7 +40,7 @@ jobs:
       version: ${{ needs.dev-prepare.outputs.version }}
       crates: "greentic-dev"
       binary-version: ${{ needs.dev-prepare.outputs.binary-version }}
-      setup-script: "if ! command -v cargo-binstall >/dev/null 2>&1; then cargo install cargo-binstall --locked; fi && cargo binstall -y greentic-flow greentic-component greentic-pack --force"
+      setup-script: "if ! command -v cargo-binstall >/dev/null 2>&1; then curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash; fi && cargo binstall -y greentic-flow greentic-component greentic-pack --force"
       binary-crates: "greentic-dev"
       dual-role-binary-crates: "greentic-dev"
       require-pre-release: true
