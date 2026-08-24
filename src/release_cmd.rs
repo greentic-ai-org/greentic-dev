@@ -5,9 +5,11 @@ use std::str::FromStr;
 
 use anyhow::{Context, Result, anyhow, bail};
 use async_trait::async_trait;
-use oci_distribution::Reference;
-use oci_distribution::client::{Client, ClientConfig, ClientProtocol, Config, ImageLayer};
-use oci_distribution::secrets::RegistryAuth;
+use greentic_distributor_client::oci_client::Reference;
+use greentic_distributor_client::oci_client::client::{
+    Client, ClientConfig, ClientProtocol, Config, ImageLayer,
+};
+use greentic_distributor_client::oci_client::secrets::RegistryAuth;
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
@@ -1768,7 +1770,9 @@ async fn manifest_exists(
     }
 }
 
-fn is_missing_manifest_error(err: &oci_distribution::errors::OciDistributionError) -> bool {
+fn is_missing_manifest_error(
+    err: &greentic_distributor_client::oci_client::errors::OciDistributionError,
+) -> bool {
     let msg = err.to_string().to_ascii_lowercase();
     msg.contains("manifest unknown")
         || msg.contains("name unknown")
@@ -1776,7 +1780,9 @@ fn is_missing_manifest_error(err: &oci_distribution::errors::OciDistributionErro
         || msg.contains("404")
 }
 
-fn is_unauthorized_error(err: &oci_distribution::errors::OciDistributionError) -> bool {
+fn is_unauthorized_error(
+    err: &greentic_distributor_client::oci_client::errors::OciDistributionError,
+) -> bool {
     let msg = err.to_string().to_ascii_lowercase();
     msg.contains("not authorized") || msg.contains("unauthorized") || msg.contains("401")
 }

@@ -8,12 +8,16 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use anyhow::{Context, Result, anyhow, bail};
 use async_trait::async_trait;
 use flate2::read::GzDecoder;
+use greentic_distributor_client::oci_client::Reference;
+use greentic_distributor_client::oci_client::client::{
+    Client, ClientConfig, ClientProtocol, ImageData,
+};
+use greentic_distributor_client::oci_client::errors::OciDistributionError;
+use greentic_distributor_client::oci_client::manifest::{
+    IMAGE_MANIFEST_MEDIA_TYPE, OCI_IMAGE_MEDIA_TYPE,
+};
+use greentic_distributor_client::oci_client::secrets::RegistryAuth;
 use greentic_distributor_client::oci_packs::{OciPackFetcher, PackFetchOptions, RegistryClient};
-use oci_distribution::Reference;
-use oci_distribution::client::{Client, ClientConfig, ClientProtocol, ImageData};
-use oci_distribution::errors::OciDistributionError;
-use oci_distribution::manifest::{IMAGE_MANIFEST_MEDIA_TYPE, OCI_IMAGE_MEDIA_TYPE};
-use oci_distribution::secrets::RegistryAuth;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use tar::Archive;
@@ -1356,12 +1360,15 @@ fn convert_image(image: ImageData) -> greentic_distributor_client::oci_packs::Pu
             let digest = format!("sha256:{}", layer.sha256_digest());
             greentic_distributor_client::oci_packs::PulledLayer {
                 media_type: layer.media_type,
-                data: layer.data,
+                data: layer.data.to_vec(),
                 digest: Some(digest),
             }
         })
         .collect();
-    let manifest_annotations = image.manifest.and_then(|m| m.annotations);
+    let manifest_annotations = image
+        .manifest
+        .and_then(|m| m.annotations)
+        .map(|annotations| annotations.into_iter().collect());
     greentic_distributor_client::oci_packs::PulledImage {
         digest: image.digest,
         layers,
