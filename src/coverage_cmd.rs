@@ -206,7 +206,13 @@ fn ensure_tool(bin: &str, package: &str, offline: bool) -> Result<()> {
     let mut command = Command::new("cargo");
     command.arg("binstall");
     command.args(cargo_args_for_network(offline));
-    command.args(["-y", "--force", package]);
+    command.args([
+        "-y",
+        "--force",
+        "--maximum-resolution-timeout",
+        "60",
+        package,
+    ]);
     let status = command
         .stdin(Stdio::inherit())
         .stdout(Stdio::inherit())
