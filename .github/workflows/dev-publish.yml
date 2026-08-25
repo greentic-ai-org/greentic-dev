@@ -32,6 +32,8 @@ jobs:
     with:
       package: greentic-dev
       version: ${{ needs.dev-prepare.outputs.binary-version }}
+      rust-version: "1.96.0"
+      include-macos-intel: true
 
   dev-publish:
     needs: [dev-prepare, dev-binaries-greentic-dev]
