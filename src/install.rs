@@ -568,9 +568,16 @@ where
                 .iter()
                 .map(|asset| asset.id.as_str())
                 .collect();
+            // Not a warning any more, and the wording matters. When this was
+            // written nothing installed store assets at all, so "skipping" was
+            // the whole truth. `gtc install --tenant` now pulls them straight
+            // after this delegate returns — so saying they are skipped tells an
+            // operator their entitlement was dropped when it was not. It stays
+            // reported because running greentic-dev DIRECTLY really does leave
+            // them uninstalled; the message names who handles them instead.
             eprintln!(
-                "warning: tenant `{tenant}` declares {} store asset(s) that greentic-dev does \
-                 not install; skipping: {}",
+                "note: tenant `{tenant}` declares {} store asset(s); these are installed by \
+                 `gtc install --tenant`, not here: {}",
                 ids.len(),
                 ids.join(", ")
             );
