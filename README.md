@@ -123,7 +123,7 @@ Everything is validated before execution: flows are checked against component de
 
 ## Requirements
 
-- Rust 1.95+ (repo pins `rust-toolchain.toml`)
+- Rust 1.96+ (repo pins `rust-toolchain.toml`)
 - `wasm32-wasip2` target for component builds: `rustup target add wasm32-wasip2`
 - Network optional: most flows/components can run offline; remote component pulls require connectivity unless cached.
 
