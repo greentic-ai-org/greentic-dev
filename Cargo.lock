@@ -1875,9 +1875,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-component"
-version = "1.2.0-dev.32616502865"
+version = "1.2.0-dev.32809628569"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f623c435c1b4c7f270cc07dabfc31822cb4b1c6202eec09e0ce6a43419d0b9f6"
+checksum = "34f53f9239338e49726dd56c711fde98a8c53cd26576f6f8361a4123e602e472"
 dependencies = [
  "anyhow",
  "base64 0.23.1",
@@ -1932,9 +1932,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-component-manifest"
-version = "1.2.0-dev.32616502865"
+version = "1.2.0-dev.32809628569"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9da73b78e77648f492864226a15bc6a8c7e2a6ad88d717b8d9224b9d42f26b12"
+checksum = "a5bdd761bb690acdbd59e41c0e9a2d4b91e7506aec9f34419b351b3faf2fb18f"
 dependencies = [
  "greentic-types",
  "jsonschema 0.49.9",
@@ -2014,9 +2014,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-distributor-client"
-version = "1.2.0-dev.32685561317"
+version = "1.2.0-dev.32807216191"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d2494a2f247c47213ddfd4b68ab6e66f08a6f1860bfe5f458b10f7137a2d158"
+checksum = "1e91907470206e849310a1075633f1dd3669b225985be6ae7a719be5a316d04e"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2044,9 +2044,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-flow"
-version = "1.2.0-dev.32686359477"
+version = "1.2.0-dev.32807893541"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6cf212e7bf0696d99fcf6ad259b50ac21a7a97c6e526d0d464b1fea1d964f3ac"
+checksum = "efab81c9467fcd9e21adce19c5dba4a34a86397b8c11890d0fa52ff405e2a9f3"
 dependencies = [
  "anyhow",
  "blake3",
@@ -2206,9 +2206,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-secrets-api"
-version = "1.2.0-dev.32686166057"
+version = "1.2.0-dev.32807676178"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "55cb45b2c51df70d454c87a434d1d369cadb4e9231eba8a46238722bf9144aa3"
+checksum = "a1058fd442b270e09b48d2409e8edc5b5db5fcbcc4b402ac1822e78dfe510d99"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2217,9 +2217,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-secrets-core"
-version = "1.2.0-dev.32686166057"
+version = "1.2.0-dev.32807676178"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d9754cf233677fa3d442d09bdbc724757d6ec8cb9dc6d755ec66625333ebb3f"
+checksum = "af9711a6378370ed8640fb5be6e62990c03abb947222574fa1b12749fb50d2e4"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2245,9 +2245,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-secrets-lib"
-version = "1.2.0-dev.32686166057"
+version = "1.2.0-dev.32807676178"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b13f010ac2bfd1b3c96bf6b70cd0de9ebb8e6a20d92f2b11cbac08c0db080391"
+checksum = "80b348fd6c9a40851c44333d143b8cb36331cb961d545f73ea3634094d2ba4f0"
 dependencies = [
  "async-trait",
  "greentic-secrets-api",
@@ -2259,9 +2259,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-secrets-provider-dev"
-version = "1.2.0-dev.32686166057"
+version = "1.2.0-dev.32807676178"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab5761eecf99424ea60f0a5905f7dca5dc3096bb0be33fd105d7a6b7fc82a5b4"
+checksum = "fb32097a8070248729f357e7fa022b047c4c60c47258e370ae306aa9abc71524"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -2277,9 +2277,9 @@ dependencies = [
 
 [[package]]
 name = "greentic-secrets-spec"
-version = "1.2.0-dev.32686166057"
+version = "1.2.0-dev.32807676178"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "84caf7e6ed80adbe902042cc59008b1d1a1b1c884af85a0fd87a4566c49033a7"
+checksum = "8f0a8a09e0059a0a66baf767eaa61f2ebd66f5accd216b6fcd316fa21a027333"
 dependencies = [
  "async-trait",
  "greentic-types",
@@ -4149,7 +4149,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b570b25f7617e43d59005d0990ccb79e950a423952cea19671b7a876da390adf"
 dependencies = [
  "anyhow",
- "itertools 0.14.0",
+ "itertools 0.13.0",
  "proc-macro2",
  "quote",
  "syn 2.0.119",
