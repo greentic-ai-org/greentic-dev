@@ -10,91 +10,91 @@
       "bins": [
         "greentic-dev-dev"
       ],
-      "version": "1.2.0-dev.33372964016"
+      "version": "1.2.33372964016"
     },
     {
       "crate": "greentic-operator",
       "bins": [
         "greentic-operator-dev"
       ],
-      "version": "1.2.0-dev.32336373119"
+      "version": "1.2.32336373119"
     },
     {
       "crate": "greentic-bundle",
       "bins": [
         "greentic-bundle-dev"
       ],
-      "version": "1.2.0-dev.33372555107"
+      "version": "1.2.33372555107"
     },
     {
       "crate": "greentic-setup",
       "bins": [
         "greentic-setup-dev"
       ],
-      "version": "1.2.0-dev.33373097658"
+      "version": "1.2.33373097658"
     },
     {
       "crate": "greentic-start",
       "bins": [
         "greentic-start-dev"
       ],
-      "version": "1.2.0-dev.33373379885"
+      "version": "1.2.33373379885"
     },
     {
       "crate": "greentic-deployer",
       "bins": [
         "greentic-deployer-dev"
       ],
-      "version": "1.2.0-dev.33373508496"
+      "version": "1.2.33373508496"
     },
     {
       "crate": "greentic-component",
       "bins": [
         "greentic-component-dev"
       ],
-      "version": "1.2.0-dev.33371892038"
+      "version": "1.2.33371892038"
     },
     {
       "crate": "greentic-flow",
       "bins": [
         "greentic-flow-dev"
       ],
-      "version": "1.2.0-dev.33373092333"
+      "version": "1.2.33373092333"
     },
     {
       "crate": "greentic-pack",
       "bins": [
         "greentic-pack-dev"
       ],
-      "version": "1.2.0-dev.32548717337"
+      "version": "1.2.32548717337"
     },
     {
       "crate": "greentic-runner",
       "bins": [
         "greentic-runner-dev"
       ],
-      "version": "1.2.0-dev.33373512061"
+      "version": "1.2.33373512061"
     },
     {
       "crate": "greentic-gui",
       "bins": [
         "greentic-gui-dev"
       ],
-      "version": "1.1.0"
+      "version": "1.2.33372694409"
     },
     {
       "crate": "greentic-secrets",
       "bins": [
         "greentic-secrets-dev"
       ],
-      "version": "1.2.0-dev.33373236880"
+      "version": "1.2.33373236880"
     },
     {
       "crate": "greentic-mcp",
       "bins": [
         "greentic-mcp-dev"
       ],
-      "version": "1.2.0-dev.33372373877"
+      "version": "1.2.33372373877"
     }
   ],
   "extension_packs": [
